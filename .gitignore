@@ -31,4 +31,9 @@
 *.out
 *.app
 
+
+# Emacs temporary files
+*~
+*#
+
 backend/build/*
