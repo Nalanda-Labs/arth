@@ -15,9 +15,9 @@
       "name": "arth",
       "rdbms": "postgresql",
       "host": "127.0.0.1",
-      "port": 26257,
+      "port": 5432,
       "dbname": "arth",
-      "user": "root",
+      "user": "shiv",
       "passwd": "",
       "is_fast": true
     }

@@ -20,7 +20,7 @@
 	let name='';
 
 	async function submit(event) {
-		const response = await post(`/api/v1//register`, { name, username, email, password });
+		const response = await post(`/api/v1/register`, { name, username, email, password });
 
 		// TODO handle network errors
 		errors = response.errors;

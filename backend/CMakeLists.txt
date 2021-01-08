@@ -18,7 +18,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/lib/cmake/Drogon/" "/usr/
 message(STATUS "${CMAKE_MODULE_PATH}")
 
 set(arth_sources
-    src/main.cc)
+    src/main.cc
+    src/api/v1/login.cc
+    src/api/v1/register.cc)
 
 add_executable(${PROJECT_NAME} ${arth_sources})
 target_include_directories(arth PRIVATE "/usr/include/jsoncpp")
