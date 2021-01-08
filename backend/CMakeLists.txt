@@ -17,6 +17,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /usr/local/lib/cmake/)
 
 find_package(Drogon REQUIRED)
 find_package(Trantor REQUIRED)
+find_package(jsoncpp REQUIRED)
 
 set(arth_sources
     src/main.cc)
