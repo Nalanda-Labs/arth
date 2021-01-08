@@ -18,7 +18,7 @@
 	let errors = null;
 
 	async function submit(event) {
-		const response = await post(`/api/v1/auth/login`, { email, password });
+		const response = await post(`/api/v1/login`, { email, password });
 
 		// TODO handle network errors
 		errors = response.errors;
@@ -29,9 +29,18 @@
 		}
 	}
 </script>
+<style>
+	.wrapper {
+		width: 100%;
+		height: 100px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+</style>
 
 <svelte:head>
-	<title>Sign in • Conduit</title>
+	<title>Sign in • Arth</title>
 </svelte:head>
 
 <div class="auth-page">
@@ -47,14 +56,20 @@
 
 				<form on:submit|preventDefault={submit}>
 					<fieldset class="form-group">
-						<input class="form-control form-control-lg" type="email" required placeholder="Email" bind:value={email}>
+						<label for="email" class="form-label">Email:</label>
+						<input class="form-control form-control-sm" type="email" required placeholder="Email" bind:value={email}>
+						<div class="form-text">We'll never share your email with anyone else.</div>
 					</fieldset>
 					<fieldset class="form-group">
-						<input class="form-control form-control-lg" type="password" required placeholder="Password" bind:value={password}>
+						<label for="password" class="form-label">Passphrase:</label>
+						<input class="form-control form-control-sm" type="password" required placeholder="Passphrase min 16 characters" bind:value={password} minlength="16" maxlength="1024">
+						<div class="form-text">Never share.</div>
 					</fieldset>
-					<button class="btn btn-lg btn-primary pull-xs-right" type="submit">
-						Sign in
-					</button>
+					<div class="wrapper">
+						<button class="btn btn-lg btn-primary pull-xs-right" style="">
+							Sign In
+						</button>
+					</div>
 				</form>
 			</div>
 		</div>

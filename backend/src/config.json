@@ -9,5 +9,17 @@
   "app": {
     "threads_num": 0,
     "document_root": "./"
-  }
+  },
+  "db_clients": [
+    {
+      "name": "arth",
+      "rdbms": "postgresql",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "dbname": "arth",
+      "user": "shiv",
+      "passwd": "",
+      "is_fast": true
+    }
+  ]
 }
