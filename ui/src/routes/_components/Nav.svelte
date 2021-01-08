@@ -40,7 +40,7 @@
 
 				<li class="nav-item">
 					<a rel='prefetch' href="/register" class="nav-link" class:active="{$page.path === '/register'}">
-						Sign up
+						Register
 					</a>
 				</li>
 			{/if}
