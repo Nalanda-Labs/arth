@@ -1,0 +1,13 @@
+{
+  "listeners": [
+    {
+      "address": "0.0.0.0",
+      "port": 8000,
+      "https": false
+    }
+  ],
+  "app": {
+    "threads_num": 0,
+    "document_root": "./"
+  }
+}
