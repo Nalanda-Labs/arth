@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-	<title>Conduit</title>
+	<title>Arth</title>
 </svelte:head>
 
 <div class="home-page">

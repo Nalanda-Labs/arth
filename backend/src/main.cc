@@ -4,7 +4,7 @@ using namespace drogon;
 
 int main() {
     std::cout << banner << std::endl;
-    app().loadConfigFile("config.json");
+    app().loadConfigFile("../config.json");
     app().run();
     auto clientPtr = drogon::app().getFastDbClient("arth");
 }

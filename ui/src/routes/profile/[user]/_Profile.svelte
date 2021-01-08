@@ -1,6 +1,6 @@
 <script>
 	import { goto } from '@sapper/app';
-	import ArticleList from '../../_components/ArticleList/index.svelte';
+	import QuestionList from '../../_components/QuestionList/index.svelte';
 	import * as api from 'api.js';
 
 	export let profile;
@@ -55,19 +55,19 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-xs-12 col-md-10 offset-md-1">
-				<div class="articles-toggle">
+				<div class="questions-toggle">
 					<ul class="nav nav-pills outline-active">
 						<li class="nav-item">
-							<a href='/profile/@{profile.username}' class="nav-link {favorites ? '' : 'active'}">My Articles</a>
+							<a href='/profile/@{profile.username}' class="nav-link {favorites ? '' : 'active'}">My Questions</a>
 						</li>
 
 						<li class="nav-item">
-							<a class="nav-link {favorites ? 'active' : ''}" href='/profile/@{profile.username}/favorites'>Favorited Articles</a>
+							<a class="nav-link {favorites ? 'active' : ''}" href='/profile/@{profile.username}/favorites'>Favorited Questions</a>
 						</li>
 					</ul>
 				</div>
 
-				<ArticleList tab='profile' username='{profile.username}' {favorites}/>
+				<QuestionList tab='profile' username='{profile.username}' {favorites}/>
 			</div>
 		</div>
 	</div>

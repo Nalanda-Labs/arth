@@ -1,6 +1,6 @@
 <script>
 	import { stores } from '@sapper/app';
-	import ArticleList from '../ArticleList/index.svelte';
+	import QuestionList from '../QuestionList/index.svelte';
 
 	export let tab = 'all';
 	export let tag = null;
@@ -8,18 +8,27 @@
 
 	const { session } = stores();
 
-	function globalfeed() {
+	function questions() {
 		tab = "all";
+		tag = null;
+	}
+	function popular() {
+		tab="popular";
 		tag = null;
 	}
 </script>
 
 <div class="col-md-9">
 	<div class="feed-toggle">
-		<ul class="nav nav-pills outline-active">
+		<ul class="nav nav-tabs">
 			<li class="nav-item">
-				<a href="." class='nav-link {tab === "all" ? "active" : "" }' on:click='{globalfeed}'>
-					Global Feed
+				<a href="." class='nav-link {tab === "all" ? "active" : "" }' on:click='{questions}'>
+					Qustions
+				</a>
+			</li>
+			<li class="nav-item">
+				<a href="." class='nav-link {tab === "popular" ? "active" : "" }' on:click='{popular}'>
+					Popular
 				</a>
 			</li>
 
@@ -33,5 +42,5 @@
 		</ul>
 	</div>
 
-	<ArticleList {p} {tab} {tag}/>
+	<QuestionList {p} {tab} {tag}/>
 </div>
