@@ -8,6 +8,8 @@
 #include "register.h"
 #include <string>
 
+using namespace drogon;
+using namespace drogon::orm;
 using namespace api::v1;
 
 void registration::doRegister(const HttpRequestPtr &req,
@@ -16,31 +18,44 @@ void registration::doRegister(const HttpRequestPtr &req,
     auto json = req->getJsonObject();
     Json::Value ret;
 
-    LOG_DEBUG << "name: " << json->get("name", "").asString();
-    LOG_DEBUG << "email: " << json->get("email", "").asString();
-    LOG_DEBUG << "username: " << json->get("username", "").asString();
-    LOG_DEBUG << "password: " << json->get("password", "").asString();
+    auto name = json->get("name", "").asString();
+    auto email = json->get("email", "").asString();
+    auto username = json->get("username", "").asString();
+    auto password = json->get("password", "").asString();
 
-    // if (json)
+    LOG_DEBUG << "name: " << name;
+    LOG_DEBUG << "email: " << email;
+    LOG_DEBUG << "username: " << username;
+    LOG_DEBUG << "password: " << password;
+
+    // always validate user input. never rely on what is coming from the other side
+    if (name == "" || username == "" || email == "" || password == "")
+    {
+        ret["error"] = "None of the fields can be empty.";
+        auto resp = HttpResponse::newHttpJsonResponse(ret);
+        callback(resp);
+    }
+
     // {
-    //     auto clientPtr = drogon::app().getFastDbClient("arth");
-    //     auto transPtr = clientPtr->newTransaction();
-    //     transPtr->execSqlAsync(
-    //         "select * from users where =$1",
-    //         [](const Result &r) {
-    //             if (r.size() > 0)
-    //             {
-    //                 ret["errors"] = "User exists";
-    //             } else {
-    //                 *transPtr = "insert into users (useranme)"
-    //             }
-    //         },
-    //         [](const DrogonDbException &e) {
-    //             std::cerr << "error:" << e.base().what() << std::endl;
-    //         },
-    //         "default");
-    // }
-
-    auto resp = HttpResponse::newHttpJsonResponse(ret);
-    callback(resp);
+    // auto clientPtr = app().getFastDbClient("default");
+    // assert(clientPtr);
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        clientPtr->newTransactionAsync([ret=std::move(ret), callback=std::move(callback)](const std::shared_ptr<Transaction> &transPtr) {
+            assert(transPtr);
+            transPtr->execSqlAsync( "select * from users", 
+            [=](const Result &r) {
+                if(r.size() > 1) {
+                    LOG_DEBUG << "User exists";
+                    ret["error"] = "User exists";
+                    callback(HttpResponse::newHttpJsonResponse(str::move(ret)));
+                } else {
+                    *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values('shiv', '2021-01-01T00:00:00', '2020-01-01T00:00:00', 'shiv', 0);"
+                }
+            },
+            [](const DrogonDbException &e) {
+                LOG_DEBUG << e.base().what();
+            });
+        });
+    }
 }

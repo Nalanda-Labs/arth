@@ -23,7 +23,7 @@ namespace api
         public:
             METHOD_LIST_BEGIN
             // use METHOD_ADD to add your custom processing function here;
-            METHOD_ADD(registration ::doRegister, "/api/v1/register", Post, Options);
+            ADD_METHOD_TO(registration ::doRegister, "/api/v1/register", Post, Options);
             METHOD_LIST_END
 
             void doRegister(const HttpRequestPtr &req,

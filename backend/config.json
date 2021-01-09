@@ -12,13 +12,12 @@
   },
   "db_clients": [
     {
-      "name": "arth",
       "rdbms": "postgresql",
       "host": "127.0.0.1",
       "port": 5432,
       "dbname": "arth",
       "user": "shiv",
-      "passwd": "",
+      "passwd": "yagyavalkya",
       "is_fast": true
     }
   ]

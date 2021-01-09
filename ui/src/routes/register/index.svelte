@@ -23,10 +23,15 @@
 		const response = await post(`/api/v1/register`, { name, username, email, password });
 
 		// TODO handle network errors
-		errors = response.errors;
+		errors = response.error;
 
-		if (response.user) {
-			$session.user = response.user;
+		if(errors) {
+			alet(error);
+			return;
+		}
+
+		if (response.username) {
+			$session.user = response.username;
 			goto('/');
 		}
 	}
