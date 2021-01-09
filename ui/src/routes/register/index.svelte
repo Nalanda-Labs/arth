@@ -26,7 +26,7 @@
 		errors = response.error;
 
 		if(errors) {
-			alet(error);
+			alert(errors);
 			return;
 		}
 

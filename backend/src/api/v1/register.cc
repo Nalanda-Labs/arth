@@ -41,21 +41,36 @@ void registration::doRegister(const HttpRequestPtr &req,
     // assert(clientPtr);
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([ret=std::move(ret), callback=std::move(callback)](const std::shared_ptr<Transaction> &transPtr) {
+        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
-            transPtr->execSqlAsync( "select * from users", 
-            [=](const Result &r) {
-                if(r.size() > 1) {
-                    LOG_DEBUG << "User exists";
-                    ret["error"] = "User exists";
-                    callback(HttpResponse::newHttpJsonResponse(str::move(ret)));
-                } else {
-                    *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values('shiv', '2021-01-01T00:00:00', '2020-01-01T00:00:00', 'shiv', 0);"
-                }
-            },
-            [](const DrogonDbException &e) {
-                LOG_DEBUG << e.base().what();
-            });
+            transPtr->execSqlAsync(
+                "select * from users",
+                [=](const Result &r) mutable{
+                    if (r.size() > 0)
+                    {
+                        LOG_DEBUG << "User exists";
+                        ret["error"] = "User exists";
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    }
+                    else
+                    {
+                        auto username_lower = username;
+                        transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                        *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, 0);" << username << username_lower >> [=](const Result &r) mutable {
+                            ret["username"] = username_lower;
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        } >> [=](const DrogonDbException &e) mutable {
+                            LOG_ERROR << "err:" << e.base().what();
+                            ret["error"] = (std::string)e.base().what();
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        };
+                    }
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                });
         });
     }
 }
