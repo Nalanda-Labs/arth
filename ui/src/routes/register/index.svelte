@@ -18,6 +18,7 @@
 	let password = '';
 	let errors = null;
 	let name='';
+	let response = null;
 
 	async function submit(event) {
 		const response = await post(`/api/v1/register`, { name, username, email, password });
@@ -59,7 +60,7 @@
 					<a href="/login">Have an account?</a>
 				</p>
 
-				<ListErrors {errors}/>
+				<ListErrors {response}/>
 
 				<form on:submit|preventDefault={submit}>
 					<fieldset class="form-group">

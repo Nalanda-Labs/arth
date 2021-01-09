@@ -44,7 +44,7 @@ void registration::doRegister(const HttpRequestPtr &req,
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
             transPtr->execSqlAsync(
-                "select * from users",
+                "select * from users where username=$1",
                 [=](const Result &r) mutable{
                     if (r.size() > 0)
                     {
@@ -56,6 +56,7 @@ void registration::doRegister(const HttpRequestPtr &req,
                     {
                         auto username_lower = username;
                         transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                        LOG_DEBUG << username_lower;
                         *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, 0);" << username << username_lower >> [=](const Result &r) mutable {
                             ret["username"] = username_lower;
                             callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
@@ -70,7 +71,7 @@ void registration::doRegister(const HttpRequestPtr &req,
                     LOG_DEBUG << e.base().what();
                     ret["error"] = (std::string)e.base().what();
                     callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                });
+                }, username);
         });
     }
 }
