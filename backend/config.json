@@ -20,5 +20,8 @@
       "passwd": "yagyavalkya",
       "is_fast": true
     }
-  ]
+  ],
+  "custom_config": {
+    "recaptcha_secret" : "6LeP1yYaAAAAAJeiW3vX4vlEpAWBL42in6iW29ke"
+  }
 }

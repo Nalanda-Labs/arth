@@ -5,8 +5,11 @@
  *
  */
 
-#include "register.h"
 #include <string>
+
+#include <drogon/HttpClient.h>
+
+#include "register.h"
 
 using namespace drogon;
 using namespace drogon::orm;
@@ -22,6 +25,9 @@ void registration::doRegister(const HttpRequestPtr &req,
     auto email = json->get("email", "").asString();
     auto username = json->get("username", "").asString();
     auto password = json->get("password", "").asString();
+    Json::Value token;
+    if (json->isMember("token"))
+        token = json->get("token", "");
 
     LOG_DEBUG << "name: " << name;
     LOG_DEBUG << "email: " << email;
@@ -32,7 +38,51 @@ void registration::doRegister(const HttpRequestPtr &req,
     if (name == "" || username == "" || email == "" || password == "")
     {
         ret["error"] = "None of the fields can be empty.";
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
+        auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
+        callback(resp);
+    }
+
+    if (token.isMember("isTrusted"))
+    {
+        auto customConfig = app().getCustomConfig();
+        std::string secret = "";
+        if (customConfig.isMember("recaptcha_secret") && customConfig.get("recaptcha_secret", "") != "")
+        {
+            secret = customConfig.get("recaptcha_secret", "").asString();
+        }
+        else
+        {
+            ret["error"] = "Recaptcha improperly configured.";
+            auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
+            callback(resp);
+        }
+
+        auto client = HttpClient::newHttpClient(
+            "https://www.google.com/");
+        auto req = HttpRequest::newHttpRequest();
+        req->setMethod(drogon::Post);
+        req->setPath("/recaptcha/api/siteverify");
+        req->setParameter("secret", secret);
+        req->setParameter("response", token.get("isTrusted", false).asString());
+
+        client->sendRequest(
+            req,
+            [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr &response) mutable {
+                LOG_DEBUG << "received response!";
+                // auto headers=response.
+                std::shared_ptr<Json::Value> res = response->getJsonObject();
+                if (res->isMember("success") && not res->get("success", false))
+                {
+                    ret["error"] = "Recaptcha test failed.";
+                    auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
+                    callback(resp);
+                }
+            });
+    }
+    else
+    {
+        ret["error"] = "Recaptcha token not found.";
+        auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
         callback(resp);
     }
 
@@ -45,7 +95,7 @@ void registration::doRegister(const HttpRequestPtr &req,
             assert(transPtr);
             transPtr->execSqlAsync(
                 "select * from users where username=$1",
-                [=](const Result &r) mutable{
+                [=](const Result &r) mutable {
                     if (r.size() > 0)
                     {
                         LOG_DEBUG << "User exists";
@@ -71,7 +121,8 @@ void registration::doRegister(const HttpRequestPtr &req,
                     LOG_DEBUG << e.base().what();
                     ret["error"] = (std::string)e.base().what();
                     callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                }, username);
+                },
+                username);
         });
     }
 }

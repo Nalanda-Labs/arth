@@ -37,3 +37,4 @@
 *#
 
 backend/build/*
+backend/config.json
