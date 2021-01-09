@@ -86,9 +86,6 @@ void registration::doRegister(const HttpRequestPtr &req,
         callback(resp);
     }
 
-    // {
-    // auto clientPtr = app().getFastDbClient("default");
-    // assert(clientPtr);
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
