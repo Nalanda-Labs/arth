@@ -11,16 +11,13 @@
 
 using namespace drogon;
 
-namespace api
-{
-namespace v1
-{
+namespace api {
+namespace v1 {
 /**
- * @brief this class is created by the drogon_ctl command (drogon_ctl create controller -r arth::login).
- * this class is a restful API controller.
+ * @brief this class is created by the drogon_ctl command (drogon_ctl create
+ * controller -r arth::login). this class is a restful API controller.
  */
-class Login : public drogon::HttpController<Login>
-{
+class Login : public drogon::HttpController<Login> {
 public:
     METHOD_LIST_BEGIN
     // use METHOD_ADD to add your custom processing function here;
@@ -28,7 +25,7 @@ public:
     METHOD_LIST_END
 
     void doLogin(const HttpRequestPtr &req,
-        std::function<void(const HttpResponsePtr &)> &&callback);
+                std::function<void(const HttpResponsePtr &)> &&callback);
 };
 } // namespace v1
 } // namespace api
