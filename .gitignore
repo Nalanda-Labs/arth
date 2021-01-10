@@ -34,7 +34,9 @@
 
 # Emacs temporary files
 *~
-*#
+*#*
+
+backend/.cache
 
 backend/build/*
 backend/config.json
