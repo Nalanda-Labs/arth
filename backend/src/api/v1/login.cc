@@ -25,7 +25,7 @@ HttpResponsePtr jsonResponse(Json::Value &&data) {
     return HttpResponse::newHttpJsonResponse(data);
 }
 
-void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
+void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
     auto json = req->getJsonObject();
     Json::Value ret;
 
@@ -53,7 +53,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
             callback(jsonResponse(std::move(ret)));
         }
 
-        auto clientPtr = drogon::app().getFastDbClient();
+        auto clientPtr = drogon::app().getFastDbClient("default");
 
         clientPtr->execSqlAsync(
             "select id, username, password_hash from users where username = $1",
@@ -69,7 +69,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
                 auto row = r[0];
 
-                auto password_hash = row["password"].as<std::string>();
+                auto password_hash = row["password_hash"].as<std::string>();
 
                 if (verify_password(password, password_hash)) {
                     auto user_id = row["id"].as<int>();
