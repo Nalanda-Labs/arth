@@ -60,11 +60,11 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
-                LOG_DEBUG << "User does not exist";
-                /// Prevents a class or error where attacker is trying to 
-                /// guess usernames for a given password
-                ret["error"] = "Wrong username or password";
-                callback(jsonResponse(std::move(ret)));                
+                    LOG_DEBUG << "User does not exist";
+                    /// Prevents a class or error where attacker is trying to 
+                    /// guess usernames for a given password
+                    ret["error"] = "Wrong username or password";
+                    callback(jsonResponse(std::move(ret)));                
                 }
 
                 auto row = r[0];
