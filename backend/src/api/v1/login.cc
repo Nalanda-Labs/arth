@@ -39,7 +39,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         LOG_DEBUG << "Some fields are empty";        
         ret["error"] = "None of the fields can be empty";
         auto resp = jsonResponse(std::move(ret));
-        callback(resp);        
+        callback(resp);
     }
 
     {
@@ -50,7 +50,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         if (jwtSecret == "") {
             LOG_DEBUG << "JWT not configured properly";
             ret["error"] = "JWT not configured properly";
-            callback(jsonResponse(std::move(ret)));            
+            callback(jsonResponse(std::move(ret)));
         }
 
         auto clientPtr = drogon::app().getFastDbClient();
@@ -61,10 +61,10 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
                     LOG_DEBUG << "User does not exist";
-                    /// Prevents a class or error where attacker is trying to 
+                    /// Prevents a class or error where attacker is trying to
                     /// guess usernames for a given password
                     ret["error"] = "Wrong username or password";
-                    callback(jsonResponse(std::move(ret)));                
+                    callback(jsonResponse(std::move(ret)));
                 }
 
                 auto row = r[0];
@@ -76,10 +76,10 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                     auto username = row["username"].as<std::string>();
 
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
-                    callback(jsonResponse(std::move(ret)));                    
+                    callback(jsonResponse(std::move(ret)));
                 }
 
-                /// Prevents a class or error where attacker is trying to 
+                /// Prevents a class or error where attacker is trying to
                 /// guess usernames for a given password
                 ret["error"] = "Wrong username or password";
                 callback(jsonResponse(std::move(ret)));
@@ -91,6 +91,6 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
 
-            username);        
+            username);
     }
 }

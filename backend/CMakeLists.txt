@@ -34,6 +34,5 @@ find_package(Threads REQUIRED)
 find_library( DL_LIBRARY libdl.so  REQUIRD)
 find_package(Drogon REQUIRED)
 find_library(argon2 REQUEIRD)
-find_package(jwt-cpp CONFIG REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec pq sqlite3 ssl crypto jwt-cpp::jwt-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec pq sqlite3 ssl crypto)
