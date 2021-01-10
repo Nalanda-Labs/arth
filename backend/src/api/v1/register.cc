@@ -9,6 +9,8 @@
 
 #include <drogon/HttpClient.h>
 
+#include "util/emailutils.h"
+#include "util/datetime.h"
 #include "register.h"
 
 using namespace drogon;
@@ -90,36 +92,47 @@ void registration::doRegister(const HttpRequestPtr &req,
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([ = ](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
-            transPtr->execSqlAsync(
-                "select * from users where username=$1",
-            [ = ](const Result & r) mutable {
-                if (r.size() > 0)
-                {
-                    LOG_DEBUG << "User exists";
-                    ret["error"] = "User exists";
-                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                }
-                else
-                {
-                    auto username_lower = username;
-                    transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
-                    LOG_DEBUG << username_lower;
-                    *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, 0);" << username << username_lower >> [ = ](const Result & r) mutable {
-                        ret["username"] = username_lower;
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    } >> [ = ](const DrogonDbException & e) mutable {
-                        LOG_ERROR << "err:" << e.base().what();
-                        ret["error"] = (std::string)e.base().what();
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    };
-                }
-            },
-            [ = ](const DrogonDbException & e) mutable {
-                LOG_DEBUG << e.base().what();
-                ret["error"] = (std::string)e.base().what();
+            EmailUtils::cleanEmail(email);
+
+            if(email == "") {
+                ret["error"] = "Invalid email.";
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-            },
-            username);
+            } else {
+                transPtr->execSqlAsync(
+                    "select * from users where username=$1 or email=$2",
+                [ = ](const Result & r) mutable {
+                    if (r.size() > 0)
+                    {
+                        LOG_DEBUG << "User exists";
+                        ret["error"] = "User exists";
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    }
+                    else
+                    {
+                        auto username_lower = username;
+
+                        transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                        LOG_DEBUG << username_lower;
+
+                        *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level) \
+                        values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, $3, 0);" 
+                        << username << username_lower << email >> [ = ](const Result & r) mutable {
+                            ret["username"] = username_lower;
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        } >> [ = ](const DrogonDbException & e) mutable {
+                            LOG_ERROR << "err:" << e.base().what();
+                            ret["error"] = (std::string)e.base().what();
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        };
+                    }
+                },
+                [ = ](const DrogonDbException & e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                },
+                username, email);
+            }
         });
     }
 }

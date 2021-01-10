@@ -1,5 +1,5 @@
 #ifndef _EMAILUTILS_H_
-#defin _EMAILUTILS_H_
+#define _EMAILUTILS_H_
 
 #include <string>
 
@@ -41,6 +41,6 @@ public:
     	email = username + '@' + domain;
     	transform(email.begin(), email.end(), email.begin(), ::tolower);
 	}
-}
+};
 
 #endif
