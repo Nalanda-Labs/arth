@@ -58,7 +58,7 @@ void registration::doRegister(const HttpRequestPtr &req,
         }
 
         auto client = HttpClient::newHttpClient(
-            "https://www.google.com/");
+                          "https://www.google.com/");
         auto req = HttpRequest::newHttpRequest();
         req->setMethod(drogon::Post);
         req->setPath("/recaptcha/api/siteverify");
@@ -67,17 +67,17 @@ void registration::doRegister(const HttpRequestPtr &req,
 
         client->sendRequest(
             req,
-            [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr &response) mutable {
-                LOG_DEBUG << "received response!";
-                // auto headers=response.
-                std::shared_ptr<Json::Value> res = response->getJsonObject();
-                if (res->isMember("success") && not res->get("success", false))
-                {
-                    ret["error"] = "Recaptcha test failed.";
-                    auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
-                    callback(resp);
-                }
-            });
+        [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr & response) mutable {
+            LOG_DEBUG << "received response!";
+            // auto headers=response.
+            std::shared_ptr<Json::Value> res = response->getJsonObject();
+            if (res->isMember("success") && not res->get("success", false))
+            {
+                ret["error"] = "Recaptcha test failed.";
+                auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
+                callback(resp);
+            }
+        });
     }
     else
     {
@@ -88,38 +88,38 @@ void registration::doRegister(const HttpRequestPtr &req,
 
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
+        clientPtr->newTransactionAsync([ = ](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
             transPtr->execSqlAsync(
                 "select * from users where username=$1",
-                [=](const Result &r) mutable {
-                    if (r.size() > 0)
-                    {
-                        LOG_DEBUG << "User exists";
-                        ret["error"] = "User exists";
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    }
-                    else
-                    {
-                        auto username_lower = username;
-                        transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
-                        LOG_DEBUG << username_lower;
-                        *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, 0);" << username << username_lower >> [=](const Result &r) mutable {
-                            ret["username"] = username_lower;
-                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                        } >> [=](const DrogonDbException &e) mutable {
-                            LOG_ERROR << "err:" << e.base().what();
-                            ret["error"] = (std::string)e.base().what();
-                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                        };
-                    }
-                },
-                [=](const DrogonDbException &e) mutable {
-                    LOG_DEBUG << e.base().what();
-                    ret["error"] = (std::string)e.base().what();
+            [ = ](const Result & r) mutable {
+                if (r.size() > 0)
+                {
+                    LOG_DEBUG << "User exists";
+                    ret["error"] = "User exists";
                     callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                },
-                username);
+                }
+                else
+                {
+                    auto username_lower = username;
+                    transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                    LOG_DEBUG << username_lower;
+                    *transPtr << "insert into users(username, created_at, updated_at, username_lower, trust_level) values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, 0);" << username << username_lower >> [ = ](const Result & r) mutable {
+                        ret["username"] = username_lower;
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    } >> [ = ](const DrogonDbException & e) mutable {
+                        LOG_ERROR << "err:" << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    };
+                }
+            },
+            [ = ](const DrogonDbException & e) mutable {
+                LOG_DEBUG << e.base().what();
+                ret["error"] = (std::string)e.base().what();
+                callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+            },
+            username);
         });
     }
 }

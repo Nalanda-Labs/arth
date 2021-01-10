@@ -39,7 +39,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
         LOG_DEBUG << "Some fields are empty";        
         ret["error"] = "None of the fields can be empty";
         auto resp = jsonResponse(std::move(ret));
-        callback(resp);        
+        callback(resp);
     }
 
     {
@@ -50,7 +50,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
         if (jwtSecret == "") {
             LOG_DEBUG << "JWT not configured properly";
             ret["error"] = "JWT not configured properly";
-            callback(jsonResponse(std::move(ret)));            
+            callback(jsonResponse(std::move(ret)));
         }
 
         auto clientPtr = drogon::app().getFastDbClient("default");
@@ -69,30 +69,27 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
                 }
 
                 auto row = r[0];
-
                 auto password_hash = row["password_hash"].as<std::string>();
 
-                if (verify_password(password, password_hash)) {
+                if (verifyPassword(password, password_hash)) {
                     auto user_id = row["id"].as<int>();
                     auto username = row["username"].as<std::string>();
 
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
-                    callback(jsonResponse(std::move(ret)));                    
-                    return;
+                    callback(jsonResponse(std::move(ret)));
                 }
 
-                /// Prevents a class or error where attacker is trying to 
+                /// Prevents a class or error where attacker is trying to
                 /// guess usernames for a given password
                 ret["error"] = "Wrong username or password";
-                callback(jsonResponse(std::move(ret)));
+                callback(jsonResponse(std::move(ret)));                    
+                return;                        
             },
-
             [=](const DrogonDbException &e) mutable {
                 LOG_DEBUG << e.base().what();
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-
-            username);        
+            username);
     }
 }

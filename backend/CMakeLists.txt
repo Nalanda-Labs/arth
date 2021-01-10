@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(arth)
 
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -33,6 +33,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 find_library( DL_LIBRARY libdl.so  REQUIRD)
 find_package(Drogon REQUIRED)
-find_package(jwt-cpp CONFIG REQUIRED)
+find_library(argon2 REQUEIRD)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec pq sqlite3 ssl crypto jwt-cpp::jwt-cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec pq sqlite3 ssl crypto)

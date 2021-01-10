@@ -1,10 +1,13 @@
-#include <string>
+#ifndef _HASHPASSWORD_H_
+#define _HASHPASSWORD_H_
 
-inline std::string hash_password(const std::string &password) {
-  return password;
+inline std::string hashPassword(const std::string &password) {
+	return password;
 }
 
 
-inline bool verify_password(const std::string &password, const std::string &hash) {
-  return hash_password(password) == hash;
+inline bool verifyPassword(const std::string &password, const std::string &hash) {
+	return hashPassword(password) == hash;
 }
+
+#endif

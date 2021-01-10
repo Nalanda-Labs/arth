@@ -21,7 +21,7 @@ namespace v1
  */
 class registration : public drogon::HttpController<registration>
 {
-public:
+  public:
     METHOD_LIST_BEGIN
     // use METHOD_ADD to add your custom processing function here;
     ADD_METHOD_TO(registration ::doRegister, "/api/v1/register", Post, Options);
