@@ -14,7 +14,7 @@
         {
             "rdbms": "postgresql",
             "host": "127.0.0.1",
-            "port": 5432,
+            "port": 26257,
             "dbname": "arth",
             "user": "shiv",
             "passwd": "yagyavalkya",
