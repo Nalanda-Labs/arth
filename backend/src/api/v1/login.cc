@@ -59,7 +59,24 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
             "select id, username, password_hash from users where username = $1",
 
             [=](const Result &r) mutable {
-                if (r.size() != 1) {
+                if (r.size() == 1) {
+                    auto row = r[0];
+                    auto password_hash = row["password_hash"].as<std::string>();
+
+                    if (verifyPassword(password, password_hash)) {
+                        auto user_id = row["id"].as<int>();
+                        auto username = row["username"].as<std::string>();
+
+                        ret["jwt"] = signJWT(user_id, username, jwtSecret);
+                        callback(jsonResponse(std::move(ret)));
+                    }
+
+                    /// Prevents a class or error where attacker is trying to
+                    /// guess usernames for a given password
+                    ret["error"] = "Wrong username or password";
+                    callback(jsonResponse(std::move(ret)));                    
+                }
+                else {
                     LOG_DEBUG << "User does not exist";
                     /// Prevents a class or error where attacker is trying to
                     /// guess usernames for a given password
@@ -67,30 +84,13 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
                     callback(jsonResponse(std::move(ret)));
                 }
 
-                auto row = r[0];
-
-                auto password_hash = row["password_hash"].as<std::string>();
-
-                if (verify_password(password, password_hash)) {
-                    auto user_id = row["id"].as<int>();
-                    auto username = row["username"].as<std::string>();
-
-                    ret["jwt"] = signJWT(user_id, username, jwtSecret);
-                    callback(jsonResponse(std::move(ret)));
-                }
-
-                /// Prevents a class or error where attacker is trying to
-                /// guess usernames for a given password
-                ret["error"] = "Wrong username or password";
-                callback(jsonResponse(std::move(ret)));
+                
             },
-
             [=](const DrogonDbException &e) mutable {
                 LOG_DEBUG << e.base().what();
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-
             username);
     }
 }
