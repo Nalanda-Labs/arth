@@ -64,7 +64,8 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
                     /// Prevents a class or error where attacker is trying to 
                     /// guess usernames for a given password
                     ret["error"] = "Wrong username or password";
-                    callback(jsonResponse(std::move(ret)));                
+                    callback(jsonResponse(std::move(ret)));
+                    return;          
                 }
 
                 auto row = r[0];
@@ -77,6 +78,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
 
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
                     callback(jsonResponse(std::move(ret)));                    
+                    return;
                 }
 
                 /// Prevents a class or error where attacker is trying to 
