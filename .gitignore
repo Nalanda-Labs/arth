@@ -36,6 +36,8 @@
 *~
 *#*
 
+backend/.cache
+
 backend/build/*
 backend/config.json
 .vscode/

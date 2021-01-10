@@ -8,6 +8,7 @@
 #include <string>
 
 #include <drogon/HttpClient.h>
+#include <trantor/utils/Logger.h>
 
 #include "login.h"
 #include "util/jwt_impl.h"
@@ -20,7 +21,7 @@ using namespace api::v1;
 using TransactionPtr = const std::shared_ptr<Transaction> &;
 using Callback = std::function<void(const HttpResponsePtr &)> &&;
 
-HttpResponsePtr jsonResponse(Json::Value &data) {
+HttpResponsePtr jsonResponse(Json::Value &&data) {
     return HttpResponse::newHttpJsonResponse(data);
 }
 
@@ -35,8 +36,9 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     LOG_DEBUG << "password: " << password;
 
     if (username == "" || password == "") {
+        LOG_DEBUG << "Some fields are empty";        
         ret["error"] = "None of the fields can be empty";
-        auto resp = jsonResponse(ret);
+        auto resp = jsonResponse(std::move(ret));
         callback(resp);
 
         return;
@@ -48,17 +50,15 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         std::string jwtSecret = customConfig.get("jwt_secret", "").asString();
 
         if (jwtSecret == "") {
+            LOG_DEBUG << "JWT not configured properly";
             ret["error"] = "JWT not configured properly";
-            callback(jsonResponse(ret));
+            callback(jsonResponse(std::move(ret)));
             return;
         }
 
         auto clientPtr = drogon::app().getFastDbClient();
 
-        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {
-        assert(transactionPtr);
-
-        transactionPtr->execSqlAsync(
+        clientPtr->execSqlAsync(
             "select id, username, password_hash from users where username = $1",
 
             [=](const Result &r) mutable {
@@ -66,8 +66,8 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 LOG_DEBUG << "User does not exist";
                 /// Prevents a class or error where attacker is trying to 
                 /// guess usernames for a given password
-                ret["error"] = "Invalid credentials. Either the user does not exist or the password is wrong";
-                callback(jsonResponse(ret));
+                ret["error"] = "Wrong username or password";
+                callback(jsonResponse(std::move(ret)));
 
                 return;
                 }
@@ -77,18 +77,18 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 auto password_hash = row["password"].as<std::string>();
 
                 if (verify_password(password, password_hash)) {
-                auto user_id = row["id"].as<int>();
-                auto username = row["username"].as<std::string>();
+                    auto user_id = row["id"].as<int>();
+                    auto username = row["username"].as<std::string>();
 
-                ret["jwt"] = signJWT(user_id, username, jwtSecret);
-                callback(jsonResponse(ret));
-                return;
+                    ret["jwt"] = signJWT(user_id, username, jwtSecret);
+                    callback(jsonResponse(std::move(ret)));
+                    return;
                 }
 
                 /// Prevents a class or error where attacker is trying to 
                 /// guess usernames for a given password
-                ret["error"] = "Invalid credentials. Either the user does not exist or the password is wrong";
-                callback(jsonResponse(ret));
+                ret["error"] = "Wrong username or password";
+                callback(jsonResponse(std::move(ret)));
 
                 return;
             },
@@ -99,7 +99,6 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
 
-            username);
-        });
+            username);        
     }
 }
