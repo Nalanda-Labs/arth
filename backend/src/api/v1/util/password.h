@@ -1,6 +1,8 @@
 #ifndef _HASHPASSWORD_H_
 #define _HASHPASSWORD_H_
 
+#include <string>
+
 inline std::string hashPassword(const std::string &password) {
 	return password;
 }
