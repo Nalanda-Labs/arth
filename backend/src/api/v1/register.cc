@@ -141,11 +141,11 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                             transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
                             LOG_DEBUG << username_lower;
                             auto created_at = DateTime::getLocalDateTimeISOFormat();
-                            auto password_hash = PasswordUtils::hashPassword(password, "");
+                            auto [password_hash, salt] = PasswordUtils::hashPassword(password, "");
 
-                            LOG_DEBUG << std::get<0>(password_hash);
-                            LOG_DEBUG << std::get<1>(password_hash);
-                            if (std::get<0>(password_hash) != "" && std::get<1>(password_hash) != "")
+                            LOG_DEBUG << "password_hash: " << password_hash;
+                            LOG_DEBUG << "salt: " << salt;
+                            if (password_hash != "" && salt != "")
                             {
                                 uint8_t t[16];
                                 arc4random_buf((void *)t, 16); // it takes a void* so we cast it
@@ -160,8 +160,8 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
                                 *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level, \
                                               password_hash, salt, email_verification_code) values($1, $2, $3, $4, $5, 0, $6, $7, $8);"
-                                          << username << created_at << created_at << username_lower << email << std::get<0>(password_hash) << std::get<1>(password_hash) << token >>
-                                    [=](const Result &r) mutable {
+                                          << username << created_at << created_at << username_lower << email << password_hash << password_hash << token 
+                                          >> [=](const Result &r) mutable {
                                         auto smtp = SMTPMail();
                                         // TODO: move subject string to translation file
                                         auto msgid = smtp.sendEmail(
