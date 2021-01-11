@@ -11,12 +11,17 @@
 #include <trantor/utils/Logger.h>
 
 #include "login.h"
+#include "util/emailutils.h"
 #include "util/jwt_impl.h"
 #include "util/password.h"
+#include "util/string_util.h"
+#include "util/input_validation.h"
+
 
 using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
+
 
 void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     auto json = req->getJsonObject();
@@ -31,12 +36,17 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     }
 
 
-    const std::string username = json->get("username", "").asString();
-    const std::string password = json->get("password", "").asString();
-    const std::string email = json->get("email", "").asString();
+    std::string username = trim(json->get("username", "").asString());
+    std::string password = trim(json->get("password", "").asString());
+    std::string email = trim(json->get("email", "").asString());
 
     LOG_DEBUG << "username: " << username;
     LOG_DEBUG << "password: " << password;
+    LOG_DEBUG << "email: " << email;
+
+    EmailUtils::cleanEmail(email);
+
+    LOG_DEBUG << "cleaned email: " << email;
 
     if (username == "" && email == "") {
         LOG_DEBUG << "Both username and email cannot be empty";        
@@ -55,6 +65,13 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     if (password == "") {
         LOG_DEBUG << "Password is empty";        
         ret["error"] = "Password is empty";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    if (!isUsernameValid(username) || !isEmailValid(email) || !isPasswordValid(password)) {
+        LOG_DEBUG << "Invalid input";        
+        ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
         return;
     }
