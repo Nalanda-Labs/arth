@@ -51,7 +51,6 @@ public:
 			encoded_salt = stored_salt;
 		}
 
-		// it is a cpu blocking operation so we launch it using std::async
 		int ret = argon2i_hash_encoded(iterations, memory, threads, (const void*)password.c_str(), 
 							password.length(), salt, saltlen, hashlen, encoded_password, encoded_len);
 
