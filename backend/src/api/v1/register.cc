@@ -208,3 +208,46 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
         });
     }
 }
+
+void registration::verifyEmail(const HttpRequestPtr &req, Callback callback, const std::string &token)
+{
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        Json::Value ret;
+
+        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
+            transPtr->execSqlAsync(
+                "select * from users where email_verification_code=$1",
+                [=](const Result &r) mutable {
+                    if (r.size() == 1)
+                    {
+                        *transPtr << "update users set email_varified=true, email_verification_code='' where email_verification_code=$1" << token >>
+                            [=](const Result &r) mutable {
+                                ret["message"] = "Email verified. Login to continue.";
+                                callback(jsonResponse(std::move(ret)));
+                                return;
+                            } >>
+                            [=](const DrogonDbException &e) mutable {
+                                LOG_DEBUG << e.base().what();
+                                ret["error"] = (std::string)e.base().what();
+                                callback(jsonResponse(std::move(ret)));
+                                return;
+                            };
+                    }
+                    else
+                    {
+                        LOG_DEBUG << "Token not found.";
+                        ret["error"] = "Token not found.";
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    }
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(jsonResponse(std::move(ret)));
+                },
+                token);
+        });
+    }
+}
