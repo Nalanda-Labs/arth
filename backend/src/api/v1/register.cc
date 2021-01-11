@@ -19,6 +19,18 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
+const std::string registration::emailBody(const std::string &username, const std::string &base_url, const std::string &token)
+{
+    std::string link = base_url + "/verify-registration-email?token=" + token;
+
+    std::string body = "Dear " + username + ",\n\n" +
+                       "Thank you for registering at arth. Please click link " +
+                       link + " to verify your email.\n\n\
+                       Thanks,\n Team Arth ";
+
+    return std::move(body);
+}
+
 void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 {
     auto json = req->getJsonObject();
@@ -135,9 +147,20 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                             LOG_DEBUG << std::get<1>(password_hash);
                             if (std::get<0>(password_hash) != "" && std::get<1>(password_hash) != "")
                             {
+                                uint8_t t[16];
+                                arc4random_buf((void *)t, 16); // it takes a void* so we cast it
+                                std::ostringstream convert;
+                                for (int i = 0; i < 16; i++)
+                                {
+                                    convert << (int)t[i];
+                                }
+
+                                std::string ec = convert.str();
+                                std::string token = Base64::encode(ec);
+
                                 *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level, \
-                                              password_hash, salt) values($1, $2, $3, $4, $5, 0, $6, $7);"
-                                          << username << created_at << created_at << username_lower << email << std::get<0>(password_hash) << std::get<1>(password_hash) >>
+                                              password_hash, salt, email_verification_code) values($1, $2, $3, $4, $5, 0, $6, $7, $8);"
+                                          << username << created_at << created_at << username_lower << email << std::get<0>(password_hash) << std::get<1>(password_hash) << token >>
                                     [=](const Result &r) mutable {
                                         auto smtp = SMTPMail();
                                         // TODO: move subject string to translation file
@@ -147,17 +170,17 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                             customConfig.get("admin_email", "").asString(),
                                             email,
                                             "Registration at arth",
-                                            "Registration at arth",
+                                            emailBody(username, customConfig.get("base_url", "").asString(), token),
                                             customConfig.get("admin_username", "").asString(),
                                             customConfig.get("password", "").asString(), nullptr);
-                                            LOG_DEBUG << msgid;
-                                            ret["username"] = username_lower;
+                                        LOG_DEBUG << msgid;
+                                        ret["username"] = username_lower;
 
-                                            // we cannot check whether email has been sent or not
-                                            // so we will need to fix this in another way in app
-                                            ret["mesage"] = "An email has been sent to you. Please verify your email.";
-                                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                                            return;
+                                        // we cannot check whether email has been sent or not
+                                        // so we will need to fix this in another way in app
+                                        ret["mesage"] = "An email has been sent to you. Please verify your email.";
+                                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                                        return;
                                     } >>
                                     [=](const DrogonDbException &e) mutable {
                                         LOG_ERROR << "err:" << e.base().what();

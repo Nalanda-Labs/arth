@@ -27,5 +27,6 @@ class registration : public drogon::HttpController<registration>
     METHOD_LIST_END
 
     void doRegister(const HttpRequestPtr &req, Callback callback);
+    const std::string emailBody(const std::string &username, const std::string &base_url, const std::string &token);
 };
 } // namespace api::v1
