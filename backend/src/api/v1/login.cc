@@ -31,17 +31,31 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     }
 
 
-    std::string username = json->get("username", "").asString();
-    std::string password = json->get("password", "").asString();
+    const std::string username = json->get("username", "").asString();
+    const std::string password = json->get("password", "").asString();
+    const std::string email = json->get("email", "").asString();
 
     LOG_DEBUG << "username: " << username;
     LOG_DEBUG << "password: " << password;
 
-    if (username == "" || password == "") {
-        LOG_DEBUG << "Some fields are empty";        
-        ret["error"] = "None of the fields can be empty";
-        auto resp = jsonResponse(std::move(ret));
-        callback(resp);
+    if (username == "" && email == "") {
+        LOG_DEBUG << "Both username and email cannot be empty";        
+        ret["error"] = "Both username and email cannot be empty";        
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    if (username != "" && email != "") {
+        LOG_DEBUG << "Submit either username or email. Not both";
+        ret["error"] = "Submit either username or email. Not both";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    if (password == "") {
+        LOG_DEBUG << "Password is empty";        
+        ret["error"] = "Password is empty";
+        callback(jsonResponse(std::move(ret)));
         return;
     }
 
@@ -60,7 +74,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         auto clientPtr = drogon::app().getFastDbClient("default");
 
         clientPtr->execSqlAsync(
-            "select id, username, password_hash, salt from users where username = $1",
+            "select id, username, password_hash, salt from users where username = $1 or email = $2",
 
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
@@ -69,8 +83,8 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                     /// guess usernames for a given password
                     ret["error"] = "Wrong username or password";
                     callback(jsonResponse(std::move(ret)));
-                    return;          
-                }
+                    return;
+                }   
 
                 auto row = r[0];
                 auto password_hash = row["password_hash"].as<std::string>();
@@ -95,6 +109,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-            username);
+            username,
+            email);
     }
 }
