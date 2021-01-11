@@ -672,3 +672,10 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+
+                        ADditional Clauses
+
+You cannot resell this software or use it for commercial purpose like a SaaS.
+These restrictions apply to all files in this repository unless explicitly
+waived.
