@@ -48,6 +48,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     {
         ret["error"] = "None of the fields can be empty.";
         callback(jsonResponse(std::move(ret)));
+        return;
     }
 
     if (token.isMember("isTrusted"))
@@ -62,6 +63,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
         {
             ret["error"] = "Recaptcha improperly configured.";
             callback(jsonResponse(std::move(ret)));
+            return;
         }
 
         auto client = HttpClient::newHttpClient(
@@ -82,6 +84,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
             {
                 ret["error"] = "Recaptcha test failed.";
                 callback(jsonResponse(std::move(ret)));
+                return;
             }
         });
     }
@@ -89,6 +92,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     {
         ret["error"] = "Recaptcha token not found.";
         callback(jsonResponse(std::move(ret)));
+        return;
     }
 
     {
@@ -100,43 +104,43 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
             if (email == "") {
                 ret["error"] = "Invalid email.";
                 callback(jsonResponse(std::move(ret)));
-            } else {
-                transPtr->execSqlAsync(
-                    "select * from users where username=$1 or email=$2",
-                [ = ](const Result & r) mutable {
-                    if (r.size() > 0)
-                    {
-                        LOG_DEBUG << "User exists";
-                        ret["error"] = "User exists";
-                        callback(jsonResponse(std::move(ret)));
-                    }
-                    else
-                    {
-                        auto username_lower = username;
-
-                        transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
-                        LOG_DEBUG << username_lower;
-                        auto created_at = DateTime::getLocalDateTimeISOFormat();
-
-                        *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level) \
-                        values($1, $2, $3, $4, $5, 0);"
-                        << username << created_at << created_at << username_lower << email >> [ = ](const Result & r) mutable {
-                            ret["username"] = username_lower;
-                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                        } >> [ = ](const DrogonDbException & e) mutable {
-                            LOG_ERROR << "err:" << e.base().what();
-                            ret["error"] = (std::string)e.base().what();
-                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                        };
-                    }
-                },
-                [ = ](const DrogonDbException & e) mutable {
-                    LOG_DEBUG << e.base().what();
-                    ret["error"] = (std::string)e.base().what();
-                    callback(jsonResponse(std::move(ret)));
-                },
-                username, email);
+                return;
             }
+
+            transPtr->execSqlAsync(
+                "select * from users where username=$1 or email=$2",
+            [ = ](const Result & r) mutable {
+                if (r.size() > 0)
+                {
+                    LOG_DEBUG << "User exists";
+                    ret["error"] = "User exists";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                }
+
+                auto username_lower = username;
+
+                transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                LOG_DEBUG << username_lower;
+
+                *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level) \
+                values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, $3, 0);" 
+                << username << username_lower << email 
+                >> [ = ](const Result & r) mutable {
+                    ret["username"] = username_lower;
+                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                } >> [ = ](const DrogonDbException & e) mutable {
+                    LOG_ERROR << "err:" << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                };
+            },
+            [ = ](const DrogonDbException & e) mutable {
+                LOG_DEBUG << e.base().what();
+                ret["error"] = (std::string)e.base().what();
+                callback(jsonResponse(std::move(ret)));
+            },
+            username, email);
         });
     }
 }
