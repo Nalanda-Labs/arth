@@ -25,8 +25,8 @@ const std::string registration::emailBody(const std::string &username, const std
 
     std::string body = "Dear " + username + ",\n\n" +
                        "Thank you for registering at arth. Please click link " +
-                       link + " to verify your email.\n\n\
-                       Thanks,\n Team Arth ";
+                       link + " to verify your email.\n\n" +
+                       "Thanks,\n Team Arth ";
 
     return std::move(body);
 }
@@ -160,7 +160,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
                                 *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level, \
                                               password_hash, salt, email_verification_code) values($1, $2, $3, $4, $5, 0, $6, $7, $8);"
-                                          << username << created_at << created_at << username_lower << email << password_hash << password_hash << token 
+                                          << username << created_at << created_at << username_lower << email << password_hash << salt << token 
                                           >> [=](const Result &r) mutable {
                                         auto smtp = SMTPMail();
                                         // TODO: move subject string to translation file

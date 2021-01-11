@@ -10,6 +10,7 @@
 	import { goto, stores } from '@sapper/app';
 	import ListErrors from '../_components/ListErrors.svelte';
 	import { post } from 'utils.js';
+	import jwt_decode from "jwt-decode";
 
 	const { session } = stores();
 
@@ -19,13 +20,14 @@
 	let response = {};
 
 	async function submit(event) {
-		const response = await post(`/api/v1/login`, { email, password });
+		const response = await post(`auth/login`, { email, password });
 
-		// TODO handle network errors
-		errors = response.errors;
-
-		if (response.user) {
-			$session.user = response.user;
+		if (response.error) {
+			alert(response.error);
+		}else if (response.jwt) {
+			const decoded = jwt_decode(response.jwt);
+			localStorage.setItem("jwt", response.jwt);
+			$session.user = decoded["username"];
 			goto('/');
 		}
 	}

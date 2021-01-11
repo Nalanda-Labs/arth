@@ -1,12 +1,14 @@
 import * as api from 'api.js';
+import jwt_decode from "jwt-decode";
 
 export function post(req, res) {
-	const user = req.body;
 
-	api.post('users/login', { user }).then(response => {
-		if (response.user) req.session.user = response.user;
-		res.setHeader('Content-Type', 'application/json');
+    api.post('login', req.body).then(response => {
+        let decoded = jwt_decode(response.jwt);
 
-		res.end(JSON.stringify(response));
-	});
+        if (decoded.username) req.session.user = decoded.username;
+        res.setHeader('Content-Type', 'application/json');
+
+        res.end(JSON.stringify(response));
+    });
 }

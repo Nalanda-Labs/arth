@@ -1,7 +1,14 @@
 <script>
-	import { stores } from "@sapper/app";
+	import { goto, stores } from "@sapper/app";
+	import { post } from "utils.js";
 
 	const { page, session } = stores();
+
+	async function logout() {
+		await post(`auth/logout`);
+		$session.user = null;
+		goto("/");
+	}
 </script>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -22,14 +29,6 @@
 			id="navbarSupportedContent"
 			style="float:right">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-				<li class="nav-item">
-					<a
-						rel="prefetch"
-						class="nav-link"
-						class:active={$page.path === '/'}
-						href="/">Home</a>
-				</li>
-
 				{#if $session.user}
 					<li class="nav-item">
 						<a
@@ -54,10 +53,19 @@
 					<li class="nav-item">
 						<a
 							rel="prefetch"
-							href="/profile/@{$session.user.username}"
+							href="/profile/@{$session.user}"
 							class="nav-link">
 							<!-- <img src={$user.image} class="user-pic" alt={$user.username}> -->
-							{$session.user.username}
+							{$session.user}
+						</a>
+					</li>
+					<li class="nav-item">
+						<a
+							rel="prefetch"
+							href="logout"
+							class="nav-link"
+							on:click={logout}>
+							Sign Out
 						</a>
 					</li>
 				{:else}
@@ -88,9 +96,7 @@
 					type="search"
 					placeholder="Search"
 					aria-label="Search" />
-				<button
-					class="btn btn-primary"
-					type="submit">Search</button>
+				<button class="btn btn-primary" type="submit">Search</button>
 			</form>
 		</div>
 	</div>

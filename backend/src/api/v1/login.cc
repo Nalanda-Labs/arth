@@ -37,7 +37,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
 
     std::string username = trim(json->get("username", "").asString());
-    std::string password = trim(json->get("password", "").asString());
+    std::string password = json->get("password", "").asString();
     std::string email = trim(json->get("email", "").asString());
 
     LOG_DEBUG << "username: " << username;
@@ -69,7 +69,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         return;
     }
 
-    if (!isUsernameValid(username) || !isEmailValid(email) || !isPasswordValid(password)) {
+    if (!(isUsernameValid(username) || isEmailValid(email)) || !isPasswordValid(password)) {
         LOG_DEBUG << "Invalid input";        
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
@@ -108,7 +108,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 auto salt = row["salt"].as<std::string>();
 
                 if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
-                    auto user_id = row["id"].as<int>();
+                    auto user_id = row["id"].as<unsigned long>();
                     auto username = row["username"].as<std::string>();
 
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
