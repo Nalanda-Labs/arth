@@ -33,6 +33,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         ret["error"] = "None of the fields can be empty";
         auto resp = jsonResponse(std::move(ret));
         callback(resp);
+        return;
     }
 
     {
@@ -44,6 +45,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
             LOG_DEBUG << "JWT not configured properly";
             ret["error"] = "JWT not configured properly";
             callback(jsonResponse(std::move(ret)));
+            return;
         }
 
         auto clientPtr = drogon::app().getFastDbClient("default");
@@ -70,13 +72,13 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
                     callback(jsonResponse(std::move(ret)));
+                    return;
                 }
 
                 /// Prevents a class or error where attacker is trying to
                 /// guess usernames for a given password
                 ret["error"] = "Wrong username or password";
-                callback(jsonResponse(std::move(ret)));                    
-                return;                        
+                callback(jsonResponse(std::move(ret)));
             },
             [=](const DrogonDbException &e) mutable {
                 LOG_DEBUG << e.base().what();
