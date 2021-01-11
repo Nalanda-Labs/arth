@@ -140,8 +140,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                           << username << created_at << created_at << username_lower << email << std::get<0>(password_hash) << std::get<1>(password_hash) >>
                                     [=](const Result &r) mutable {
                                         auto smtp = SMTPMail();
-                                        // TODO: validate data from custom config
-                                        // move subject string to translation file
+                                        // TODO: move subject string to translation file
                                         auto msgid = smtp.sendEmail(
                                             customConfig.get("smtp_server", "").asString(),
                                             customConfig.get("smtp_port", 25).asInt(),
@@ -151,18 +150,14 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                             "Registration at arth",
                                             customConfig.get("admin_username", "").asString(),
                                             customConfig.get("password", "").asString(), nullptr);
-                                        if (msgid == "")
-                                        {
-                                            //TODO: rollback transaction
-                                        }
-                                        else
-                                        {
                                             LOG_DEBUG << msgid;
                                             ret["username"] = username_lower;
+
+                                            // we cannot check whether email has been sent or not
+                                            // so we will need to fix this in another way in app
                                             ret["mesage"] = "An email has been sent to you. Please verify your email.";
                                             callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                                             return;
-                                        }
                                     } >>
                                     [=](const DrogonDbException &e) mutable {
                                         LOG_ERROR << "err:" << e.base().what();
