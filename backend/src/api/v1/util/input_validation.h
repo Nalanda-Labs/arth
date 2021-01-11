@@ -9,12 +9,12 @@
 
 
 inline bool isUsernameValid(const std::string &username) {    
-    return !username.empty() && contains(username, " ") && username.length() < 60;
+    return !username.empty() && !contains(username, " ") && username.length() < 60;
 }
 
 
 inline bool isEmailValid(const std::string &email) {    
-    return !email.empty() && contains(email, " ") && email.length() < 256;
+    return !email.empty() && !contains(email, " ") && email.length() < 256;
 }
 
 
