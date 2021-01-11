@@ -8,7 +8,8 @@
 using TransactionPtr = const std::shared_ptr<drogon::orm::Transaction> &;
 using Callback = std::function<void(const drogon::HttpResponsePtr &)> &&;
 
-inline drogon::HttpResponsePtr jsonResponse(Json::Value &&data) {
+inline drogon::HttpResponsePtr jsonResponse(Json::Value &&data)
+{
     return drogon::HttpResponse::newHttpJsonResponse(data);
 }
 

@@ -22,6 +22,14 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     auto json = req->getJsonObject();
     Json::Value ret;
 
+    if(json == nullptr) {
+        ret["error"] = "Malformed request.";
+        auto resp = jsonResponse(std::move(ret));
+        callback(resp);
+
+        return;
+    }
+
     auto name = json->get("name", "").asString();
     auto email = json->get("email", "").asString();
     auto username = json->get("username", "").asString();
@@ -93,7 +101,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
             assert(transPtr);
             EmailUtils::cleanEmail(email);
 
-            if(email == "") {
+            if (email == "") {
                 ret["error"] = "Invalid email.";
                 callback(jsonResponse(std::move(ret)));
                 return;
