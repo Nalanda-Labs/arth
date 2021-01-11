@@ -94,7 +94,7 @@ void registration::doRegister(const HttpRequestPtr &req,
             assert(transPtr);
             EmailUtils::cleanEmail(email);
 
-            if(email == "") {
+            if (email == "") {
                 ret["error"] = "Invalid email.";
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             } else {
@@ -115,7 +115,7 @@ void registration::doRegister(const HttpRequestPtr &req,
                         LOG_DEBUG << username_lower;
 
                         *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level) \
-                        values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, $3, 0);" 
+                        values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, $3, 0);"
                         << username << username_lower << email >> [ = ](const Result & r) mutable {
                             ret["username"] = username_lower;
                             callback(HttpResponse::newHttpJsonResponse(std::move(ret)));

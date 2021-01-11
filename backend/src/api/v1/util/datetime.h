@@ -21,7 +21,7 @@ public:
 		return std::move(std::make_tuple(local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday));
 	}
 
-	inline std::string getLocalYMDISOFormat() {
+	inline std::string getLocalDateISOFormat() {
 		/**
 		 *	This function returns year, month, day in ISO format
 		 */
@@ -29,7 +29,20 @@ public:
 		time_t tt = std::chrono::system_clock::to_time_t(now);
 		tm local_tm = *localtime(&tt);
 
-		return std::move(std::to_string(local_tm.tm_year + 190) + '-' + std::to_string(local_tm.tm_mon + 1) + '-' + std::to_string(local_tm.tm_mday));
+		return std::move(std::to_string(local_tm.tm_year + 190) + "-" + std::to_string(local_tm.tm_mon + 1) + "-" + std::to_string(local_tm.tm_mday));
+	}
+
+	inline std::string getLocalDateTimeISOFormat() {
+		/**
+		 *	This function returns date and time in ISO format
+		 */
+		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+		time_t tt = std::chrono::system_clock::to_time_t(now);
+		tm local_tm = *localtime(&tt);
+
+		return std::move(std::to_string(local_tm.tm_year + 190) + "-" + std::to_string(local_tm.tm_mon + 1) + "-"
+			+ std::to_string(local_tm.tm_mday) + "T" + std::to_string(local_tm.tm_hour) + ":" \
+			std::to_string(local_tm.tm_min) + ":" + std::to_string(local_tm.tm_sec));
 	}
 };
 
