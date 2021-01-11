@@ -20,7 +20,8 @@ message(STATUS "${CMAKE_MODULE_PATH}")
 set(arth_sources
     src/main.cc
     src/api/v1/register.cc
-    src/api/v1/login.cc)
+    src/api/v1/login.cc
+    src/api/v1/plugins/email.cc)
 
 add_executable(${PROJECT_NAME} ${arth_sources})
 target_include_directories(arth PRIVATE "/usr/include/jsoncpp")
