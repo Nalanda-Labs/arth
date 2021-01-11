@@ -22,6 +22,15 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     auto json = req->getJsonObject();
     Json::Value ret;
 
+    if(json == nullptr) {
+        ret["error"] = "Malformed request.";
+        auto resp = jsonResponse(std::move(ret));
+        callback(resp);
+
+        return;
+    }
+
+
     std::string username = json->get("username", "").asString();
     std::string password = json->get("password", "").asString();
 
@@ -49,7 +58,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         auto clientPtr = drogon::app().getFastDbClient("default");
 
         clientPtr->execSqlAsync(
-            "select id, username, password_hash from users where username = $1",
+            "select id, username, password_hash, salt from users where username = $1",
 
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
@@ -63,8 +72,9 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
                 auto row = r[0];
                 auto password_hash = row["password_hash"].as<std::string>();
+                auto salt = row["salt"].as<std::string>();
 
-                if (verifyPassword(password, password_hash)) {
+                if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
                     auto user_id = row["id"].as<int>();
                     auto username = row["username"].as<std::string>();
 

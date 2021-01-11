@@ -22,6 +22,14 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     auto json = req->getJsonObject();
     Json::Value ret;
 
+    if(json == nullptr) {
+        ret["error"] = "Malformed request.";
+        auto resp = jsonResponse(std::move(ret));
+        callback(resp);
+
+        return;
+    }
+
     auto name = json->get("name", "").asString();
     auto email = json->get("email", "").asString();
     auto username = json->get("username", "").asString();
@@ -108,10 +116,11 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
                         transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
                         LOG_DEBUG << username_lower;
+                        auto created_at = DateTime::getLocalDateTimeISOFormat();
 
                         *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level) \
-                        values($1, '2021-01-01T00:00:00', '2020-01-01T00:00:00', $2, $3, 0);"
-                        << username << username_lower << email >> [ = ](const Result & r) mutable {
+                        values($1, $2, $3, $4, $5, 0);"
+                        << username << created_at << created_at << username_lower << email >> [ = ](const Result & r) mutable {
                             ret["username"] = username_lower;
                             callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                         } >> [ = ](const DrogonDbException & e) mutable {

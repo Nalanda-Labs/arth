@@ -32,7 +32,11 @@ find_package(ZLIB REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 find_library( DL_LIBRARY libdl.so  REQUIRD)
+find_library( DL_LIBRARY libargon2.a  REQUIERD)
+find_library( DL_LIBRARY libbsd.so  REQUIERD)
 find_package(Drogon REQUIRED)
 find_library(argon2 REQUEIRD)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec pq sqlite3 ssl crypto)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} 
+	Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec
+	pq sqlite3 ssl crypto argon2 bsd)
