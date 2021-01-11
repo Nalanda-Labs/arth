@@ -5,6 +5,7 @@
 #include <argon2.h>
 #include <bsd/stdlib.h> // for arc4random_buf
 #include <tuple>
+#include <sstream>
 
 #include "base64.h"
 
@@ -51,10 +52,10 @@ public:
 		}
 
 		// it is a cpu blocking operation so we launch it using std::async
-		auto ret = std::async(argon2i_hash_encoded, iterations, memory, threads, (const void*)password.c_str(), 
+		int ret = argon2i_hash_encoded(iterations, memory, threads, (const void*)password.c_str(), 
 							password.length(), salt, saltlen, hashlen, encoded_password, encoded_len);
 
-		if(ret.get() == (int)ARGON2_OK)
+		if(ret == (int)ARGON2_OK)
 			return std::make_tuple(std::move(std::string(encoded_password)), std::move(encoded_salt));
 		else
 			return std::make_tuple("", "");
@@ -62,12 +63,12 @@ public:
 
 
 	static inline bool verifyPassword(const std::string &password, const std::string &hash, const std::string &stored_salt) {
-		auto ret = hashPassword(password, stored_salt);
-		if (hash == std::get<0>(ret))
+		auto [password_hash, _] = hashPassword(password, stored_salt);
+
+		if (hash == password_hash)
 			return true;
 		
 		return false;
-
 	}
 };
 
