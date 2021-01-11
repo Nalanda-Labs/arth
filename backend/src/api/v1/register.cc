@@ -50,6 +50,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     {
         ret["error"] = "None of the fields can be empty.";
         callback(jsonResponse(std::move(ret)));
+        return;
     }
 
     if (token.isMember("isTrusted"))
@@ -64,6 +65,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
         {
             ret["error"] = "Recaptcha improperly configured.";
             callback(jsonResponse(std::move(ret)));
+            return;
         }
 
         auto client = HttpClient::newHttpClient(
@@ -76,21 +78,23 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
         client->sendRequest(
             req,
-            [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr &response) mutable {
-                LOG_DEBUG << "received response!";
-                // auto headers=response.
-                std::shared_ptr<Json::Value> res = response->getJsonObject();
-                if (res->isMember("success") && not res->get("success", false))
-                {
-                    ret["error"] = "Recaptcha test failed.";
-                    callback(jsonResponse(std::move(ret)));
-                }
-            });
+        [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr & response) mutable {
+            LOG_DEBUG << "received response!";
+            // auto headers=response.
+            std::shared_ptr<Json::Value> res = response->getJsonObject();
+            if (res->isMember("success") && not res->get("success", false))
+            {
+                ret["error"] = "Recaptcha test failed.";
+                callback(jsonResponse(std::move(ret)));
+                return;
+            }
+        });
     }
     else
     {
         ret["error"] = "Recaptcha token not found.";
         callback(jsonResponse(std::move(ret)));
+        return;
     }
 
     {
@@ -114,6 +118,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                             LOG_DEBUG << "User exists";
                             ret["error"] = "User exists";
                             callback(jsonResponse(std::move(ret)));
+                            return;
                         }
                         else
                         {
@@ -134,6 +139,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                     [=](const Result &r) mutable {
                                         ret["username"] = username_lower;
                                         callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                                        return;
                                     } >>
                                     [=](const DrogonDbException &e) mutable {
                                         LOG_ERROR << "err:" << e.base().what();
@@ -147,6 +153,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                 LOG_ERROR << "Error hashing password";
                                 ret["error"] = "An error occurred. Please contact support.";
                                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                                return;
                             }
                         }
                     },
