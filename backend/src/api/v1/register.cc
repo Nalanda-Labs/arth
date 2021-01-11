@@ -17,8 +17,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void registration::doRegister(const HttpRequestPtr &req,
-                              std::function<void(const HttpResponsePtr &)> &&callback)
+void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 {
     auto json = req->getJsonObject();
     Json::Value ret;
@@ -40,8 +39,7 @@ void registration::doRegister(const HttpRequestPtr &req,
     if (name == "" || username == "" || email == "" || password == "")
     {
         ret["error"] = "None of the fields can be empty.";
-        auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
-        callback(resp);
+        callback(jsonResponse(std::move(ret)));
     }
 
     if (token.isMember("isTrusted"))
@@ -55,8 +53,7 @@ void registration::doRegister(const HttpRequestPtr &req,
         else
         {
             ret["error"] = "Recaptcha improperly configured.";
-            auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
-            callback(resp);
+            callback(jsonResponse(std::move(ret)));
         }
 
         auto client = HttpClient::newHttpClient(
@@ -76,16 +73,14 @@ void registration::doRegister(const HttpRequestPtr &req,
             if (res->isMember("success") && not res->get("success", false))
             {
                 ret["error"] = "Recaptcha test failed.";
-                auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
-                callback(resp);
+                callback(jsonResponse(std::move(ret)));
             }
         });
     }
     else
     {
         ret["error"] = "Recaptcha token not found.";
-        auto resp = HttpResponse::newHttpJsonResponse(std::move(ret));
-        callback(resp);
+        callback(jsonResponse(std::move(ret)));
     }
 
     {
@@ -96,7 +91,7 @@ void registration::doRegister(const HttpRequestPtr &req,
 
             if(email == "") {
                 ret["error"] = "Invalid email.";
-                callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                callback(jsonResponse(std::move(ret)));
             } else {
                 transPtr->execSqlAsync(
                     "select * from users where username=$1 or email=$2",
@@ -105,7 +100,7 @@ void registration::doRegister(const HttpRequestPtr &req,
                     {
                         LOG_DEBUG << "User exists";
                         ret["error"] = "User exists";
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        callback(jsonResponse(std::move(ret)));
                     }
                     else
                     {
@@ -129,7 +124,7 @@ void registration::doRegister(const HttpRequestPtr &req,
                 [ = ](const DrogonDbException & e) mutable {
                     LOG_DEBUG << e.base().what();
                     ret["error"] = (std::string)e.base().what();
-                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    callback(jsonResponse(std::move(ret)));
                 },
                 username, email);
             }

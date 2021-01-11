@@ -8,11 +8,11 @@
 #pragma once
 
 #include <drogon/HttpController.h>
+#include "util/drogon.h"
 
 using namespace drogon;
 
-namespace api {
-namespace v1 {
+namespace api::v1 {
 /**
  * @brief this class is created by the drogon_ctl command (drogon_ctl create
  * controller -r arth::login). this class is a restful API controller.
@@ -24,8 +24,6 @@ public:
     ADD_METHOD_TO(Login ::doLogin, "/api/v1/login", Post, Options);
     METHOD_LIST_END
 
-    void doLogin(const HttpRequestPtr &req,
-                std::function<void(const HttpResponsePtr &)> &&callback);
+    void doLogin(const HttpRequestPtr &req, Callback callback);
 };
-} // namespace v1
-} // namespace api
+} // namespace api::v1

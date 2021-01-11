@@ -18,14 +18,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-using TransactionPtr = const std::shared_ptr<Transaction> &;
-using Callback = std::function<void(const HttpResponsePtr &)> &&;
-
-HttpResponsePtr jsonResponse(Json::Value &&data) {
-    return HttpResponse::newHttpJsonResponse(data);
-}
-
-void Login::doLogin(const HttpRequestPtr &req, Callback &&callback) {
+void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
     auto json = req->getJsonObject();
     Json::Value ret;
 

@@ -8,12 +8,11 @@
 #pragma once
 
 #include <drogon/HttpController.h>
+#include "util/drogon.h"
 
 using namespace drogon;
 
-namespace api
-{
-namespace v1
+namespace api::v1 
 {
 /**
  * @brief this class is created by the drogon_ctl command (drogon_ctl create controller -r arth::login).
@@ -27,8 +26,6 @@ class registration : public drogon::HttpController<registration>
     ADD_METHOD_TO(registration ::doRegister, "/api/v1/register", Post, Options);
     METHOD_LIST_END
 
-    void doRegister(const HttpRequestPtr &req,
-        std::function<void(const HttpResponsePtr &)> &&callback);
+    void doRegister(const HttpRequestPtr &req, Callback callback);
 };
-} // namespace v1
-} // namespace api
+} // namespace api::v1
