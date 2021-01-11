@@ -212,6 +212,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 void registration::verifyEmail(const HttpRequestPtr &req, Callback callback, const std::string &token)
 {
     {
+        LOG_DEBUG << token;
         auto clientPtr = drogon::app().getFastDbClient("default");
         Json::Value ret;
 
@@ -221,7 +222,7 @@ void registration::verifyEmail(const HttpRequestPtr &req, Callback callback, con
                 [=](const Result &r) mutable {
                     if (r.size() == 1)
                     {
-                        *transPtr << "update users set email_varified=true, email_verification_code='' where email_verification_code=$1" << token >>
+                        *transPtr << "update users set email_verified=true, email_verification_code='' where email_verification_code=$1" << token >>
                             [=](const Result &r) mutable {
                                 ret["message"] = "Email verified. Login to continue.";
                                 callback(jsonResponse(std::move(ret)));
