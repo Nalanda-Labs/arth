@@ -2,6 +2,7 @@
 #define _EMAILUTILS_H_
 
 #include <string>
+#include <algorithm>
 
 class EmailUtils {
 public:
@@ -12,10 +13,14 @@ public:
 	 * If email is invalid it becomes an empty string.
 	 */
 	static void inline cleanEmail(std::string& email) {
+		if (email.empty()) {
+			return;
+		}
+
 		std::string delimiter = "@";
 		size_t pos = 0;
 		std::string username;
-		std::string domain;
+		
 		int i = 0;
 
 		while ((pos = email.find(delimiter)) != std::string::npos) {
@@ -30,7 +35,7 @@ public:
 		}
 
 		// email contains domain part now
-		domain = std::move(email);
+		std::string domain = std::move(email);
 		// now username and domain are separate we remove everything after +
 		delimiter = '+';
 

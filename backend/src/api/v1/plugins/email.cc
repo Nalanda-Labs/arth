@@ -356,8 +356,7 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_WARN << "EMail pointer gone";
-                    return "";
+                    LOG_WARN << "EMail pointer gone";                    
                 }
                 if (connPtr->connected())
                 {
@@ -376,8 +375,7 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_ERROR << "EMail pointer gone";
-                    return "";
+                    LOG_ERROR << "EMail pointer gone";                    
                 }
                 // can't connect to server
                 LOG_ERROR << "Bad Server address";
@@ -391,8 +389,7 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_ERROR << "EMail pointer gone";
-                    return "";
+                    LOG_ERROR << "EMail pointer gone";                    
                 }
                 LOG_DEBUG << "Calling messageHandle";
                 //email->m_socket->disconnect();
