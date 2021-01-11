@@ -11,8 +11,7 @@
 	import ListErrors from "../_components/ListErrors.svelte";
 	import { post } from "utils.js";
 	import { recaptchaSiteKey } from "../../consts.js";
-	import { onMount } from 'svelte';
-
+	import { onMount } from "svelte";
 
 	const { session } = stores();
 
@@ -21,7 +20,7 @@
 	let password = "";
 	let errors = null;
 	let name = "";
-	let token= {};
+	let token = {};
 	let response = {};
 
 	async function onSubmit(token) {
@@ -40,12 +39,7 @@
 			alert(errors);
 			return;
 		}
-
-		if (response.username) {
-			$session.user = response.username;
-			goto("/");
-		}
-	};
+	}
 
 	onMount(() => {
 		const script = document.createElement("script");
@@ -142,7 +136,7 @@
 							data-callback="onSubmit"
 							data-action="submit">
 							Submit
-							</button>
+						</button>
 					</div>
 				</form>
 			</div>

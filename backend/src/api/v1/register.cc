@@ -12,6 +12,7 @@
 #include "util/emailutils.h"
 #include "util/datetime.h"
 #include "util/password.h"
+#include "plugins/email.h"
 #include "register.h"
 
 using namespace drogon;
@@ -53,9 +54,10 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
         return;
     }
 
+    auto customConfig = app().getCustomConfig();
+
     if (token.isMember("isTrusted"))
     {
-        auto customConfig = app().getCustomConfig();
         std::string secret = "";
         if (customConfig.isMember("recaptcha_secret") && customConfig.get("recaptcha_secret", "") != "")
         {
@@ -78,17 +80,17 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
         client->sendRequest(
             req,
-        [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr & response) mutable {
-            LOG_DEBUG << "received response!";
-            // auto headers=response.
-            std::shared_ptr<Json::Value> res = response->getJsonObject();
-            if (res->isMember("success") && not res->get("success", false))
-            {
-                ret["error"] = "Recaptcha test failed.";
-                callback(jsonResponse(std::move(ret)));
-                return;
-            }
-        });
+            [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr &response) mutable {
+                LOG_DEBUG << "received response!";
+                // auto headers=response.
+                std::shared_ptr<Json::Value> res = response->getJsonObject();
+                if (res->isMember("success") && not res->get("success", false))
+                {
+                    ret["error"] = "Recaptcha test failed.";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                }
+            });
     }
     else
     {
@@ -137,9 +139,30 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                               password_hash, salt) values($1, $2, $3, $4, $5, 0, $6, $7);"
                                           << username << created_at << created_at << username_lower << email << std::get<0>(password_hash) << std::get<1>(password_hash) >>
                                     [=](const Result &r) mutable {
-                                        ret["username"] = username_lower;
-                                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                                        return;
+                                        auto smtp = SMTPMail();
+                                        // TODO: validate data from custom config
+                                        // move subject string to translation file
+                                        auto msgid = smtp.sendEmail(
+                                            customConfig.get("smtp_server", "").asString(),
+                                            customConfig.get("smtp_port", 25).asInt(),
+                                            customConfig.get("admin_email", "").asString(),
+                                            email,
+                                            "Registration at arth",
+                                            "Registration at arth",
+                                            customConfig.get("admin_username", "").asString(),
+                                            customConfig.get("password", "").asString(), nullptr);
+                                        if (msgid == "")
+                                        {
+                                            //TODO: rollback transaction
+                                        }
+                                        else
+                                        {
+                                            LOG_DEBUG << msgid;
+                                            ret["username"] = username_lower;
+                                            ret["mesage"] = "An email has been sent to you. Please verify your email.";
+                                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                                            return;
+                                        }
                                     } >>
                                     [=](const DrogonDbException &e) mutable {
                                         LOG_ERROR << "err:" << e.base().what();
