@@ -4,6 +4,7 @@
 #include <string>
 #include <argon2.h>
 #include <bsd/stdlib.h> // for arc4random_buf
+#include <tuple>
 
 class PasswordUtils {
 public:
