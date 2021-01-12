@@ -17,24 +17,23 @@
 #include "util/string_util.h"
 #include "util/input_validation.h"
 
-
 using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-
-void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
+void Login::doLogin(const HttpRequestPtr &req, Callback callback)
+{
     auto json = req->getJsonObject();
     Json::Value ret;
 
-    if(json == nullptr) {
+    if (json == nullptr)
+    {
         ret["error"] = "Malformed request.";
         auto resp = jsonResponse(std::move(ret));
         callback(resp);
 
         return;
     }
-
 
     std::string username = trim(json->get("username", "").asString());
     std::string password = json->get("password", "").asString();
@@ -48,29 +47,37 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
     LOG_DEBUG << "cleaned email: " << email;
 
-    if (username == "" && email == "") {
-        LOG_DEBUG << "Both username and email cannot be empty";        
-        ret["error"] = "Both username and email cannot be empty";        
+    if (username == "" && email == "")
+    {
+        LOG_DEBUG << "Both username and email cannot be empty";
+        ret["error"] = "Both username and email cannot be empty";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (username != "" && email != "") {
+    if (username != "" && email != "")
+    {
         LOG_DEBUG << "Submit either username or email. Not both";
         ret["error"] = "Submit either username or email. Not both";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (password == "") {
-        LOG_DEBUG << "Password is empty";        
+    if (password == "")
+    {
+        LOG_DEBUG << "Password is empty";
         ret["error"] = "Password is empty";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (!(isUsernameValid(username) || isEmailValid(email)) || !isPasswordValid(password)) {
-        LOG_DEBUG << "Invalid input";        
+    LOG_DEBUG << isUsernameValid(username);
+    LOG_DEBUG << isUsernameValid(email);
+    LOG_DEBUG << isPasswordValid(password);
+
+    if (!(isUsernameValid(username) || isEmailValid(email)) || !isPasswordValid(password))
+    {
+        LOG_DEBUG << "Invalid input";
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
         return;
@@ -81,7 +88,8 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
 
         std::string jwtSecret = customConfig.get("jwt_secret", "").asString();
 
-        if (jwtSecret == "") {
+        if (jwtSecret == "")
+        {
             LOG_DEBUG << "JWT not configured properly";
             ret["error"] = "JWT not configured properly";
             callback(jsonResponse(std::move(ret)));
@@ -94,20 +102,22 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
             "select id, username, password_hash, salt from users where username = $1 or email = $2",
 
             [=](const Result &r) mutable {
-                if (r.size() != 1) {
+                if (r.size() != 1)
+                {
                     LOG_DEBUG << "User does not exist";
-                    /// Prevents a class or error where attacker is trying to 
+                    /// Prevents a class or error where attacker is trying to
                     /// guess usernames for a given password
                     ret["error"] = "Wrong username or password";
                     callback(jsonResponse(std::move(ret)));
                     return;
-                }   
+                }
 
                 auto row = r[0];
                 auto password_hash = row["password_hash"].as<std::string>();
                 auto salt = row["salt"].as<std::string>();
 
-                if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
+                if (PasswordUtils::verifyPassword(password, password_hash, salt))
+                {
                     auto user_id = row["id"].as<unsigned long>();
                     auto username = row["username"].as<std::string>();
 

@@ -178,7 +178,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
 
                                         // we cannot check whether email has been sent or not
                                         // so we will need to fix this in another way in app
-                                        ret["mesage"] = "An email has been sent to you. Please verify your email.";
+                                        ret["message"] = "An email has been sent to you. Please verify your email.";
                                         callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                                         return;
                                     } >>

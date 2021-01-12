@@ -6,6 +6,7 @@ import svelte from 'rollup-plugin-svelte';
 import { terser } from 'rollup-plugin-terser';
 import config from 'sapper/config/rollup.js';
 import pkg from './package.json';
+import json from '@rollup/plugin-json';
 
 const mode = process.env.NODE_ENV;
 const dev = mode === 'development';
@@ -21,6 +22,7 @@ export default {
 		input: config.client.input(),
 		output: config.client.output(),
 		plugins: [
+			json(),
 			replace({
 				'process.browser': true,
 				'process.env.NODE_ENV': JSON.stringify(mode)
@@ -49,7 +51,8 @@ export default {
 					'@babel/plugin-syntax-dynamic-import',
 					['@babel/plugin-transform-runtime', {
 						useESModules: true
-					}]
+					},
+					]
 				]
 			}),
 
@@ -66,6 +69,7 @@ export default {
 		input: config.server.input(),
 		output: config.server.output(),
 		plugins: [
+			json(),
 			replace({
 				'process.browser': false,
 				'process.env.NODE_ENV': JSON.stringify(mode)
@@ -98,7 +102,8 @@ export default {
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
 			commonjs(),
-			!dev && terser()
+			!dev && terser(),
+			json()
 		],
 
 		preserveEntrySignatures: false,

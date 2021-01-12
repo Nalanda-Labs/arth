@@ -2,10 +2,8 @@
 	export let response;
 </script>
 
-{#if response.error}
+{#if response && response.error}
 	<ul class="error-messages">
-		{#each Object.keys(response) as key}
-			<li>{key} {response[key]}</li>
-		{/each}
+			<li>{response.error}</li>
 	</ul>
 {/if}
