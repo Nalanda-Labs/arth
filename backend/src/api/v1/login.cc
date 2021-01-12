@@ -91,7 +91,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
         auto clientPtr = drogon::app().getFastDbClient("default");
 
         clientPtr->execSqlAsync(
-            "select id, username, password_hash, salt from users where username = $1 or email = $2",
+            "select id, username, password_hash, salt, email_verified from users where username = $1 or email = $2",
 
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
@@ -104,8 +104,17 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback) {
                 }   
 
                 auto row = r[0];
+
+                auto email_verified = row["email_verified"].as<bool>();
+                if (!email_verified) {
+                    ret["error"] = "Please verify your email before logging in";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                }
+
                 auto password_hash = row["password_hash"].as<std::string>();
                 auto salt = row["salt"].as<std::string>();
+
 
                 if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
                     auto user_id = row["id"].as<unsigned long>();
