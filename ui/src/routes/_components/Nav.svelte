@@ -33,10 +33,10 @@
 					<li class="nav-item">
 						<a
 							rel="prefetch"
-							href="/editor"
+							href="/topic"
 							class="nav-link"
-							class:active={$page.path === '/editor'}>
-							<i class="ion-compose" />&nbsp;New Post
+							class:active={$page.path === '/topic'}>
+							<i class="ion-compose" />&nbsp;Create Topic
 						</a>
 					</li>
 

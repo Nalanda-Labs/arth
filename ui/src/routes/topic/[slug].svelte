@@ -7,8 +7,8 @@
 		}
 
 		const { slug } = params;
-		const { article } = await api.get(`articles/${slug}`, null);
-		return { article, slug };
+		const { topic } = await api.get(`topic/${slug}`, null);
+		return { topic, slug };
 	}
 </script>
 
@@ -16,7 +16,7 @@
 	import Editor from './_Editor.svelte';
 
 	export let slug;
-	export let article;
+	export let topic;
 </script>
 
-<Editor {article} {slug}/>
+<Editor {topic} {slug}/>

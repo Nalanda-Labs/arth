@@ -38,6 +38,8 @@
 		if (errors) {
 			alert(errors);
 			return;
+		} else {
+			alert(response.message);
 		}
 	}
 
@@ -81,7 +83,7 @@
 				<form on:submit|preventDefault={onSubmit} id="r-form">
 					<fieldset class="form-group">
 						<label
-							for="useename"
+							for="username"
 							class="form-label">Username:</label>
 						<input
 							class="form-control form-control-sm"

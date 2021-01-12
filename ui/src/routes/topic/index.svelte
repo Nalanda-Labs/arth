@@ -8,7 +8,11 @@
 
 <script>
 	import Editor from './_Editor.svelte';
-	let article = { title: '', description: '', body: '', tagList: [] };
+	let topic = { title: '', description: '', body: '', tagList: [] };
 </script>
 
-<Editor {article}/>
+<svelte:head>
+	<title>Create Topic • Arth</title>
+</svelte:head>
+
+<Editor {topic}/>
