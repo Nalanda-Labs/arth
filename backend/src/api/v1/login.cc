@@ -71,9 +71,9 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
         return;
     }
 
-    LOG_DEBUG << isUsernameValid(username);
-    LOG_DEBUG << isUsernameValid(email);
-    LOG_DEBUG << isPasswordValid(password);
+    LOG_DEBUG << "username valid? " << isUsernameValid(username);
+    LOG_DEBUG << "email valid? " << isEmailValid(email);
+    LOG_DEBUG << "password valid? " << isPasswordValid(password);
 
     if (!(isUsernameValid(username) || isEmailValid(email)) || !isPasswordValid(password))
     {
@@ -116,6 +116,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
 
                 auto email_verified = row["email_verified"].as<bool>();
                 if (!email_verified) {
+                    LOG_DEBUG << "Email not verified";
                     ret["error"] = "Please verify your email before logging in";
                     callback(jsonResponse(std::move(ret)));
                     return;
@@ -129,11 +130,14 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
                     auto user_id = row["id"].as<unsigned long>();
                     auto username = row["username"].as<std::string>();
 
+                    LOG_DEBUG << "Log in successful";
+
                     ret["jwt"] = signJWT(user_id, username, jwtSecret);
                     callback(jsonResponse(std::move(ret)));
                     return;
                 }
 
+                LOG_DEBUG << "Wrong username or password";
                 /// Prevents a class or error where attacker is trying to
                 /// guess usernames for a given password
                 ret["error"] = "Wrong username or password";
