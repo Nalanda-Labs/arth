@@ -166,7 +166,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                         // TODO: move subject string to translation file
                                         auto msgid = smtp.sendEmail(
                                             customConfig.get("smtp_server", "").asString(),
-                                            customConfig.get("smtp_port", 25).asInt(),
+                                            customConfig.get("smtp_port", 587).asInt(),
                                             customConfig.get("admin_email", "").asString(),
                                             email,
                                             "Registration at arth",
