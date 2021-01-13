@@ -95,12 +95,12 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                     ret["message"] = "Email has been sent to " + email;
 
                     auto smtp = SMTPMail();
+                    auto base_url = customConfig.get("base_url", "").asString();
                     smtp.sendEMail(
                         email, 
                         "Password recovery for Arth",
-                        "The username or email provided for password "
-                        "recovery does not exist in our database. Please "
-                        "try again using the registered username or email",
+                        std::string("Someone tried to reset password on ") + base_url + ". "
+                        "If you find this error please ignore this email.",
                         customConfig
                     );
 
