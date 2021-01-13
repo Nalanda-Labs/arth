@@ -41,4 +41,35 @@ class SMTPMail : public drogon::Plugin<SMTPMail>
                     const std::string &passwd,
                     const std::function<void(const std::string&)> &cb = {}
                     );
+
+    /**
+     * @brief Send Email using the parameters from config instead 
+     * of manually specifying all parameters
+     * 
+     * @param to Email address to send the mail to
+     * @param subject Subject of the email
+     * @param content Content of email
+     * @param config Config to use. Should contain smtp_server, 
+     * admin_email, admin_username, password and (optionally) 
+     * smpt_port. If smtp_port is not specified, uses port 25
+     * @param cb 
+     * @return std::string 
+     */
+    std::string sendEMail(const std::string &to, 
+                          const std::string &subject, 
+                          const std::string &content,
+                          const Json::Value config,
+                          const std::function<void(const std::string&)> &cb = {}) {
+        return sendEmail(
+            config.get("smtp_server", "").asString(),
+            config.get("smtp_port", 587).asInt(),
+            config.get("admin_email", "").asString(),
+            to,
+            subject,
+            content,
+            config.get("admin_username", "").asString(),
+            config.get("password", "").asString(), 
+            cb
+          );
+    }
 };
