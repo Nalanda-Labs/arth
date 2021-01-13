@@ -23,6 +23,7 @@ set(arth_sources
     src/api/v1/login.cc
     src/api/v1/forgot_password.cc
     src/api/v1/plugins/email.cc
+    src/api/v1/topic.cc
     )
 
 add_executable(${PROJECT_NAME} ${arth_sources})

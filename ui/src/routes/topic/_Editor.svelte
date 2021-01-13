@@ -17,12 +17,12 @@
 
 		const response = await (id
 			? api.put(
-					`topics/${id}`,
+					`topic/${id}`,
 					{ topic },
 					$session.user && localStorage.getItem("jwt")
 			  )
 			: api.post(
-					"topics",
+					"t/create-topic/",
 					{ topic },
 					$session.user && localStorage.getItem("jwt")
 			  ));
