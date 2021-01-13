@@ -34,7 +34,8 @@ inline std::optional<Token> verifyJWT(const std::string &token,
 	}  
 }
 
-inline std::string signJWT(const int user_id, const std::string &username,
+inline std::string signJWT(const int user_id, 
+                           const std::string &username,
                            const std::string &secret,
                            const std::string issuer = "arth") {
 

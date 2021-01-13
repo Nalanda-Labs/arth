@@ -21,7 +21,9 @@ set(arth_sources
     src/main.cc
     src/api/v1/register.cc
     src/api/v1/login.cc
-    src/api/v1/plugins/email.cc)
+    src/api/v1/forgot_password.cc
+    src/api/v1/plugins/email.cc
+    )
 
 add_executable(${PROJECT_NAME} ${arth_sources})
 target_include_directories(arth PRIVATE "/usr/include/jsoncpp")
@@ -32,10 +34,10 @@ find_package(jsoncpp REQUIRED)
 find_package(ZLIB REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-find_library( DL_LIBRARY libpq.so  REQUIRD)
-find_library( DL_LIBRARY libdl.so  REQUIRD)
-find_library( DL_LIBRARY libargon2.a  REQUIERD)
-find_library( DL_LIBRARY libbsd.so  REQUIERD)
+find_library( DL_LIBRARY libpq.so  REQUIRED)
+find_library( DL_LIBRARY libdl.so  REQUIRED)
+find_library( DL_LIBRARY libargon2.a  REQUIERED)
+find_library( DL_LIBRARY libbsd.so  REQUIERED)
 find_package(Drogon REQUIRED)
 find_library(argon2 REQUEIRD)
 
