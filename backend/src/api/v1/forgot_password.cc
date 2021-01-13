@@ -89,23 +89,26 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
             "$2",
             [=](const Result &r) mutable {
                 if (r.size() != 1) {
-                /// **Important**: Do not let the UI know that user does not
-                /// exist. It can be misused by competitors or hackers to know who
-                /// all are affiliated with us.
-                ret["message"] = "Email has been sent to " + email;
+                    /// **Important**: Do not let the UI know that user does not
+                    /// exist. It can be misused by competitors or hackers to know who
+                    /// all are affiliated with us.
+                    ret["message"] = "Email has been sent to " + email;
 
-                auto smtp = SMTPMail();
-                smtp.sendEMail(email, "Password recovery for Arth",
-                                "The username or email provided for password "
-                                "recovery does not exist in our database. Please "
-                                "try again using the registered username or email",
-                                customConfig);
+                    auto smtp = SMTPMail();
+                    smtp.sendEMail(
+                        email, 
+                        "Password recovery for Arth",
+                        "The username or email provided for password "
+                        "recovery does not exist in our database. Please "
+                        "try again using the registered username or email",
+                        customConfig
+                    );
 
-                LOG_WARN << "Non existant username or email requested for "
-                            "password recovery";
+                    LOG_WARN << "Non existant username or email requested for "
+                                "password recovery";
 
-                callback(jsonResponse(std::move(ret)));
-                return;
+                    callback(jsonResponse(std::move(ret)));
+                    return;
                 }
 
                 auto row = r[0];
@@ -113,14 +116,14 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                 auto email_verified = row["email_verified"].as<bool>();
 
                 if (!email_verified) {
-                /// C and C++ concatenate such char* automatically.
-                /// This is const char * not std::string. std::string
-                /// is concatenated using operator +
-                ret["error"] =
-                    "Email not verified. You need to "
-                    "verify your email before trying to reset password";
-                callback(jsonResponse(std::move(ret)));
-                return;
+                    /// C and C++ concatenate such char* automatically.
+                    /// This is const char * not std::string. std::string
+                    /// is concatenated using operator +
+                    ret["error"] =
+                        "Email not verified. You need to "
+                        "verify your email before trying to reset password";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
                 }
 
                 auto user_id = row["id"].as<size_t>();
@@ -135,23 +138,23 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                     "values ($1, $2, $3, $4, $5)",
 
                     [=](const Result &r) mutable {
-                    auto smtp = SMTPMail();
-                    auto base_url = customConfig["base_url"].asString();
-                    smtp.sendEMail(email, "Password recovery for Arth",
-                                    std::string("Click on the link <a href=\"") +
-                                        base_url +
-                                        "/verify-forgot-password?token=" + token +
-                                        "\"> " + "to change your password.",
-                                    customConfig);
+                        auto smtp = SMTPMail();
+                        auto base_url = customConfig["base_url"].asString();
+                        smtp.sendEMail(email, "Password recovery for Arth",
+                                        std::string("Click on the link <a href=\"") +
+                                            base_url +
+                                            "/verify-forgot-password?token=" + token +
+                                            "\"> " + "to change your password.",
+                                        customConfig);
 
-                    ret["message"] = "Email has been sent to " + email;
-                    callback(jsonResponse(std::move(ret)));
+                        ret["message"] = "Email has been sent to " + email;
+                        callback(jsonResponse(std::move(ret)));
                     },
 
                     [=](const DrogonDbException &e) mutable {
-                    LOG_DEBUG << e.base().what();
-                    ret["error"] = (std::string)e.base().what();
-                    callback(jsonResponse(std::move(ret)));
+                        LOG_DEBUG << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(jsonResponse(std::move(ret)));
                     },
 
                     user_id, email, token, createdAt, createdAt);
