@@ -25,7 +25,7 @@ inline std::optional<Token> verifyJWT(const std::string &token,
 		/// throws exception if verification fails
 		verifier.verify(decoded);
 
-        int user = decoded.get_payload_claim("user_id").as_int();
+        int64_t user = decoded.get_payload_claim("user_id").as_int();
         std::string username = decoded.get_payload_claim("username").as_string();
 
         return Token(user, username);
