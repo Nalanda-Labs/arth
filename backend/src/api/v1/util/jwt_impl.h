@@ -3,10 +3,10 @@
 #include <optional>
 
 struct Token {
-    int userID;
+    size_t userID;
     std::string username;
 
-    Token(int userID, std::string username)
+    Token(size_t userID, std::string username)
         : userID(userID), username(username) {}
 };
 
@@ -25,10 +25,10 @@ inline std::optional<Token> verifyJWT(const std::string &token,
 		/// throws exception if verification fails
 		verifier.verify(decoded);
 
-        int user = decoded.get_payload_claim("user_id").as_int();
+        size_t user_id = decoded.get_payload_claim("user_id").as_int();
         std::string username = decoded.get_payload_claim("username").as_string();
 
-        return Token(user, username);
+        return Token(user_id, username);
 	} catch(std::exception &e) {
 		return {};
 	}  
