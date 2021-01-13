@@ -21,7 +21,7 @@ class ForgotPassword : public drogon::HttpController<ForgotPassword> {
 public:
     METHOD_LIST_BEGIN
     // use METHOD_ADD to add your custom processing function here;
-    ADD_METHOD_TO(ForgotPassword::forgotPassword, "/api/v1/forgot_password", Post, Options);
+    ADD_METHOD_TO(ForgotPassword::forgotPassword, "/api/v1/forgot-password", Post, Options);
     METHOD_LIST_END
 
     void forgotPassword(const HttpRequestPtr &req, Callback callback);
