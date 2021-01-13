@@ -32,7 +32,12 @@ std::string uuid() {
 void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                                     Callback callback) {
     auto json = req->getJsonObject();
+
     Json::Value ret;
+    if (json == nullptr) {
+        ret["error"] = "Invalid input";
+        callback(jsonResponse(std::move(ret)));
+    }    
 
     std::string email = json->get("email", "").asString();
     std::string username = json->get("username", "").asString();
