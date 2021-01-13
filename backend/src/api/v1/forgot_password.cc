@@ -122,7 +122,7 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                         /// is concatenated using operator +
                         ret["error"] =
                             "Email not verified. You need to "
-                            "veqrify your email before trying to reset password";
+                            "verify your email before trying to reset password";
                         callback(jsonResponse(std::move(ret)));
                         return;
                     }
