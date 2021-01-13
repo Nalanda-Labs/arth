@@ -129,9 +129,7 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
 
                     auto user_id = row["id"].as<size_t>();
 
-                    std::string token = uuid();
-
-                    std::string createdAt = DateTime::getLocalDateTimeISOFormat();
+                    std::string token = uuid();                    
 
                     /// Token is unique indexed in the database. 
                     /// If uuid collides (highly highly unlikely), 
@@ -140,7 +138,7 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                     transactionPtr->execSqlAsync(
                         "insert into email_tokens (user_id, email, token, created_at, "
                         "updated_at) "
-                        "values ($1, $2, $3, $4, $5)",
+                        "values ($1, $2, $3, now(), now())",
 
                         [=](const Result &r) mutable {
                             auto smtp = SMTPMail();
@@ -162,7 +160,7 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                             callback(jsonResponse(std::move(ret)));
                         },
 
-                        user_id, email, token, createdAt, createdAt
+                        user_id, email, token
                     );
                 },
                 [=](const DrogonDbException &e) mutable {
@@ -211,16 +209,14 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
 
     {
         auto clientPtr = app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {
-            
-            auto now = DateTime::getLocalDateTimeISOFormat();
+        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {                    
 
             transactionPtr->execSqlAsync(
                 "update email_tokens "                
-                "set confirmed = true, updated_at = $1"
+                "set confirmed = true, updated_at = now()"
                 "where expired = false "
                 "and confirmed = false "
-                "and token = $2 "
+                "and token = $1 "
                 "returning user_id", 
                 [=] (const Result &r) mutable {
 
@@ -272,7 +268,7 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
                 },
-                now, token
+                token
             );
         });
     }    
