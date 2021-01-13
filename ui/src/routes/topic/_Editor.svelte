@@ -48,12 +48,10 @@
 	function handleChange(e) {
 		value = e.detail.value;
 	}
-
-	// If on:tags is defined
-	let tags = "";
 	
 	function handleTags(event) {
-		tags = event.detail.tags;
+		topic.tagList = event.detail.tags;
+		
 	}
 
 	async function tagList (){

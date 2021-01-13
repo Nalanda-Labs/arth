@@ -8,7 +8,7 @@
 
 <script>
 	import Editor from './_Editor.svelte';
-	let topic = { title: '', description: '', body: '', tagList: [] };
+	let topic = { title: '', body: '', tagList: [] };
 </script>
 
 <svelte:head>

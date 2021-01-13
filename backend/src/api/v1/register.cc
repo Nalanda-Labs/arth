@@ -139,7 +139,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                             auto username_lower = username;
 
                             transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
-                            LOG_DEBUG << username_lower;                            
+                            LOG_DEBUG << username_lower;
                             auto [password_hash, salt] = PasswordUtils::hashPassword(password, "");
 
                             LOG_DEBUG << "password_hash: " << password_hash;
@@ -157,10 +157,10 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
                                 std::string ec = convert.str();
                                 std::string token = Base64::encode(ec);
 
-                                *transPtr << "insert into users(username, created_at, updated_at, username_lower, email, trust_level, \
-                                              password_hash, salt, email_verification_code) values($1, now(), now(), $2, $3, 0, $4, $5, $6);"
-                                          << username << username_lower << email << password_hash << salt << token 
-                                          >> [=](const Result &r) mutable {
+                                *transPtr << "insert into users(username, username_lower, email, trust_level,"
+                                             "password_hash, salt, email_verification_code) values($1, $2, $3, 0, $4, $5, $6);"
+                                          << username << username_lower << email << password_hash << salt << token >>
+                                    [=](const Result &r) mutable {
                                         auto smtp = SMTPMail();
                                         // TODO: move subject string to translation file
                                         auto msgid = smtp.sendEmail(
