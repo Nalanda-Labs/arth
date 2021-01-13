@@ -6,59 +6,32 @@
 	// import gfm from "@bytemd/plugin-gfm";
 
 	export let topic;
-	export let slug;
+	export let id;
 
 	let inProgress = false;
 	let errors;
-
 	const { session } = stores();
 
-	function addTag(input) {
-		topic.tagList = [...topic.tagList, input.value];
-		input.value = "";
-	}
-
-	function remove(index) {
-		topic.tagList = [
-			...topic.tagList.slice(0, index),
-			...topic.tagList.slice(index + 1),
-		];
-	}
-
-	async function publish() {
+	async function onSubmit() {
 		inProgress = true;
 
-		const response = await (slug
+		const response = await (id
 			? api.put(
-					`topics/${slug}`,
+					`topics/${id}`,
 					{ topic },
-					$session.user && $session.user.token
+					$session.user && localStorage.getItem("jwt")
 			  )
 			: api.post(
 					"topics",
 					{ topic },
-					$session.user && $session.user.token
+					$session.user && localStorage.getItem("jwt")
 			  ));
 
 		if (response.topic) {
-			goto(`/topic/${response.topic.slug}`);
+			goto(`/topic/${response.topic.id}`);
 		}
 
 		inProgress = false;
-	}
-
-	function enter(node, callback) {
-		function onkeydown(event) {
-			if (event.which === 13) callback(node);
-		}
-
-		node.addEventListener("keydown", onkeydown);
-
-		return {
-			destroy() {
-				node.removeEventListener("keydown", onkeydown);
-			},
-		};
 	}
 
 	let Editor = null;
@@ -78,20 +51,13 @@
 
 	// If on:tags is defined
 	let tags = "";
-	const countryList = [
-		"Afghanistan",
-		"Albania",
-		"Algeria",
-		"American Samoa",
-		"Andorra",
-		"Angola",
-		"Anguilla",
-		"Antarctica",
-		"Antigua and Barbuda",
-		"Argentina",
-	];
+	
 	function handleTags(event) {
 		tags = event.detail.tags;
+	}
+
+	async function tagList (){
+		
 	}
 </script>
 
@@ -111,7 +77,7 @@
 			<div class="col-md-10 offset-md-1 col-xs-12">
 				<h3>Post your topic for discussion</h3>
 				<hr />
-				<form>
+				<form on:submit|preventDefault={onSubmit}>
 					<fieldset>
 						<fieldset class="form-group">
 							<label
@@ -157,11 +123,11 @@
 								placeholder={'Tags, tab to complete'}
 								allowBlur={true}
 								disable={false}
-								autocomplete={countryList}
+								autocomplete={tagList}
 								minChars={3} />
 						</fieldset>
 						<div class="wrapper">
-							<button class="btn btn btn-primary pull-xs-right">
+							<button class="btn btn btn-primary pull-xs-right" data-action="submit">
 								Create Topic
 							</button>
 						</div>

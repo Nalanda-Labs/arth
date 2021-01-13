@@ -6,17 +6,17 @@
 			this.redirect(302, `/login`);
 		}
 
-		const { slug } = params;
-		const { topic } = await api.get(`topic/${slug}`, null);
-		return { topic, slug };
+		const { id } = params;
+		const { topic } = await api.get(`topic/${id}`, null);
+		return { topic, id };
 	}
 </script>
 
 <script>
 	import Editor from './_Editor.svelte';
 
-	export let slug;
+	export let id;
 	export let topic;
 </script>
 
-<Editor {topic} {slug}/>
+<Editor {topic} {id}/>
