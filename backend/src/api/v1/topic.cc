@@ -10,6 +10,7 @@
 #include <trantor/utils/Logger.h>
 
 #include "util/arth.h"
+#include "util/input_validation.h"
 #include "util/jwt_impl.h"
 
 #include "topic.h"
@@ -20,62 +21,25 @@ using namespace api::v1;
 
 void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 {
-    std::string authHeader;
     Json::Value ret;
-
-    try
-    {
-        authHeader = req->getHeader("Authorization");
-        LOG_DEBUG << authHeader;
-    }
-    catch (std::exception &e)
-    {
-        LOG_DEBUG << e.what();
-
-        ret["error"] = "Invalid JWT.";
-        callback(jsonResponse(std::move(ret)));
-        return;
-    }
-
-    std::string delimiter = " ";
-    std::string bearer = authHeader.substr(0, authHeader.find(delimiter));
-    std::string JWT = "";
-
-    if (bearer == "Bearer")
-    {
-        JWT = authHeader.erase(0, bearer.length() + delimiter.length());
-    }
-    else
-    {
-        LOG_DEBUG << bearer;
-
-        ret["error"] = "Invalid JWT.";
-        callback(jsonResponse(std::move(ret)));
-        return;
-    }
-
-    auto json = req->getJsonObject();
-    if (json == nullptr)
-    {
-        ret["error"] = "Invalid input";
-        callback(jsonResponse(std::move(ret)));
-    }
 
     auto customConfig = app().getCustomConfig();
     auto jwt_secret = customConfig.get("jwt_secret", "").asString();
 
-    auto decoded_jwt = verifyJWT(JWT, jwt_secret).value_or(Token{0, ""});
-    auto user_id = decoded_jwt.userID;
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);    
 
-    if (decoded_jwt.username == "" || user_id == 0)
-    {
-        ret["error"] = "Invalid JWT.";
+    if (!optionalToken.has_value()) {
+        ret["error"] = "Authentication Error";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    LOG_DEBUG << decoded_jwt.userID;
+    Token jwt = optionalToken.value();
 
+    auto user_id = jwt.userID;
+    LOG_DEBUG << user_id;
+
+    auto json = req->getJsonObject();
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=](TransactionPtr transPtr) mutable {
