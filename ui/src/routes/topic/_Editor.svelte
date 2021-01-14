@@ -14,17 +14,25 @@
 
 	async function onSubmit() {
 		inProgress = true;
+		if (value.length < 20 || value.length > 100000) {
+			alert(
+				"Topic should not be less than 20 or more than 100000 characters."
+			);
+			return;
+		}
+
+		topic.body = value;
+
+		if (topic.tagList.length < 1) {
+			alert("At least one tag should be supplied.");
+		}
 
 		const response = await (id
-			? api.put(
-					`topic/${id}`,
-					{ topic },
-					$session.user && localStorage.getItem("jwt")
-			  )
+			? api.put(`topic/${id}`, { topic }, localStorage.getItem("jwt"))
 			: api.post(
 					"t/create-topic/",
 					{ topic },
-					$session.user && localStorage.getItem("jwt")
+					localStorage.getItem("jwt")
 			  ));
 
 		if (response.topic) {
@@ -48,26 +56,21 @@
 	function handleChange(e) {
 		value = e.detail.value;
 	}
-	
+
 	function handleTags(event) {
 		topic.tagList = event.detail.tags;
-		
+		let re = /[a-zA-Z0-0\-\+]+/;
+		let tags = [];
+		for (let i = 0; i < topic.tagList.length; i++) {
+			if (topic.tagList[i].length > 32) {
+				alert("32 Characterx max.");
+			}
+		}
 	}
 
-	async function tagList (){
-		
-	}
+	// function for auto-completing tags
+	async function tagList() {}
 </script>
-
-<style>
-	.wrapper {
-		width: 100%;
-		height: 100px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-</style>
 
 <div class="editor-page">
 	<div class="container page">
@@ -81,7 +84,9 @@
 							<label
 								for="title"
 								class="form-label"
-								style="float:left;margin-right: 10px;margin-top: 8px">Title:</label>
+								style="float:left;margin-right: 10px;margin-top: 8px"
+								>Title:</label
+							>
 							<span style="display: block;overflow: hidden;">
 								<input
 									class="form-control form-control"
@@ -90,9 +95,10 @@
 									type="text"
 									placeholder="Topic summary"
 									bind:value={topic.title}
-									required=""
+									required="true"
 									minlength="10"
-									maxlength="256" />
+									maxlength="256"
+								/>
 							</span>
 						</fieldset>
 
@@ -100,13 +106,16 @@
 							<svelte:component
 								this={Editor}
 								on:change={handleChange}
-								{value} />
+								{value}
+							/>
 						</fieldset>
 						<fieldset class="form-group" style="margin-top:20px">
 							<label
 								for="tags"
 								class="form-label"
-								style="float:left;margin-right: 10px;margin-top: 8px">Tags:</label>
+								style="float:left;margin-right: 10px;margin-top: 8px"
+								>Tags:</label
+							>
 							<svelte:component
 								this={Tags}
 								name={"tags"}
@@ -115,19 +124,20 @@
 								maxTags={5}
 								allowPaste={true}
 								allowDrop={true}
-								splitWith={','}
+								splitWith={","}
 								onlyUnique={true}
 								removeKeys={[27]}
-								placeholder={'Tags, tab to complete'}
+								placeholder={"Tags, tab to complete"}
 								allowBlur={true}
 								disable={false}
 								autocomplete={tagList}
-								minChars={3} />
+								minChars={3}
+							/>
 						</fieldset>
 						<div class="wrapper">
-							<button class="btn btn btn-primary pull-xs-right" data-action="submit">
-								Create Topic
-							</button>
+							<button
+								class="btn btn btn-primary pull-xs-right"
+								data-action="submit"> Create Topic </button>
 						</div>
 					</fieldset>
 				</form>
@@ -135,3 +145,13 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.wrapper {
+		width: 100%;
+		height: 100px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+</style>
