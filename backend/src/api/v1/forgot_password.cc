@@ -18,23 +18,26 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-std::string uuid() {
-  uuid_t uuid_token;
-  uuid_generate(uuid_token);
+std::string uuid()
+{
+    uuid_t uuid_token;
+    uuid_generate(uuid_token);
 
-  /// uuid is 16 bytes
-  char uuid_buffer[17];
-  uuid_unparse(uuid_token, uuid_buffer);
+    /// uuid is 16 bytes
+    char uuid_buffer[40];
+    uuid_unparse(uuid_token, uuid_buffer);
 
-  return uuid_buffer;
+    return uuid_buffer;
 }
 
 void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
-                                    Callback callback) {
+                                    Callback callback)
+{
     auto json = req->getJsonObject();
 
     Json::Value ret;
-    if (json == nullptr) {
+    if (json == nullptr)
+    {
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
     }
@@ -47,34 +50,30 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
     EmailUtils::cleanEmail(email);
     LOG_DEBUG << "cleaned email: " << email;
 
-    if (email == "" && username == "") {
+    if (email == "" && username == "")
+    {
         LOG_DEBUG << "Neither username nor email supplied";
         ret["error"] = "Neither username nor email supplied";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (email != "" && username != "") {
-        LOG_DEBUG << "Both username and email supplied";
-        ret["error"] = "Both username and email supplied";
-        callback(jsonResponse(std::move(ret)));
-        return;
-    }
-
-    if (username != "" && !isUsernameValid(username)) {
+    if (username != "" && !isUsernameValid(username))
+    {
         LOG_DEBUG << "Username should be less than 60 characters and should not "
-                    "contain spaces";
+                     "contain spaces";
         ret["error"] = "Username should be less than 60 characters and should not "
-                    "contain spaces";
+                       "contain spaces";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (email != "" && !isEmailValid(email)) {
+    if (email != "" && !isEmailValid(email))
+    {
         LOG_DEBUG << "Email should be less than 256 characters and should not "
-                    "contain spaces";
+                     "contain spaces";
         ret["error"] = "Email should be less than 256 characters and should not "
-                    "contain spaces";
+                       "contain spaces";
         callback(jsonResponse(std::move(ret)));
         return;
     }
@@ -84,12 +83,13 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
         clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {
             assert(transactionPtr);
             auto customConfig = app().getCustomConfig();
-
+            LOG_DEBUG << "Hello";
             transactionPtr->execSqlAsync(
                 "select id, email_verified from users where email = $1 or username = "
                 "$2",
                 [=](const Result &r) mutable {
-                    if (r.size() != 1) {
+                    if (r.size() != 1)
+                    {
                         /// **Important**: Do not let the UI know that user does not
                         /// exist. It can be misused by competitors or hackers to know who
                         /// all are affiliated with us.
@@ -98,12 +98,11 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
                         auto smtp = SMTPMail();
                         auto base_url = customConfig.get("base_url", "").asString();
                         smtp.sendEMail(
-                            email, 
+                            email,
                             "Password recovery for Arth",
                             std::string("Someone tried to reset password on ") + base_url + ". "
-                            "If you find this error please ignore this email.",
-                            customConfig
-                        );
+                                                                                            "If you find this error please ignore this email.",
+                            customConfig);
 
                         LOG_WARN << "Non existant username or email requested for "
                                     "password recovery";
@@ -116,7 +115,8 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
 
                     auto email_verified = row["email_verified"].as<bool>();
 
-                    if (!email_verified) {
+                    if (!email_verified)
+                    {
                         /// C and C++ concatenate such char* automatically.
                         /// This is const char * not std::string. std::string
                         /// is concatenated using operator +
@@ -129,57 +129,58 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
 
                     auto user_id = row["id"].as<size_t>();
 
-                    std::string token = uuid();                    
+                    std::string token = uuid();
 
-                    /// Token is unique indexed in the database. 
-                    /// If uuid collides (highly highly unlikely), 
-                    /// then insert will fail and user will get an error. 
-                    /// They will try again and succeed (mostly).                    
+                    /// Token is unique indexed in the database.
+                    /// If uuid collides (highly highly unlikely),
+                    /// then insert will fail and user will get an error.
+                    /// They will try again and succeed (mostly).
                     transactionPtr->execSqlAsync(
-                        "insert into email_tokens (user_id, email, token, created_at, "
-                        "updated_at) "
-                        "values ($1, $2, $3, now(), now())",
+                        "insert into email_tokens (user_id, email, token)"
+                        "values ($1, $2, $3)",
 
                         [=](const Result &r) mutable {
                             auto smtp = SMTPMail();
                             auto base_url = customConfig["base_url"].asString();
                             smtp.sendEMail(email, "Password recovery for Arth",
-                                            std::string("Click on the link <a href=\"") +
-                                                base_url +
-                                                "/verify-forgot-password?token=" + token +
-                                                "\"> " + "to change your password.",
-                                            customConfig);
+                                           std::string("Click on the link " +
+                                               base_url +
+                                               "/verify-forgot-password?token=" + token +
+                                               " to change your password."),
+                                           customConfig);
 
                             ret["message"] = "Email has been sent to " + email;
                             callback(jsonResponse(std::move(ret)));
+                            return;
                         },
 
                         [=](const DrogonDbException &e) mutable {
                             LOG_DEBUG << e.base().what();
                             ret["error"] = (std::string)e.base().what();
                             callback(jsonResponse(std::move(ret)));
+                            return;
                         },
 
-                        user_id, email, token
-                    );
+                        user_id, email, token);
                 },
                 [=](const DrogonDbException &e) mutable {
                     LOG_DEBUG << e.base().what();
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
+                    return;
                 },
-                email, username
-            );
+                email, username);
         });
     }
 }
 
-
-void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback) {
+void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback)
+{
     auto json = req->getJsonObject();
     Json::Value ret;
 
-    if (json == nullptr) {
+    if (json == nullptr)
+    {
         LOG_DEBUG << "Invalid input";
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
@@ -187,20 +188,21 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
     }
 
     auto token = req->getParameter("token");
-    auto newPassword = json->get("new_password", "").asString();    
+    auto newPassword = json->get("new_password", "").asString();
 
     LOG_DEBUG << "token: " << token << "\n";
-    LOG_DEBUG << "new password: " << newPassword;    
+    LOG_DEBUG << "new password: " << newPassword;
 
-
-    if (token == "" || newPassword == "") {
+    if (token == "" || newPassword == "")
+    {
         LOG_DEBUG << "Invalid input";
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (!isPasswordValid(newPassword)) {
+    if (!isPasswordValid(newPassword))
+    {
         LOG_DEBUG << "Invalid password";
         ret["error"] = "Password should be at least 16 and 256 characters";
         callback(jsonResponse(std::move(ret)));
@@ -209,37 +211,35 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
 
     {
         auto clientPtr = app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {                    
-
+        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {
             transactionPtr->execSqlAsync(
-                "update email_tokens "                
-                "set confirmed = true, updated_at = now()"
+                "select user_id from email_tokens "
                 "where expired = false "
                 "and confirmed = false "
-                "and token = $1 "
-                "returning user_id", 
-                [=] (const Result &r) mutable {
-
+                "and token = $1 ",
+                [=](const Result &r) mutable {
                     /// Token is unique. inserting a token that already exists wont happen.
                     /// So we dont need to check if more than one row is affected
-                    if (r.size() != 1) {
+                    if (r.size() != 1)
+                    {
                         LOG_DEBUG << "Token doesn't exist or is expired. Please try resetting password again";
                         ret["error"] = "Token doesn't exist or is expired. Please try resetting password again";
                         callback(jsonResponse(std::move(ret)));
                         return;
-                    }       
+                    }
 
                     auto [passwordHash, salt] = PasswordUtils::hashPassword(newPassword, "");
 
                     LOG_DEBUG << "password_hash: " << passwordHash;
                     LOG_DEBUG << "salt: " << salt;
 
-                    if (passwordHash.empty() || salt.empty()) {
+                    if (passwordHash.empty() || salt.empty())
+                    {
                         LOG_ERROR << "Error hashing password";
                         ret["error"] = "An error occurred. Please contact support.";
                         callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                         return;
-                    }             
+                    }
 
                     /// we have already checked if one row is returned
                     auto userID = r[0]["user_id"].as<size_t>();
@@ -248,28 +248,25 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
                         "update users "
                         "set password_hash = $1, salt = $2 "
                         "where id = $3 ",
-                        [=] (const Result &r) mutable {
+                        [=](const Result &r) mutable {
                             LOG_DEBUG << "Password updated";
                             ret["message"] = "Password updated";
                             callback(jsonResponse(std::move(ret)));
                             return;
-
                         },
                         [=](const DrogonDbException &e) mutable {
                             LOG_DEBUG << e.base().what();
                             ret["error"] = (std::string)e.base().what();
                             callback(jsonResponse(std::move(ret)));
                         },
-                        passwordHash, salt, userID
-                    );
+                        passwordHash, salt, userID);
                 },
                 [=](const DrogonDbException &e) mutable {
                     LOG_DEBUG << e.base().what();
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
                 },
-                token
-            );
+                token);
         });
-    }    
+    }
 }

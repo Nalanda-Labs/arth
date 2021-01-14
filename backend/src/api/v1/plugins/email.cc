@@ -111,9 +111,6 @@ void messagesHandle(const trantor::TcpConnectionPtr &connPtr,
     std::string responseCode(receievedMsg.begin(), receievedMsg.begin() + 3);
     //    std::string responseMsg(receievedMsg.begin() + 4, receievedMsg.end());
 
-    LOG_DEBUG << email->m_status;
-    LOG_DEBUG << EMail::Close;
-
     if (email->m_status == EMail::Init && responseCode == "220")
     {
         std::string outMsg;
@@ -356,7 +353,7 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_WARN << "EMail pointer gone";                    
+                    LOG_WARN << "EMail pointer gone";
                 }
                 if (connPtr->connected())
                 {
@@ -375,7 +372,7 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_ERROR << "EMail pointer gone";                    
+                    LOG_ERROR << "EMail pointer gone";
                 }
                 // can't connect to server
                 LOG_ERROR << "Bad Server address";
@@ -389,9 +386,9 @@ std::string SMTPMail::sendEmail(const std::string &mailServer,
                 auto email_ptr = email_wptr.lock();
                 if (!email_ptr)
                 {
-                    LOG_ERROR << "EMail pointer gone";                    
+                    LOG_ERROR << "EMail pointer gone";
                 }
-                LOG_DEBUG << "Calling messageHandle";
+
                 //email->m_socket->disconnect();
                 messagesHandle(connPtr, msg, email_ptr, cb_);
             });

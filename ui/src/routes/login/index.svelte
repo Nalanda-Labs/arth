@@ -53,6 +53,8 @@
 				<h1 class="text-xs-center">Sign In</h1>
 				<p class="text-xs-center">
 					<a href="/register">Need an account?</a>
+					or
+					<a href="/forgot-password">Forgot password?</a>
 				</p>
 
 				<ListErrors {response}/>
