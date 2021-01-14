@@ -1,3 +1,6 @@
+#ifndef UITL_JWT_IMPL
+#define UITL_JWT_IMPL
+
 #include <exception>
 #include <jwt-cpp/jwt.h>
 #include <optional>
@@ -47,3 +50,5 @@ inline std::string signJWT(const int user_id,
       .set_payload_claim("username", jwt::claim(username))
       .sign(jwt::algorithm::hs256{secret});
 }
+
+#endif
