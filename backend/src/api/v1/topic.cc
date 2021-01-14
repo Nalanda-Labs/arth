@@ -78,8 +78,8 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([=](TransactionPtr transactionPtr) mutable {
-            assert(transactionPtr);
+        clientPtr->newTransactionAsync([=](TransactionPtr transPtr) mutable {
+            assert(transPtr);
             auto customConfig = app().getCustomConfig();
             std::string tags = "";
 
@@ -89,19 +89,22 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
             auto body = topic.get("body", "").asString();
             auto tagList = topic["tagList"];
 
-            if (title.length() < 10 || title.length() > 256) {
+            if (title.length() < 10 || title.length() > 256)
+            {
                 LOG_DEBUG << "Bad title length " + std::to_string(title.length());
                 ret["error"] = "Bad title length " + std::to_string(title.length());
                 callback(jsonResponse(std::move(ret)));
                 return;
             }
-            if (body.length() < 20 || body.length() > 1000000) {
+            if (body.length() < 20 || body.length() > 1000000)
+            {
                 LOG_DEBUG << "Bad body length " + std::to_string(body.length());
                 ret["error"] = "Bad body length " + std::to_string(body.length());
                 callback(jsonResponse(std::move(ret)));
                 return;
             }
-            if(tagList.size() <1) {
+            if (tagList.size() < 1)
+            {
                 LOG_DEBUG << "At least one tag must be provided";
                 ret["error"] = "At least one tag must be provided";
                 callback(jsonResponse(std::move(ret)));
@@ -124,7 +127,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
             tags = tags.substr(0, tags.size() - 1); // remove last comma
             LOG_DEBUG << tags;
 
-            transactionPtr->execSqlAsync(
+            transPtr->execSqlAsync(
                 "select * from tags where name in (" + tags + ")",
                 [=](const Result &r) mutable {
                     if (r.size() != tagList.size())
@@ -135,9 +138,48 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                     }
                     else
                     {
-                        
-                        callback(jsonResponse(std::move(ret)));
-                        return;
+                        transPtr->execSqlAsync(
+                            "update tags set topic_count=topic_count + 1 where name in (" + tags + ")",
+                            [=](const Result &r1) mutable {
+                                transPtr->execSqlAsync(
+                                    "insert into topics(title, description, posted_by, updated_by) values($1, $2, $3, $4) returning id",
+                                    [=](const Result &r2) mutable {
+                                        for (auto &row : r)
+                                        {
+                                            auto tag_id = row["id"].as<size_t>();
+
+                                            transPtr->execSqlAsync(
+                                                "insert into topic_tags(topic_id, tag_id) values($1, $2)",
+                                                [=](const Result &r3) {
+                                                },
+                                                [=](const DrogonDbException &e) mutable {
+                                                    LOG_DEBUG << e.base().what();
+                                                    ret["error"] = (std::string)e.base().what();
+                                                    callback(jsonResponse(std::move(ret)));
+                                                    return;
+                                                },
+                                                tag_id, r2[0]["id"].as<size_t>());
+                                        }
+
+                                        LOG_DEBUG << "Topic added";
+                                        ret["message"] = "Topic added";
+                                        ret["topic_id"] = r2[0]["id"].as<size_t>();
+                                        callback(jsonResponse(std::move(ret)));
+                                        return;
+                                    },
+                                    [=](const DrogonDbException &e) mutable {
+                                        LOG_DEBUG << e.base().what();
+                                        ret["error"] = (std::string)e.base().what();
+                                        callback(jsonResponse(std::move(ret)));
+                                        return;
+                                    },
+                                    title, body, user_id, user_id);
+                            },
+                            [=](const DrogonDbException &e) mutable {
+                                LOG_DEBUG << e.base().what();
+                                ret["error"] = (std::string)e.base().what();
+                                callback(jsonResponse(std::move(ret)));
+                            });
                     }
                 },
                 [=](const DrogonDbException &e) mutable {
