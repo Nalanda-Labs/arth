@@ -82,7 +82,6 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
             assert(transPtr);
             auto customConfig = app().getCustomConfig();
             std::string tags = "";
-
             // get data from json to variables so that we do not need to operate on json
             auto topic = (*json)["topic"];
             auto title = topic.get("title", "").asString();
@@ -120,9 +119,11 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                     callback(jsonResponse(std::move(ret)));
                     return;
                 }
-                for (int j = 0; i<tag.length(); j++) {
-                    if(tag[i] >= 'A' && tag[i] <= 'Z') {
-                        tag[i] += 32; // make it uppercase. do not apply transform of c++
+                for (int j = 0; j < tag.length(); j++)
+                {
+                    if (tag[j] >= 'A' && tag[j] <= 'Z')
+                    {
+                        tag[j] += 32; // make it uppercase. do not apply transform of c++
                     }
                 }
                 LOG_DEBUG << tag;
@@ -163,7 +164,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                                                     callback(jsonResponse(std::move(ret)));
                                                     return;
                                                 },
-                                                tag_id, r2[0]["id"].as<size_t>());
+                                                r2[0]["id"].as<size_t>(), tag_id);
                                         }
 
                                         LOG_DEBUG << "Topic added";
@@ -201,7 +202,8 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 
                                         LOG_DEBUG << slug;
                                         ret["slug"] = slug;
-                                        ret["id"] = r2[0]["id"].as<Json::UInt64>();
+                                        ret["id"] = r2[0]["id"].as<std::string>();
+                                        LOG_DEBUG << r2[0]["id"].as<std::string>();
                                         callback(jsonResponse(std::move(ret)));
                                         return;
                                     },
@@ -225,6 +227,97 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
                 });
+        });
+    }
+}
+
+void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const std::string &id, const std::string &slug)
+{
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        Json::Value ret;
+        std::stringstream sstream(id);
+        size_t tid;
+        sstream >> tid;
+        LOG_DEBUG << tid;
+
+        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
+            transPtr->execSqlAsync(
+                "select * from topics where id=$1",
+                [=](const Result &r) mutable {
+                    if (r.size() == 0)
+                    {
+                        ret["error"] = "No topics found.";
+                        callback(jsonResponse(std::move(ret)));
+                    }
+                    else
+                    {
+                        ret["title"] = r[0]["title"].as<std::string>();
+                        ret["topic"] = Json::arrayValue;
+                        Json::Value topic;
+                        topic["description"] = r[0]["description"].as<std::string>();
+                        topic["visible"] = r[0]["visible"].as<bool>();
+                        Json::Value::UInt64 posted_by = r[0]["posted_by"].as<uint64_t>();
+                        topic["posted_by"] = posted_by;
+                        ret["topic"].append(topic);
+
+                        transPtr->execSqlAsync(
+                            "select name from tags left join topic_tags on topic_tags.tag_id=tags.id where topic_tags.topic_id=$1",
+                            [=](const Result &r1) mutable {
+                                ret["tags"] = Json::arrayValue;
+                                for (auto &row : r1)
+                                {
+                                    Json::Value tag;
+
+                                    LOG_DEBUG << row["name"].as<std::string>();
+                                    tag["name"] = row["name"].as<std::string>();
+                                    ret["tags"].append(tag);
+                                }
+
+                                transPtr->execSqlAsync(
+                                    "select * from topics where op_id=$1",
+                                    [=](const Result &r2) mutable {
+                                        ret["tags"] = Json::arrayValue;
+                                        LOG_DEBUG << r2.size();
+
+                                        for (auto &row : r2)
+                                        {
+                                            Json::Value topic;
+                                            topic["description"] = row["description"].as<std::string>();
+                                            topic["visible"] = row["visible"].as<bool>();
+                                            Json::Value::UInt64 posted_by = row["posted_by"].as<uint64_t>();
+                                            topic["posted_by"] = posted_by;
+                                            ret["topic"].append(topic);
+                                        }
+
+                                        LOG_DEBUG << "returning";
+                                        callback(jsonResponse(std::move(ret)));
+                                        return;
+                                    },
+                                    [=](const DrogonDbException &e) mutable {
+                                        LOG_DEBUG << e.base().what();
+                                        ret["error"] = (std::string)e.base().what();
+                                        callback(jsonResponse(std::move(ret)));
+                                        return;
+                                    },
+                                    tid);
+                                return;
+                            },
+                            [=](const DrogonDbException &e) mutable {
+                                LOG_DEBUG << e.base().what();
+                                ret["error"] = (std::string)e.base().what();
+                                callback(jsonResponse(std::move(ret)));
+                                return;
+                            },
+                            tid);
+                    }
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(jsonResponse(std::move(ret)));
+                },
+                tid);
         });
     }
 }

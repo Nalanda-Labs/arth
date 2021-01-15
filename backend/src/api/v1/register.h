@@ -18,13 +18,13 @@ namespace api::v1
  * @brief this class is created by the drogon_ctl command (drogon_ctl create controller -r arth::login).
  * this class is a restful API controller.
  */
-class registration : public drogon::HttpController<registration>
+class Registraion : public drogon::HttpController<Registraion>
 {
   public:
     METHOD_LIST_BEGIN
     // use METHOD_ADD to add your custom processing function here;
-    ADD_METHOD_TO(registration ::doRegister, "/api/v1/register", Post, Options);
-    ADD_METHOD_TO(registration ::verifyEmail, "/api/v1/verify-registration-email?token={string token}", Get, Options);
+    ADD_METHOD_TO(Registraion ::doRegister, "/api/v1/register", Post, Options);
+    ADD_METHOD_TO(Registraion ::verifyEmail, "/api/v1/verify-registration-email?token={string token}", Get, Options);
     METHOD_LIST_END
 
     void doRegister(const HttpRequestPtr &req, Callback callback);

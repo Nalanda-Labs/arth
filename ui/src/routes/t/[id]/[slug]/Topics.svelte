@@ -2,18 +2,18 @@
     import { onMount } from "svelte";
     import * as api from "api.js";
     import "bytemd/dist/index.min.css";
-    import TagList from "../../../_components/TagList.svelte";
+    import TagList from "../../../../components/_TagList.svelte";
 
     export let id;
     export let slug;
 
     let topics = [];
     let title = "";
-    let tagList = [];
-    let op_body = "";
+    let taglist = [];
+    let value = "";
     let Viewer = null;
 
-    onMount(async () => {
+        onMount(async () => {
         const bytemd = await import("bytemd");
         Viewer = bytemd.Viewer;
 
@@ -22,17 +22,20 @@
             localStorage.getItem("jwt")
         );
 
-        if (response.topics) {
-            topics = response.topics;
-            title = response.title;
-            tagList = response.tagLIst;
-            op_body = topics[0].description;
+        console.log(response);
+
+        if (response.topic) {
+            topics = response.topic;
+            title = response.title;            
+            value = topics[0].description;
+            taglist = response.tags.map(tag => tag.name);
         }
     });
 </script>
 
 <div>
     <h3>{title}</h3>
-    <svelte:component this={Viewer} {op_body} />
-    <TagList {tagList} />
+    <hr/>
+    <svelte:component this={Viewer} {value} />
+    <TagList {taglist} />
 </div>

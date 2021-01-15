@@ -19,7 +19,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-const std::string registration::emailBody(const std::string &username, const std::string &base_url, const std::string &token)
+const std::string Registraion::emailBody(const std::string &username, const std::string &base_url, const std::string &token)
 {
     std::string link = base_url + "/verify-registration-email?token=" + token;
 
@@ -31,7 +31,7 @@ const std::string registration::emailBody(const std::string &username, const std
     return std::move(body);
 }
 
-void registration::doRegister(const HttpRequestPtr &req, Callback callback)
+void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
 {
     auto json = req->getJsonObject();
     Json::Value ret;
@@ -208,7 +208,7 @@ void registration::doRegister(const HttpRequestPtr &req, Callback callback)
     }
 }
 
-void registration::verifyEmail(const HttpRequestPtr &req, Callback callback, const std::string &token)
+void Registraion::verifyEmail(const HttpRequestPtr &req, Callback callback, const std::string &token)
 {
     {
         LOG_DEBUG << token;
