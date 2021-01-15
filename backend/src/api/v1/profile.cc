@@ -168,12 +168,21 @@ void profile :: updateProfile(const HttpRequestPtr &req, Callback callback, std:
             
             User user{token.userID, name, title, designation, email};
 
-            auto updateUserAndReturnJson = [=]() mutable {
-                updateUser(
-                    transPtr, 
-                    newUsername, 
-                    username, 
-                    user, 
+            auto updateUser = [=]() mutable {
+                auto usernameLower = newUsername;
+
+                transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
+                LOG_DEBUG << "username lower: " << usernameLower;
+
+                transPtr->execSqlAsync(
+                    "update users "
+                    "set username = $1, "
+                    "username_lower = $2, "
+                    "name = $3, "
+                    "title = $4, "
+                    "designation = $5, "
+                    "email = $6 "
+                    "where id = $7",         
                     [=](const Result & r) mutable {
                         LOG_DEBUG << "in result callback";
                         ret["message"] = "Changes saved";
@@ -183,7 +192,8 @@ void profile :: updateProfile(const HttpRequestPtr &req, Callback callback, std:
                         LOG_DEBUG << e.base().what();
                         ret["error"] = (std::string)e.base().what();
                         callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    }
+                    },
+                    newUsername, usernameLower, user.name, user.title, user.designation, user.email, user.id
                 );
             };
 
@@ -196,7 +206,7 @@ void profile :: updateProfile(const HttpRequestPtr &req, Callback callback, std:
                             callback(jsonResponse(std::move(ret)));
                             return;
                         }
-                        updateUserAndReturnJson();
+                        updateUser();
                     },
                     [=](const DrogonDbException &e) mutable {
                         LOG_DEBUG << e.base().what();
@@ -206,47 +216,8 @@ void profile :: updateProfile(const HttpRequestPtr &req, Callback callback, std:
                     newUsername
                 );
             } else {
-                updateUserAndReturnJson();
+                updateUser();
             }
         });
     }
-}
-
-
-/**
- * @brief Update user with old username to new username and using other details from user
- * 
- * @param transPtr transaction pointer to use
- * @param newUsername new username
- * @param oldUsername old username
- * @param user updated values of user
- * @param resultCallback callback containing result of update if update was successful
- * @param exceptionCallback callback returning the exeption if update failed
- */
-void updateUser(
-    TransactionPtr transPtr, 
-    const std::string newUsername, 
-    const std::string oldUsername,
-    const User user,
-    DbResultCallback resultCallback,
-    DrogonDbExceptionCallback exceptionCallback) {
-
-    auto usernameLower = newUsername;
-
-    transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
-    LOG_DEBUG << "username lower: " << usernameLower;
-
-    transPtr->execSqlAsync(
-        "update users "
-        "set username = $1, "
-        "username_lower = $2, "
-        "name = $3, "
-        "title = $4, "
-        "designation = $5, "
-        "email = $6 "
-        "where id = $7",         
-        resultCallback,
-        exceptionCallback,
-        newUsername, usernameLower, user.name, user.title, user.designation, user.email, user.id
-    );
 }
