@@ -14,6 +14,18 @@ inline bool isUsernameValid(const std::string &username) {
 
 
 inline bool isEmailValid(const std::string &email) {    
+    auto position = email.find('@');
+
+    /// every email has @. If not found, email is not valid
+    if (position == std::string::npos) {
+        return false;
+    }
+
+    /// every email has . after @. If not found, return false
+    if (email.find('.', position) == std::string::npos) {
+        return false;
+    }
+
     return !email.empty() && !contains(email, " ") && email.length() < 256;
 }
 
