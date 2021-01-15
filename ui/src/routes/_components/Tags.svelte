@@ -217,7 +217,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
         return data.split(splitWith).map(tag => tag.trim());    
     }
     
-    function getMatchElements(input) {
+    async function getMatchElements(input) {
     
         if (!autoComplete) return;
         
@@ -231,7 +231,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
     
         // we modify next two lines so that we can pass a fnction as autocomplete
         // which will return an attay
-        const ac = autoComplete();
+        const ac = await autoComplete();
         var matchs = ac.filter(e => e.toLowerCase().includes(value.toLowerCase())).map(matchTag => {
                 return {
                     label: matchTag,

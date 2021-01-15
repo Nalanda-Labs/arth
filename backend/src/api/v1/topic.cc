@@ -113,7 +113,6 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
             for (int i = 0; i < tagList.size(); i++)
             {
                 auto tag = tagList[i].asString();
-                LOG_DEBUG << tag;
                 if (tag.length() > 32)
                 {
                     LOG_DEBUG << "Too big tag: " + tag;
@@ -121,6 +120,12 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                     callback(jsonResponse(std::move(ret)));
                     return;
                 }
+                for (int j = 0; i<tag.length(); j++) {
+                    if(tag[i] >= 'A' && tag[i] <= 'Z') {
+                        tag[i] += 32; // make it uppercase. do not apply transform of c++
+                    }
+                }
+                LOG_DEBUG << tag;
                 tags += "'" + tag + "',"; // need to make it compatible for array syntax for SQL
             }
 

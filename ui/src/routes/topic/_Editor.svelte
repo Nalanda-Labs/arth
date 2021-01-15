@@ -71,12 +71,15 @@
 	}
 
 	// function for auto-completing tags
-	function ts() {
-		const response = api.post("get-tags/", { tags: document.getElementById("tags").value });
+	async function ts() {
+		const response = await api.post("get-tags/", { tag: document.getElementById("tags").value });
 		if (response.tags) {
-			return response.tags;
+			let tags = [];
+			for (let i=0; i<response.tags.length; i++) {
+				tags.push(response.tags[i]["name"]);
+			}
+			return tags;
 		} else {
-			// alert("Error getting tags");
 			return [];
 		}
 	}
