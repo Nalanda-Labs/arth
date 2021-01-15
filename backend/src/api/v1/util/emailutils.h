@@ -8,7 +8,7 @@ class EmailUtils {
 public:
 	/**
 	 * This function removes characters after + in username part and makes it lowercase.
-	 * NOTE: Tihs is not validation stuff. We rely on actual email landing in mailbox
+	 * NOTE: This is not validation stuff. We rely on actual email landing in mailbox
 	 * because email validation is quite painful with unicode letter in it and domain.
 	 * If email is invalid it becomes an empty string.
 	 */
@@ -32,6 +32,11 @@ public:
     		username = email.substr(0, pos);
     		email.erase(0, pos + delimiter.length());
     		i++;
+		}
+
+		/// if @ is not found, the email is not valid anyway
+		if (username.empty()) {
+			return;
 		}
 
 		// email contains domain part now
