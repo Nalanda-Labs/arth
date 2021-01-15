@@ -127,7 +127,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
 
 
                 if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
-                    auto user_id = row["id"].as<unsigned long>();
+                    auto user_id = row["id"].as<size_t>();
                     auto username = row["username"].as<std::string>();
 
                     LOG_DEBUG << "Log in successful";

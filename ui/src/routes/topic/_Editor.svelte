@@ -13,33 +13,36 @@
 	const { session } = stores();
 
 	async function onSubmit() {
-		inProgress = true;
-		if (value.length < 20 || value.length > 100000) {
-			alert(
-				"Topic should not be less than 20 or more than 100000 characters."
+		if ($session.user) {
+			inProgress = true;
+			if (value.length < 20 || value.length > 100000) {
+				alert(
+					"Topic should not be less than 20 or more than 100000 characters."
+				);
+				return;
+			}
+
+			topic.body = value;
+
+			if (topic.tagList.length < 1) {
+				alert("At least one tag should be supplied.");
+			}
+
+			const response = await api.post(
+				"t/create-topic/",
+				{ topic },
+				localStorage.getItem("jwt")
 			);
-			return;
+
+			if (response.id && response.slug) {
+				id = response.id;
+				await goto(`/t/${response.id}/${response.slug}`);
+			}
+
+			inProgress = false;
+		} else {
+			alert("You are not logged in.");
 		}
-
-		topic.body = value;
-
-		if (topic.tagList.length < 1) {
-			alert("At least one tag should be supplied.");
-		}
-
-		const response = await (id
-			? api.put(`topic/${id}`, { topic }, localStorage.getItem("jwt"))
-			: api.post(
-					"t/create-topic/",
-					{ topic },
-					localStorage.getItem("jwt")
-			  ));
-
-		if (response.topic) {
-			goto(`/topic/${response.topic.id}`);
-		}
-
-		inProgress = false;
 	}
 
 	let Editor = null;
@@ -49,7 +52,7 @@
 
 	onMount(async () => {
 		const bytemd = await import("bytemd");
-		Tags = (await import("svelte-tags-input")).default;
+		Tags = (await import("../_components/Tags.svelte")).default;
 		Editor = bytemd.Editor;
 	});
 
@@ -60,7 +63,6 @@
 	function handleTags(event) {
 		topic.tagList = event.detail.tags;
 		let re = /[a-zA-Z0-0\-\+]+/;
-		let tags = [];
 		for (let i = 0; i < topic.tagList.length; i++) {
 			if (topic.tagList[i].length > 32) {
 				alert("32 Characterx max.");
@@ -69,13 +71,24 @@
 	}
 
 	// function for auto-completing tags
-	async function tagList() {}
+	async function ts() {
+		const response = await api.post("get-tags/", { tag: document.getElementById("tags").value });
+		if (response.tags) {
+			let tags = [];
+			for (let i=0; i<response.tags.length; i++) {
+				tags.push(response.tags[i]["name"]);
+			}
+			return tags;
+		} else {
+			return [];
+		}
+	}
 </script>
 
 <div class="editor-page">
 	<div class="container page">
 		<div class="row">
-			<div class="col-md-10 offset-md-1 col-xs-12">
+			<div class="col-md-8 offset-md-2 col-xs-12">
 				<h3>Post your topic for discussion</h3>
 				<hr />
 				<form on:submit|preventDefault={onSubmit}>
@@ -84,13 +97,13 @@
 							<label
 								for="title"
 								class="form-label"
-								style="float:left;margin-right: 10px;margin-top: 8px"
+								style="float:left;margin-right: 10px;margin-top: 8px;"
 								>Title:</label
 							>
 							<span style="display: block;overflow: hidden;">
 								<input
 									class="form-control form-control"
-									style="width:100%;"
+									style="width:100%;border-radius:0;"
 									name="title"
 									type="text"
 									placeholder="Topic summary"
@@ -130,8 +143,9 @@
 								placeholder={"Tags, tab to complete"}
 								allowBlur={true}
 								disable={false}
-								autocomplete={tagList}
+								id={"tags"}
 								minChars={3}
+								autoComplete={ts}
 							/>
 						</fieldset>
 						<div class="wrapper">

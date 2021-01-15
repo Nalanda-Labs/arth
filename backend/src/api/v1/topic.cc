@@ -77,7 +77,6 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
             for (int i = 0; i < tagList.size(); i++)
             {
                 auto tag = tagList[i].asString();
-                LOG_DEBUG << tag;
                 if (tag.length() > 32)
                 {
                     LOG_DEBUG << "Too big tag: " + tag;
@@ -85,6 +84,12 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                     callback(jsonResponse(std::move(ret)));
                     return;
                 }
+                for (int j = 0; i<tag.length(); j++) {
+                    if(tag[i] >= 'A' && tag[i] <= 'Z') {
+                        tag[i] += 32; // make it uppercase. do not apply transform of c++
+                    }
+                }
+                LOG_DEBUG << tag;
                 tags += "'" + tag + "',"; // need to make it compatible for array syntax for SQL
             }
 
@@ -106,7 +111,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                             "update tags set topic_count=topic_count + 1 where name in (" + tags + ")",
                             [=](const Result &r1) mutable {
                                 transPtr->execSqlAsync(
-                                    "insert into topics(title, description, posted_by, updated_by) values($1, $2, $3, $4) returning id",
+                                    "insert into topics(title, description, posted_by, updated_by) values($1, $2, $3, $4) returning *",
                                     [=](const Result &r2) mutable {
                                         for (auto &row : r)
                                         {
@@ -126,8 +131,41 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                                         }
 
                                         LOG_DEBUG << "Topic added";
-                                        ret["message"] = "Topic added";
-                                        ret["topic_id"] = r2[0]["id"].as<size_t>();
+                                        std::string slug;
+                                        bool prev_dash = false;
+
+                                        for (auto &c : title)
+                                        {
+                                            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+                                            {
+                                                slug += c;
+                                                prev_dash = false;
+                                            }
+                                            else if (c >= 'A' and c <= 'Z')
+                                            {
+                                                slug += c;
+                                                prev_dash = false;
+                                            }
+                                            else if (c == ' ' || c == ',' || c == '.' || c == '/' || c == '\\' || c == '-' || c == '_' || c == '=')
+                                            {
+                                                if ((!prev_dash) && (slug.length() > 0))
+                                                {
+                                                    slug += '-';
+                                                    prev_dash = true;
+                                                }
+                                            }
+                                            else if (c > 160)
+                                            {
+                                                slug += c;
+                                                prev_dash = false;
+                                            }
+                                        }
+                                        if (prev_dash)
+                                            slug = slug.substr(0, slug.size() - 1);
+
+                                        LOG_DEBUG << slug;
+                                        ret["slug"] = slug;
+                                        ret["id"] = r2[0]["id"].as<Json::UInt64>();
                                         callback(jsonResponse(std::move(ret)));
                                         return;
                                     },

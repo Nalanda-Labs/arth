@@ -25,6 +25,7 @@ set(arth_sources
     src/api/v1/plugins/email.cc
     src/api/v1/topic.cc
     src/api/v1/profile.cc
+    src/api/v1/tags.cc
     )
 
 add_executable(${PROJECT_NAME} ${arth_sources})
