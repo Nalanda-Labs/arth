@@ -174,7 +174,7 @@ void ForgotPassword::forgotPassword(const HttpRequestPtr &req,
     }
 }
 
-void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback)
+void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback, const std::string &token)
 {
     auto json = req->getJsonObject();
     Json::Value ret;
@@ -186,8 +186,7 @@ void ForgotPassword::changePassword(const HttpRequestPtr &req, Callback callback
         callback(jsonResponse(std::move(ret)));
         return;
     }
-
-    auto token = req->getParameter("token");
+        
     auto newPassword = json->get("new_password", "").asString();
 
     LOG_DEBUG << "token: " << token << "\n";

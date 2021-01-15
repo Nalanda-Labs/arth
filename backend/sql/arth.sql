@@ -85,6 +85,8 @@ CREATE TABLE public.users (
 	email VARCHAR(255) NOT NULL,
 	email_verified BOOL NULL DEFAULT false,
 	email_verification_code VARCHAR(64) NULL DEFAULT '':::STRING,
+	designation VARCHAR NULL,
+	location VARCHAR NULL,
 	CONSTRAINT users_pkey PRIMARY KEY (id ASC),
 	INDEX idx_users_admin (admin ASC) WHERE admin = true,
 	UNIQUE INDEX users_emails (email ASC),
