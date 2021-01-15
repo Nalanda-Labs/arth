@@ -50,14 +50,13 @@ void Tags::getTags(const HttpRequestPtr &req, Callback callback)
                     if (rows.size() == 0)
                     {
                         ret["tags"] = Json::arrayValue;
-                        ;
                         callback(jsonResponse(std::move(ret)));
                         return;
                     }
                     else
                     {
                         ret["tags"] = Json::arrayValue;
-                        ;
+
                         for (auto &r : rows)
                         {
                             Json::Value tag;

@@ -1,14 +1,14 @@
 <script context="module">
     export function preload({ params }, { user }) {
-        let [id, slug] = params.id;
+        let [id, slug] = [params.id, params.slug];
         return { id, slug };
     }
 </script>
 
 <script>
     import Editor from "../../../_components/Editor.svelte";
-    import Topics from "./topics.svelte";
-    import { goto, stores } from "@sapper/app";
+    import Topics from "./Topics.svelte";
+    import { stores } from "@sapper/app";
 
     export let id;
     export let slug;
