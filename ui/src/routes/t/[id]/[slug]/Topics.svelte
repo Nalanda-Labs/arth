@@ -7,35 +7,55 @@
     export let id;
     export let slug;
 
-    let topics = [];
+    let descs = [];
     let title = "";
     let taglist = [];
     let value = "";
     let Viewer = null;
+    let offset = 0;
+    let limit = 10;
+    let count = 0;
+    let time = "";
 
-        onMount(async () => {
+    onMount(async () => {
         const bytemd = await import("bytemd");
         Viewer = bytemd.Viewer;
 
-        const response = await api.get(
+        let response = await api.get(
             `t/${id}/${slug}`,
             localStorage.getItem("jwt")
         );
 
-        console.log(response);
-
         if (response.topic) {
-            topics = response.topic;
-            title = response.title;            
-            value = topics[0].description;
-            taglist = response.tags.map(tag => tag.name);
+            title = response.title;
+            value = response.topic.description;
+            taglist = response.tags.map((tag) => tag.name);
+            time = response.topic.created_at;
         }
-    });
+        response = await api.get(
+            `t/${id}/get-discussion/?time=${time}&limit=${limit}`,
+            localStorage.getItem("jwt")
+        );
+
+        if (response.topics) {
+            descs = response.topics.map(topic => topic.description);
+            offset += limit;
+            time = response.topics[response.topics.length - 1].created_at;
+        }
+    });    
 </script>
+
+<svelte:head>
+    <title>{title}</title>
+</svelte:head>
 
 <div>
     <h3>{title}</h3>
-    <hr/>
+    <hr />
     <svelte:component this={Viewer} {value} />
     <TagList {taglist} />
+    {#each descs as value}
+    <hr/>
+    <svelte:component this={Viewer} {value} />
+    {/each}
 </div>

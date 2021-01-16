@@ -26,9 +26,10 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
     auto customConfig = app().getCustomConfig();
     auto jwt_secret = customConfig.get("jwt_secret", "").asString();
 
-    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);    
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
 
-    if (!optionalToken.has_value()) {
+    if (!optionalToken.has_value())
+    {
         ret["error"] = "Authentication Error";
         callback(jsonResponse(std::move(ret)));
         return;
@@ -195,15 +196,11 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
     }
 }
 
-void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const std::string &id, const std::string &slug)
+void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "")
 {
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         Json::Value ret;
-        std::stringstream sstream(id);
-        size_t tid;
-        sstream >> tid;
-        LOG_DEBUG << tid;
 
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             transPtr->execSqlAsync(
@@ -217,18 +214,19 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const std::st
                     else
                     {
                         ret["title"] = r[0]["title"].as<std::string>();
-                        ret["topic"] = Json::arrayValue;
                         Json::Value topic;
                         topic["description"] = r[0]["description"].as<std::string>();
-                        topic["visible"] = r[0]["visible"].as<bool>();
-                        Json::Value::UInt64 posted_by = r[0]["posted_by"].as<uint64_t>();
-                        topic["posted_by"] = posted_by;
-                        ret["topic"].append(topic);
+                        topic["visible"] = r[0]["visible"].as<bool>();                        
+                        topic["posted_by"] = r[0]["posted_by"].as<std::string>();
+                        topic["created_at"] = r[0]["created_at"].as<std::string>();
+                        topic["updated_at"] = r[0]["updated_at"].as<std::string>();
+                        ret["topic"] = topic;
 
                         transPtr->execSqlAsync(
                             "select name from tags left join topic_tags on topic_tags.tag_id=tags.id where topic_tags.topic_id=$1",
                             [=](const Result &r1) mutable {
                                 ret["tags"] = Json::arrayValue;
+
                                 for (auto &row : r1)
                                 {
                                     Json::Value tag;
@@ -237,34 +235,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const std::st
                                     tag["name"] = row["name"].as<std::string>();
                                     ret["tags"].append(tag);
                                 }
-
-                                transPtr->execSqlAsync(
-                                    "select * from topics where op_id=$1",
-                                    [=](const Result &r2) mutable {
-                                        ret["tags"] = Json::arrayValue;
-                                        LOG_DEBUG << r2.size();
-
-                                        for (auto &row : r2)
-                                        {
-                                            Json::Value topic;
-                                            topic["description"] = row["description"].as<std::string>();
-                                            topic["visible"] = row["visible"].as<bool>();
-                                            Json::Value::UInt64 posted_by = row["posted_by"].as<uint64_t>();
-                                            topic["posted_by"] = posted_by;
-                                            ret["topic"].append(topic);
-                                        }
-
-                                        LOG_DEBUG << "returning";
-                                        callback(jsonResponse(std::move(ret)));
-                                        return;
-                                    },
-                                    [=](const DrogonDbException &e) mutable {
-                                        LOG_DEBUG << e.base().what();
-                                        ret["error"] = (std::string)e.base().what();
-                                        callback(jsonResponse(std::move(ret)));
-                                        return;
-                                    },
-                                    tid);
+                                callback(jsonResponse(std::move(ret)));
                                 return;
                             },
                             [=](const DrogonDbException &e) mutable {
@@ -282,6 +253,48 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const std::st
                     callback(jsonResponse(std::move(ret)));
                 },
                 tid);
+        });
+    }
+}
+
+void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
+                          const std::string &created_at, const size_t &limit = 10)
+{
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        Json::Value ret;
+        LOG_DEBUG << tid;
+
+        // never use offset in cocorachdb it does not work well in terms of execution speed
+        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
+            transPtr->execSqlAsync(
+                "select count(*) over(), t.* from topics t where op_id=$1  and created_at > $2 order by created_at asc limit $3",
+                [=](const Result &rows) mutable {
+                    ret["topics"] = Json::arrayValue;
+
+                    LOG_DEBUG << rows.size();
+                    for (auto &r : rows)
+                    {
+                        Json::Value topic;
+                        topic["description"] = r["description"].as<std::string>();
+                        topic["visible"] = r["visible"].as<bool>();
+                        topic["posted_by"] = r["posted_by"].as<std::string>();
+                        topic["created_at"] = r["created_at"].as<std::string>();
+                        topic["updated_at"] = r["updated_at"].as<std::string>();
+
+                        ret["topics"].append(topic);
+                    }
+
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                },
+                tid, created_at, limit);
         });
     }
 }
