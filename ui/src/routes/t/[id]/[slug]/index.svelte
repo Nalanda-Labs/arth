@@ -7,7 +7,7 @@
 
 <script>
     import Editor from "../../../_components/Editor.svelte";
-    import Topics from "./Topics.svelte";
+    import Topics from "./_Topics.svelte";
     import { stores } from "@sapper/app";
 
     export let id;
@@ -21,7 +21,7 @@
 </svelte:head>
 
 <div class="editor-page">
-    <div class="container page">
+    <div class="container-fluid page">
         <div class="row">
             <div class="col-md-8 offset-md-2 col-xs-12">
                 <Topics {id} {slug} />

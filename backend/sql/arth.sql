@@ -1,56 +1,48 @@
 CREATE TABLE public.email_tokens (
 	email VARCHAR(256) NOT NULL,
 	user_id INT8 NOT NULL,
-	token VARCHAR(64) NOT NULL,
-	created_at TIMESTAMP NOT NULL DEFAULT now():::TIMESTAMP,
+	token VARCHAR(64) NOT NULL unique,
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
 	confirmed BOOL NULL DEFAULT false,
-	expired BOOL NULL DEFAULT false,
-	UNIQUE INDEX email_tokens_token_key (token ASC),
-	FAMILY "primary" (email, user_id, token, created_at, rowid, confirmed, expired)
+	expired BOOL NULL DEFAULT false
 );
 
 CREATE TABLE public.tags (
-	id INT8 NOT NULL DEFAULT unique_rowid(),
+	id bigserial primary key,
 	name VARCHAR(64) NOT NULL,
-	topic_count INT8 NULL DEFAULT 0:::INT8,
-	created_at TIMESTAMP NOT NULL DEFAULT now():::TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT now():::TIMESTAMP,
-	CONSTRAINT "primary" PRIMARY KEY (id ASC),
-	FAMILY "primary" (id, name, topic_count, created_at, updated_at)
+	topic_count INT8 NULL DEFAULT 0,
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE public.topic_tags (
-	id INT8 NOT NULL DEFAULT unique_rowid(),
-	topic_id INT8 NOT NULL DEFAULT unique_rowid(),
-	tag_id INT8 NOT NULL DEFAULT unique_rowid(),
-	created_at TIMESTAMP NOT NULL,
-	updated_at TIMESTAMP NOT NULL,
-	CONSTRAINT "primary" PRIMARY KEY (id ASC),
-	FAMILY "primary" (id, topic_id, tag_id, created_at, updated_at)
+	id bigserial primary key,
+	topic_id INT8 NOT NULL DEFAULT 0,
+	tag_id INT8 NOT NULL DEFAULT 0,
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE public.topics (
-	id INT8 NOT NULL DEFAULT unique_rowid(),
+	id bigserial primary key,
 	title VARCHAR(512) NOT NULL,
 	description VARCHAR(1000000) NOT NULL,
 	tag_ids INT8[] NULL,
-	posted_by INT8 NOT NULL DEFAULT unique_rowid(),
-	created_at TIMESTAMP NOT NULL DEFAULT now():::TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT now():::TIMESTAMP,
-	upadted_by INT8 NOT NULL DEFAULT unique_rowid(),
+	posted_by INT8 NOT NULL DEFAULT 0,
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
+	updated_at TIMESTAMP NOT NULL DEFAULT now(),
+	upadted_by INT8 NOT NULL DEFAULT 0,
 	visible BOOL NULL DEFAULT true,
-	op_id INT8 NOT NULL DEFAULT unique_rowid(),
-	CONSTRAINT "primary" PRIMARY KEY (id ASC),
-	FAMILY "primary" (id, title, description, tag_ids, posted_by, created_at, updated_at, upadted_by, visible, op_id)
+	op_id INT8 NOT NULL DEFAULT 0
 );
 
 CREATE TABLE public.users (
-	id INT8 NOT NULL DEFAULT unique_rowid(),
+	id bigserial primary key,
 	username VARCHAR(60) NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	updated_at TIMESTAMP NOT NULL,
 	name VARCHAR NULL,
-	seen_notification_id INT8 NOT NULL DEFAULT 0:::INT8,
+	seen_notification_id INT8 NOT NULL DEFAULT 0,
 	last_posted_at TIMESTAMP NULL,
 	password_hash VARCHAR(256) NULL,
 	salt VARCHAR(64) NULL,
@@ -67,8 +59,8 @@ CREATE TABLE public.users (
 	suspended_at TIMESTAMP NULL,
 	suspended_till TIMESTAMP NULL,
 	date_of_birth DATE NULL,
-	views INT8 NOT NULL DEFAULT 0:::INT8,
-	flag_level INT8 NOT NULL DEFAULT 0:::INT8,
+	views INT8 NOT NULL DEFAULT 0,
+	flag_level INT8 NOT NULL DEFAULT 0,
 	ip_address INET NULL,
 	moderator BOOL NULL DEFAULT false,
 	title VARCHAR NULL,
@@ -84,11 +76,7 @@ CREATE TABLE public.users (
 	secure_identifier VARCHAR NULL,
 	email VARCHAR(255) NOT NULL,
 	email_verified BOOL NULL DEFAULT false,
-	email_verification_code VARCHAR(64) NULL DEFAULT '':::STRING,
+	email_verification_code VARCHAR(64) NULL DEFAULT '',
 	designation VARCHAR NULL,
-	location VARCHAR NULL,
-	CONSTRAINT users_pkey PRIMARY KEY (id ASC),
-	INDEX idx_users_admin (admin ASC) WHERE admin = true,
-	UNIQUE INDEX users_emails (email ASC),
-	FAMILY "primary" (id, username, created_at, updated_at, name, seen_notification_id, last_posted_at, password_hash, salt, active, username_lower, last_seen_at, admin, last_emailed_at, trust_level, approved, approved_by_id, approved_at, previous_visit_at, suspended_at, suspended_till, date_of_birth, views, flag_level, ip_address, moderator, title, uploaded_avatar_id, locale, primary_group_id, registration_ip_address, staged, first_seen_at, silenced_till, group_locked_trust_level, manual_locked_trust_level, secure_identifier, email, email_verified, email_verification_code)
+	location VARCHAR NULL
 );

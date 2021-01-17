@@ -7,6 +7,7 @@ import { terser } from 'rollup-plugin-terser';
 import config from 'sapper/config/rollup.js';
 import pkg from './package.json';
 import json from '@rollup/plugin-json';
+import postcss from "rollup-plugin-postcss";
 
 const mode = process.env.NODE_ENV;
 const dev = mode === 'development';
@@ -30,13 +31,26 @@ export default {
 			svelte({
 				dev,
 				hydratable: true,
-				emitCss: true
+				emitCss: false
 			}),
 			resolve({
 				browser: true,
 				dedupe: ['svelte']
 			}),
 			commonjs(),
+			postcss({
+				extensions: ['.scss', '.sass'],
+				extract: false,
+				minimize: true,
+				use: [
+				  ['sass', {
+					includePaths: [
+					  './src/theme',
+					  './node_modules'
+					]
+				  }]
+				]
+			  }),
 
 			legacy && babel({
 				extensions: ['.js', '.html'],
@@ -82,7 +96,20 @@ export default {
 			resolve({
 				dedupe: ['svelte']
 			}),
-			commonjs()
+			commonjs(),
+			postcss({
+				extensions: ['.scss', '.sass'],
+				extract: false,
+				minimize: true,
+				use: [
+				  ['sass', {
+					includePaths: [
+					  './src/theme',
+					  './node_modules'
+					]
+				  }]
+				]
+			  }),
 		],
 		external: Object.keys(pkg.dependencies).concat(
 			require('module').builtinModules || Object.keys(process.binding('natives'))

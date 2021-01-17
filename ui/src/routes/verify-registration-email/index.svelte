@@ -10,22 +10,15 @@
     import { goto, stores } from "@sapper/app";
     import ListErrors from "../_components/ListErrors.svelte";
     import { onMount } from "svelte";
+    import * as api from "api.js";
 
     const { session } = stores();
     let response = {};
 
     onMount(async () => {
-        await fetch(
-            `/api/v1` + window.location.pathname + window.location.search
-        ).then((response) => response.json().then(data => {
-            if(data.error) {
-                alert(data.error);
-                return;
-            } else {
-                alert(data.message);
-                goto('/');
-            }
-        }));
+        response = await api.get(
+            window.location.pathname + window.location.search
+        );
     });
 </script>
 

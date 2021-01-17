@@ -7,15 +7,20 @@
 </script>
 
 <script>
-	import { goto, stores } from '@sapper/app';
-	import ListErrors from '../_components/ListErrors.svelte';
-	import { post } from 'utils.js';
+	import { goto, stores } from "@sapper/app";
+	import ListErrors from "../_components/ListErrors.svelte";
+	import { post } from "utils.js";
 	import jwt_decode from "jwt-decode";
+	import Textfield from "@smui/textfield";
+	import Icon from "@smui/textfield/icon/index";
+	import Button, { Label } from "@smui/button";
+	import HelperText from "@smui/textfield/helper-text/index";
+	import "../_utils.scss";
 
 	const { session } = stores();
 
-	let email = '';
-	let password = '';
+	let email = "";
+	let password = "";
 	let errors = null;
 	let response = {};
 
@@ -24,59 +29,71 @@
 
 		if (response.error) {
 			alert(response.error);
-		}else if (response.jwt) {
+		} else if (response.jwt) {
 			const decoded = jwt_decode(response.jwt);
 			localStorage.setItem("jwt", response.jwt);
 			$session.user = decoded["username"];
-			goto('/');
+			goto("/");
 		}
 	}
 </script>
-<style>
-	.wrapper {
-		width: 100%;
-		height: 100px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-</style>
 
 <svelte:head>
 	<title>Sign in • Arth</title>
 </svelte:head>
 
-<div class="auth-page">
-	<div class="container page">
-		<div class="row">
-			<div class="col-md-6 offset-md-3 col-xs-12">
-				<h1 class="text-xs-center">Sign In</h1>
-				<p class="text-xs-center">
-					<a href="/register">Need an account?</a>
-					or
-					<a href="/forgot-password">Forgot password?</a>
-				</p>
+<div class="wrapper">
+	<div>
+		<h3>Sign In</h3>
+		<p>
+			<a style="text-decoration:none" href="/register">Need an account?</a>
+			or
+			<a style="text-decoration:none" href="/forgot-password">Forgot
+				password?</a>
+		</p>
 
-				<ListErrors {response}/>
+		<ListErrors {response} />
 
-				<form on:submit|preventDefault={submit}>
-					<fieldset class="form-group">
-						<label for="email" class="form-label">Email:</label>
-						<input class="form-control form-control-sm" type="email" required placeholder="Email" bind:value={email}>
-						<div class="form-text">We'll never share your email with anyone else.</div>
-					</fieldset>
-					<fieldset class="form-group">
-						<label for="password" class="form-label">Passphrase:</label>
-						<input class="form-control form-control-sm" type="password" required placeholder="Passphrase min 16 characters" bind:value={password} minlength="16" maxlength="1024">
-						<div class="form-text">Never share.</div>
-					</fieldset>
-					<div class="wrapper">
-						<button class="btn btn-lg btn-primary pull-xs-right" style="">
-							Sign In
-						</button>
-					</div>
-				</form>
+		<form on:submit|preventDefault={submit}>
+			<div>
+				<Textfield
+					withTrailingIcon
+					bind:value={email}
+					label="Email"
+					type="email"
+					minlength="6"
+					maxlength="256"
+					style="width:400px"
+					input$aria-controls="helper-text-standard-c"
+					input$aria-describedby="helper-text-standard-c">
+					<Icon class="material-icons">email</Icon>
+				</Textfield>
+				<HelperText id="helper-text-standard-c">
+					We will never share your email with anyone
+				</HelperText>
 			</div>
-		</div>
+			<div>
+				<Textfield
+					withTrailingIcon
+					bind:value={password}
+					label="Password"
+					type="password"
+					minlength="16"
+					maxlength="60"
+					style="width:400px"
+					input$aria-controls="helper-text-standard-c"
+					input$aria-describedby="helper-text-standard-c">
+					<Icon class="material-icons">password</Icon>
+				</Textfield>
+				<HelperText id="helper-text-standard-c">
+					16 characters. Never share.
+				</HelperText>
+			</div>
+			<div class="b-wrapper">
+				<Button variant="raised">
+					<Label>Log In</Label>
+				</Button>
+			</div>
+		</form>
 	</div>
 </div>

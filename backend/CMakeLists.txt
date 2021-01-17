@@ -29,11 +29,12 @@ set(arth_sources
     )
 
 add_executable(${PROJECT_NAME} ${arth_sources})
-target_include_directories(arth PRIVATE "/usr/include/jsoncpp")
+target_include_directories(arth PRIVATE "/usr/include/")
+target_include_directories(arth PRIVATE "/usr/include/jsoncpp/")
 
 
 find_package(OpenSSL REQUIRED)
-find_package(jsoncpp REQUIRED)
+#find_package(Jsoncpp REQUIRED)
 find_package(ZLIB REQUIRED)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -46,4 +47,4 @@ find_library(argon2 REQUEIRD)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} 
 	Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec
-	pq sqlite3 ssl crypto argon2 bsd)
+	pq ssl crypto argon2 bsd dl)
