@@ -3,6 +3,11 @@
 	import * as api from "api.js";
 	import { onMount } from "svelte";
 	import "bytemd/dist/index.min.css";
+	import "../_elevated.scss";
+	import "../_utils.scss";
+	import Textfield from "@smui/textfield";
+	import Button, { Label } from "@smui/button";
+	import HelperText from "@smui/textfield/helper-text/index";
 	// import gfm from "@bytemd/plugin-gfm";
 
 	export let topic;
@@ -72,10 +77,12 @@
 
 	// function for auto-completing tags
 	async function ts() {
-		const response = await api.post("get-tags/", { tag: document.getElementById("tags").value });
+		const response = await api.post("get-tags/", {
+			tag: document.getElementById("tags").value,
+		});
 		if (response.tags) {
 			let tags = [];
-			for (let i=0; i<response.tags.length; i++) {
+			for (let i = 0; i < response.tags.length; i++) {
 				tags.push(response.tags[i]["name"]);
 			}
 			return tags;
@@ -85,87 +92,65 @@
 	}
 </script>
 
-<div class="editor-page">
-	<div class="container page">
-		<div class="row">
-			<div class="col-md-8 offset-md-2 col-xs-12">
-				<h3>Post your topic for discussion</h3>
-				<hr />
-				<form on:submit|preventDefault={onSubmit}>
-					<fieldset>
-						<fieldset class="form-group">
-							<label
-								for="title"
-								class="form-label"
-								style="float:left;margin-right: 10px;margin-top: 8px;"
-								>Title:</label
-							>
-							<span style="display: block;overflow: hidden;">
-								<input
-									class="form-control form-control"
-									style="width:100%;border-radius:0;"
-									name="title"
-									type="text"
-									placeholder="Topic summary"
-									bind:value={topic.title}
-									required="true"
-									minlength="10"
-									maxlength="256"
-								/>
-							</span>
-						</fieldset>
-
-						<fieldset class="form-group" style="margin-top:20px">
-							<svelte:component
-								this={Editor}
-								on:change={handleChange}
-								{value}
-							/>
-						</fieldset>
-						<fieldset class="form-group" style="margin-top:20px">
-							<label
-								for="tags"
-								class="form-label"
-								style="float:left;margin-right: 10px;margin-top: 8px"
-								>Tags:</label
-							>
-							<svelte:component
-								this={Tags}
-								name={"tags"}
-								on:tags={handleTags}
-								addKeys={[9]}
-								maxTags={5}
-								allowPaste={true}
-								allowDrop={true}
-								splitWith={","}
-								onlyUnique={true}
-								removeKeys={[27]}
-								placeholder={"Tags, tab to complete"}
-								allowBlur={true}
-								disable={false}
-								id={"tags"}
-								minChars={3}
-								autoComplete={ts}
-							/>
-						</fieldset>
-						<div class="wrapper">
-							<button
-								class="btn btn btn-primary pull-xs-right"
-								data-action="submit"> Create Topic </button>
-						</div>
-					</fieldset>
-				</form>
-			</div>
-		</div>
-	</div>
-</div>
-
 <style>
-	.wrapper {
-		width: 100%;
-		height: 100px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	@media (max-width: 720px) {
+		.topic {
+			width: 100%;
+		}
+	}
+	@media (max-width: 4096px) {
+		.topic {
+			width: 800px;
+		}
 	}
 </style>
+
+<div class="topic">
+	<h3>Post your topic for discussion</h3>
+	<hr />
+	<form on:submit|preventDefault={onSubmit}>
+		<div>
+			<Textfield
+				withTrailingIcon
+				bind:value={topic.title}
+				label="Title"
+				type="text"
+				minlength="6"
+				maxlength="256"
+				style="min-width:100%"
+				input$aria-controls="helper-text-standard-c"
+				input$aria-describedby="helper-text-standard-c" />
+			<HelperText id="helper-text-standard-c">
+				Summary of your topic
+			</HelperText>
+		</div>
+		<svelte:component
+			this={Editor}
+			on:change={handleChange}
+			mode="tab"
+			{value}/>
+		<div style="margin:30px"/>
+		<svelte:component
+			this={Tags}
+			name={'tags'}
+			on:tags={handleTags}
+			addKeys={[9]}
+			maxTags={5}
+			allowPaste={true}
+			allowDrop={true}
+			splitWith={','}
+			onlyUnique={true}
+			removeKeys={[27, 8]}
+			placeholder={'Tags, tab to complete'}
+			allowBlur={true}
+			disable={false}
+			id={'tags'}
+			minChars={3}
+			autoComplete={ts} />
+		<div class="b-wrapper">
+			<Button variant="raised">
+				<Label>Ask</Label>
+			</Button>
+		</div>
+	</form>
+</div>
