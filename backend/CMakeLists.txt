@@ -47,4 +47,4 @@ find_library(argon2 REQUEIRD)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} 
 	Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec
-	pq ssl crypto argon2 bsd dl)
+	pq ssl crypto argon2 bsd dl sqlite3)

@@ -1,20 +1,30 @@
 <script context="module">
 	export function preload({ params }) {
 		let username = params.username;
-		return {username};
+		return { username };
 	}
 </script>
 
 <script>
-	import { navOptions } from "./_Tabs.svelte"; // import application navigation
-	let selected = navOptions[0]; // keep track of the selected 'page' object (default to the about component since we must have local db connection established first)
-	let intSelected = 0; // selected page index
+	import { navOptions } from "./_Tabs.svelte";
+	import Tab, { Icon, Label } from "@smui/tab";
+	import TabBar from "@smui/tab-bar";
+	import "../../_utils.scss";
 
 	export let username;
-	// change the selected component (the event.originalTarget.id is not accessible in Chrome so switched to event.srcElement.id)
-	function changeComponent(event) {
-		selected = navOptions[event.srcElement.id];
-		intSelected = event.srcElement.id;
+	let tabName = "Profile";
+	let component = navOptions[0].component;
+
+	function getComponent() {
+		for(let i=0; i<navOptions.length; i++) {
+			if(navOptions[i].page === tabName) {
+				return navOptions[i].component;
+			}
+		}
+	}
+	function setTabName(name) {
+		tabName = name;
+		component = getComponent();
 	}
 </script>
 
@@ -22,27 +32,28 @@
 	<title>All about {username}</title>
 </svelte:head>
 
-<div>
+<style>
+	@media (max-width: 720px) {
+		.topic {
+			width: 100%;
+		}
+	}
+	@media (max-width: 4096px) {
+		.topic {
+			width: 800px;
+		}
+	}
+</style>
+
+<div class="topic">
 	<!--app navigation -->
 	<h3 style="margin-top:20px">{username}'s Profile</h3>
 	<hr />
-	<ul class="nav nav-tabs">
-		{#each navOptions as option, i}
-			<li class="nav-item" style="margin-right:25px;">
-				<a
-					class={intSelected == i ? 'nav-link active p-2 ml-1' : 'p-2 ml-1 nav-link'}
-					on:click={changeComponent}
-					id={i}
-					role="tab">
-					{option.page}
-				</a>
-			</li>
-		{/each}
-	</ul>
-	<!-- content wrapper -->
-	<div class="row" style="margin-top:10px">
-		<div class="col-sm-12 col-md-12">
-		<svelte:component this={selected.component} {username}/>
-		</div>
-	</div>
+	<TabBar tabs={navOptions.map(option => option.page)} let:tab>
+		<Tab {tab} minWidth on:click={setTabName(tab)}>
+			<Label>{tab}</Label>
+		</Tab>
+	</TabBar>
+
+	<svelte:component this={component} {username} />
 </div>

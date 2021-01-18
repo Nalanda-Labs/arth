@@ -3,7 +3,6 @@
 	import * as api from "api.js";
 	import { onMount } from "svelte";
 	import "bytemd/dist/index.min.css";
-	import "../_elevated.scss";
 	import "../_utils.scss";
 	import Textfield from "@smui/textfield";
 	import Button, { Label } from "@smui/button";
