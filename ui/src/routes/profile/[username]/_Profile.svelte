@@ -46,29 +46,31 @@
     });
 </script>
 
-<div class="col-12 col-sm-12 col-md-2" style="float:left;margin-right:10px">
-    <img src={image_url} alt={image_alt} width="200px" height="200px" />
-</div>
-<div class="col-12 col-sm-12 col-md-6" style="float:left">
-    <table>
-        <tr>
-            <td style="float:right;margin-right:10px">Title:</td>
-            {#if $session.user == username}
-                <td><span contenteditable="true">{title}</span></td>
-            {:else}
-                <td><span>{title}</span></td>
-            {/if}
-        </tr>
-        <tr>
-            <td style="float:right;margin-right:10px">Name:</td>
-            {#if $session.user == username}
-                <td><span contenteditable="true">{name}</span></td>
-            {:else}
-                <td><span>{name}</span></td>
-            {/if}
-        </tr>
-    </table>
-</div>
-<div class="col-12 col-sm-12 col-md-3" style="display:inline">
-    <p class="card-text">It is software - made up of bugs. Col3</p>
+<div class="row">
+    <div class="col-12 col-sm-12 col-md-2" style="float:left;margin-right:10px">
+        <img src={image_url} alt={image_alt} width="160px" height="200px" />
+    </div>
+    <div class="col-12 col-sm-12 col-md-6" style="float:left">
+        <table>
+            <tr>
+                <td style="float:right;margin-right:10px">Title:</td>
+                {#if $session.user == username}
+                    <td><span contenteditable="true">{title}</span></td>
+                {:else}
+                    <td><span>{title}</span></td>
+                {/if}
+            </tr>
+            <tr>
+                <td style="float:right;margin-right:10px">Name:</td>
+                {#if $session.user == username}
+                    <td><span contenteditable="true">{name}</span></td>
+                {:else}
+                    <td><span>{name}</span></td>
+                {/if}
+            </tr>
+        </table>
+    </div>
+    <div class="col-12 col-sm-12 col-md-3" style="display:inline">
+        <p class="card-text">It is software - made up of bugs. Col3</p>
+    </div>
 </div>

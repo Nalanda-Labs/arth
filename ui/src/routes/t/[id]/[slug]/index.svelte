@@ -12,6 +12,7 @@
 
     export let id;
     export let slug;
+    let body="";
 
     const { session } = stores();
 </script>
@@ -26,7 +27,7 @@
             <div class="col-md-8 offset-md-2 col-xs-12">
                 <Topics {id} {slug} />
                 {#if $session.user}
-                    <Editor />
+                    <Editor mode="tab" {body}/>
                 {/if}
             </div>
         </div>

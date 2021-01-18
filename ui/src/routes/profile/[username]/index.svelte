@@ -33,19 +33,19 @@
 </svelte:head>
 
 <style>
-	@media (max-width: 720px) {
-		.topic {
+	@media screen and (max-width: 480px) {
+		.sm-topic {
 			width: 100%;
 		}
 	}
-	@media (max-width: 4096px) {
-		.topic {
-			width: 800px;
+	@media screen and (min-width:481px) and (max-width: 4098px) {
+		.md-topic {
+			width: 70%;
 		}
 	}
 </style>
 
-<div class="topic">
+<div class="sm-topic md-topic">
 	<!--app navigation -->
 	<h3 style="margin-top:20px">{username}'s Profile</h3>
 	<hr />
