@@ -14,23 +14,23 @@ html {
 }
 
 h1 {
-  @include mdc-typography('headline1');
-}
-
-h2 {
   @include mdc-typography('headline2');
 }
 
-h3 {
+h2 {
   @include mdc-typography('headline3');
 }
 
-h4 {
+h3 {
   @include mdc-typography('headline4');
 }
 
-h5 {
+h4 {
   @include mdc-typography('headline5');
+}
+
+h5 {
+  @include mdc-typography('headline6');
 }
 
 h6 {

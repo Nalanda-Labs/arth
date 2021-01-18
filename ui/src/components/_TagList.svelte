@@ -3,8 +3,8 @@
 
 </script>
 
-<ul class="list-group list-group-horizontal-sm">
+<ul style="list-style-type:none">
     {#each taglist as tag}
-        <li class="list-group-item" style="margin-right:5px;background-color:#ddd">{tag}</li>
+        <li style="margin-right:5px;background-color:#ddd;display:inline;padding:7px">{tag}</li>
     {/each}
 </ul>

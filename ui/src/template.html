@@ -25,7 +25,6 @@
 	<!-- Sapper creates a <script> tag containing `app/client.js`
 	     and anything else it needs to hydrate the app and
 	     initialise the router -->
-	%sapper.scripts%
 
 	<!-- Sapper generates a <style> tag containing critical CSS
 	     for the current page. CSS for the rest of the app is
@@ -41,6 +40,7 @@
 	<!-- The application will be rendered inside this element,
 	     because `app/client.js` references it -->
 	<app>%sapper.html%</app>
+	%sapper.scripts%
 </body>
 
 </html>

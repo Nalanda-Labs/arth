@@ -6,7 +6,7 @@
 </script>
 
 <script>
-	import { navOptions } from "./_Nav.svelte"; // import application navigation
+	import { navOptions } from "./_Tabs.svelte"; // import application navigation
 	let selected = navOptions[0]; // keep track of the selected 'page' object (default to the about component since we must have local db connection established first)
 	let intSelected = 0; // selected page index
 
@@ -22,7 +22,7 @@
 	<title>All about {username}</title>
 </svelte:head>
 
-<div class="container">
+<div>
 	<!--app navigation -->
 	<h3 style="margin-top:20px">{username}'s Profile</h3>
 	<hr />

@@ -35,37 +35,39 @@
 			name: "Create Topic",
 			route: "/ask",
 			protected: true,
+			logout_only: false
 		},
 		{
 			name: "Browse Topics",
 			route: "/topics",
 			protected: false,
+			logout_only: false
 		},
 		{
 			name: "Tags",
 			route: "/tags",
 			protected: false,
+			logout_only: false
 		},
 		{
 			name: "Users",
 			route: "/users",
 			protected: false,
+			logout_only: false
 		},
 		{
 			name: "Profile",
-			route: `/profile/${session.user}`,
+			route: `/profile/${$session.user}`,
 			protected: true,
+			logout_only: false
 		},
 		{
 			name: "Register",
 			route: "/register",
 			protected: false,
+			logout_only: true
 		},
 	];
-
-	let activeSection = sections.find(
-		(section) => "route" in section && section.route === $page.path
-	);
 
 	onMount(setMiniWindow);
 
@@ -148,7 +150,7 @@
 		<Content>
 			<List>
 				{#each sections as section (section.name)}
-					{#if section.protected && $session.user}
+					{#if $session.user && !section.logout_only}
 						<Item
 							bind:this={section.component}
 							href={'route' in section ? section.route : section.shortcut}
@@ -160,7 +162,7 @@
 								{section.name}
 							</Text>
 						</Item>
-					{:else if !section.protected}
+					{:else if !section.protected && !$session.user}
 						<Item
 							bind:this={section.component}
 							href={'route' in section ? section.route : section.shortcut}
