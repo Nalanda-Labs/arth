@@ -155,12 +155,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
                                                     slug += '-';
                                                     prev_dash = true;
                                                 }
-                                            }
-                                            else if (c > 160)
-                                            {
-                                                slug += c;
-                                                prev_dash = false;
-                                            }
+                                            }                                            
                                         }
                                         if (prev_dash)
                                             slug = slug.substr(0, slug.size() - 1);
