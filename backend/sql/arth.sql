@@ -119,8 +119,7 @@ CREATE TABLE public.topics (
     tag_ids bigint[],
     posted_by bigint DEFAULT 0 NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    upadted_by bigint DEFAULT 0 NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,    
     visible boolean DEFAULT true,
     op_id bigint DEFAULT 0 NOT NULL,
     updated_by bigint
