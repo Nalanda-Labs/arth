@@ -45,7 +45,7 @@ void Tags::getTags(const HttpRequestPtr &req, Callback callback)
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=](TransactionPtr transPtr) mutable {
             transPtr->execSqlAsync(
-                "select name from tags where name like '" + tag + "%'",
+                "select name from tags where name like $1",
                 [=](const Result &rows) mutable {
                     if (rows.size() == 0)
                     {
@@ -72,7 +72,10 @@ void Tags::getTags(const HttpRequestPtr &req, Callback callback)
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
                     return;
-                });
+                },
+                /// match any tag that starts with tag
+                tag + "%"
+            );
         });
     }
 }

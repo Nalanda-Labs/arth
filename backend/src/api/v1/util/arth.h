@@ -30,43 +30,34 @@ inline drogon::HttpResponsePtr jsonResponse(Json::Value &&data)
  * @param secret The secret used to verify JWT 
  * @return std::optional<Token> 
  */
-inline std::optional<Token> verifiedToken(const std::string &authHeader, const std::string &secret) {
-    Json::Value ret;
-    if (authHeader.empty()) {
-        return {};
+std::optional<Token> verifiedToken(const std::string &authHeader, const std::string &secret);
+
+
+/**
+ * @brief Returns a parameterized query containing placeholderCount parameters
+ * Causes assertion error if placeholderCount is less than 1
+ *
+ * @param placeholderCount the number of placeholders
+ * @param bindingStartCount the number to start parameter count from
+ * @return std::string ($1, $2, $3, ...$n)
+ */
+std::string toPostgresParmeterizedSql(size_t placeholderCount,
+                                      size_t bindingStartCount = 1);
+
+
+/**
+ * @brief Add vector to binder. Please make sure that the order of 
+ * arguments before and after the call match
+ * 
+ * @tparam T 
+ * @param binder 
+ * @param vec 
+ */
+template <typename T>
+inline void addVector(drogon::orm::internal::SqlBinder &binder, std::vector<T> vec) {
+    for (auto &i : vec) {
+        binder << i;
     }
-
-    const std::string delimiter = " ";
-    
-    // ensure space exist. If space doesn't exist, return error. 
-    size_t delimiterPos = authHeader.find(delimiter);    
-    if (delimiterPos == std::string::npos) {        
-        return {};
-    }
-
-    /// ensure there is at least one character after auth method 
-    /// so that substring doesn't throw
-    if (authHeader.size() == delimiterPos) {        
-        return {};
-    }
-
-    const std::string authMethod = authHeader.substr(0, delimiterPos);
-
-    LOG_DEBUG << "auth method: " << authMethod;
-    std::string jwt = "";
-
-    /// Add an if condition for each authentication method 
-    /// Call hanlder if verified. Otherwise return error using
-    /// callback and don't call hanlder.
-
-    if (authMethod == "Bearer") {
-        jwt = authHeader.substr(authMethod.length() + delimiter.length());
-        
-        auto optionalToken = verifyJWT(jwt, secret);        
-        return optionalToken;
-    }
-
-    return {};
 }
 
 #endif
