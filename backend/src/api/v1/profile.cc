@@ -13,26 +13,17 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Profile::getProfile(const HttpRequestPtr &req, Callback callback, std::string &&username)
+void Profile::getProfile(const HttpRequestPtr &req, Callback callback, size_t userID)
 {
-
-    LOG_DEBUG << "username: " << username;
+    LOG_DEBUG << "user id: " << userID;
 
     Json::Value ret;
-
-    if (!isUsernameValid(username))
-    {
-        LOG_DEBUG << "Username not valid";
-        ret["error"] = "Username not valid";
-        callback(jsonResponse(std::move(ret)));
-        return;
-    }
 
     {
         auto clientPtr = app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select name, title, designation, location, email, image_url from users "
-            "where username = $1",
+            "select username, name, title, designation, location, email, image_url from users "
+            "where id = $1",
 
             [=](const Result &r) mutable {
                 if (r.size() != 1)
@@ -44,7 +35,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, std::stri
 
                 auto row = r[0];
 
-                ret["username"] = username;
+                ret["username"] = row["username"].as<std::string>();
                 ret["name"] = row["name"].as<std::string>();
                 ret["title"] = row["title"].as<std::string>();
                 ret["designation"] = row["designation"].as<std::string>();
@@ -70,41 +61,13 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, std::stri
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-
-            username);
+            userID
+        );
     }
 }
 
-struct User
-{
-    const size_t id;
-    const std::string name, title, designation, email;
 
-    User(const size_t id, const std::string name, const std::string title, const std::string designation, const std::string email)
-        : id(id), name(name), title(title), designation(designation), email(email) {}
-};
-
-using DbResultCallback = std::function<void(const Result &)>;
-
-/**
- * @brief Update user with old username to new username and using other details from user
- * 
- * @param transPtr transaction pointer to use
- * @param newUsername new username
- * @param oldUsername old username
- * @param user updated values of user
- * @param resultCallback callback containing result of update if update was successful
- * @param exceptionCallback callback returning the exeption if update failed
- */
-void updateUser(
-    TransactionPtr transPtr,
-    const std::string newUsername,
-    const std::string oldUsername,
-    const User user,
-    DbResultCallback resultCallback,
-    DrogonDbExceptionCallback exceptionCallback);
-
-void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, std::string &&username)
+void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, size_t userID)
 {
     auto json = req->getJsonObject();
 
@@ -116,13 +79,13 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, std::
         return;
     }
 
-    auto newUsername = json->get("newUsername", "").asString();
+    auto username = json->get("username", "").asString();
     auto name = json->get("name", "").asString();
     auto title = json->get("title", "").asString();
     auto designation = json->get("designation", "").asString();
     auto email = json->get("email", "").asString();
 
-    LOG_DEBUG << "new username: " << newUsername;
+    LOG_DEBUG << "new username: " << username;
     LOG_DEBUG << "name: " << name;
     LOG_DEBUG << "title: " << title;
     LOG_DEBUG << "designation: " << designation;
@@ -149,21 +112,21 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, std::
     }
 
     auto token = optionalToken.value();
-    if (token.username != username)
+    if (token.userID != userID)
     {
         ret["error"] = "Authentication Error";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (username.empty() || newUsername.empty() || name.empty() || title.empty() || designation.empty() || email.empty())
+    if (username.empty() || name.empty() || title.empty() || designation.empty() || email.empty())
     {
         ret["error"] = "Some or all of the parameters are empty";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (!isUsernameValid(username) || !isUsernameValid(newUsername) || !isEmailValid(email))
+    if (!isUsernameValid(username) || !isEmailValid(email))
     {
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
@@ -173,80 +136,63 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, std::
     {
         auto clientPtr = app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=](TransactionPtr transPtr) mutable {
-            User user{token.userID, name, title, designation, email};
-
-            auto updateUser = [=]() mutable {
-                auto usernameLower = newUsername;
-
-                transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
-                LOG_DEBUG << "username lower: " << usernameLower;
-
-                transPtr->execSqlAsync(
-                    "update users "
-                    "set username = $1, "
-                    "username_lower = $2, "
-                    "name = $3, "
-                    "title = $4, "
-                    "designation = $5, "
-                    "email = $6 "
-                    "where id = $7",
-                    [=](const Result &r) mutable {
-                        LOG_DEBUG << "in result callback";
-                        ret["message"] = "Changes saved";
+            transPtr->execSqlAsync(
+                "select id from users where username = $1",
+                [=](const Result &r) mutable {
+                    if (!r.empty() && r[0]["id"].as<size_t>() != userID)
+                    {
+                        ret["error"] = "Username is already taken";
                         callback(jsonResponse(std::move(ret)));
-                    },
-                    [=](const DrogonDbException &e) mutable {
-                        LOG_DEBUG << e.base().what();
-                        ret["error"] = (std::string)e.base().what();
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    },
-                    newUsername, usernameLower, user.name, user.title, user.designation, user.email, user.id);
-            };
+                        return;
+                    }
+                    auto usernameLower = username;
 
-            if (username != newUsername)
-            {
-                transPtr->execSqlAsync(
-                    "select id from users where username = $1",
-                    [=](const Result &r) mutable {
-                        if (!r.empty() && newUsername != username)
-                        {
-                            ret["error"] = "Username is already taken";
+                    transform(usernameLower.begin(), usernameLower.end(), usernameLower.begin(), ::tolower);
+                    LOG_DEBUG << "username lower: " << usernameLower;
+
+                    transPtr->execSqlAsync(
+                        "update users "
+                        "set username = $1, "
+                        "username_lower = $2, "
+                        "name = $3, "
+                        "title = $4, "
+                        "designation = $5, "
+                        "email = $6 "
+                        "where id = $7",
+                        [=](const Result &r) mutable {
+
+                            if (r.affectedRows() == 0) {
+                                ret["error"] = "user doesnt exist";
+                            }
+
+                            LOG_DEBUG << "in result callback";
+                            ret["message"] = "Changes saved";
                             callback(jsonResponse(std::move(ret)));
-                            return;
-                        }
-                        updateUser();
-                    },
-                    [=](const DrogonDbException &e) mutable {
-                        LOG_DEBUG << e.base().what();
-                        ret["error"] = (std::string)e.base().what();
-                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-                    },
-                    newUsername);
-            }
-            else
-            {
-                updateUser();
-            }
+                        },
+                        [=](const DrogonDbException &e) mutable {
+                            LOG_DEBUG << e.base().what();
+                            ret["error"] = (std::string)e.base().what();
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        },
+                        username, usernameLower, name, title, designation, email, userID
+                    );
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                },
+                username
+            );
         });
     }
 }
 
 
-
-
-
-void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string &&username) {
-    LOG_DEBUG << "username: " << username;
+void Profile::summary(const HttpRequestPtr &req, Callback callback, size_t userID) {
+    LOG_DEBUG << "user id: " << userID;
 
     Json::Value ret;
-
-    if (!isUsernameValid(username))
-    {
-        LOG_DEBUG << "Username not valid";
-        ret["error"] = "Username not valid";
-        callback(jsonResponse(std::move(ret)));
-        return;
-    }
 
     auto customConfig = app().getCustomConfig();
     int paginationSize = customConfig.get("profile_pagination_size", 5).asInt();
@@ -256,7 +202,7 @@ void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string
         /// top replies
         clientPtr->execSqlAsync(
             "select id, title, description, tag_ids from topics "
-            "where posted_by = (select id from users where username = $1) "
+            "where posted_by = $1 "
             "and op_id is null "
             "order by likes desc limit " + std::to_string(paginationSize), 
             [=] (const Result &r) mutable {
@@ -267,19 +213,22 @@ void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string
                     Json::Value json;
                     json["id"] = row["id"].as<size_t>();
                     json["title"] = row["title"].as<std::string>();
+                    json["description"] = row["description"].as<std::string>();
+                    
                     json["tag_ids"] = Json::arrayValue;
                     
                     for (const auto& tag : row["tag_ids"].asArray<size_t>()) {
                         /// tag is a std::shared_ptr. We want to append 
                         /// the value not the pointer. So deref tag
                         json["tag_ids"].append(*tag);
-                    }            
+                    }
+                    ret["top_replies"].append(json);
                 }
 
                 /// top topics
                 clientPtr->execSqlAsync(
                     "select id, title, description, tag_ids from topics "
-                    "where op_id = (select id from users where username = $1) "                    
+                    "where op_id = $1 "
                     "order by likes desc limit " + std::to_string(paginationSize), 
                     [=] (const Result &r) mutable {
                         LOG_DEBUG << "in top topics";
@@ -295,7 +244,8 @@ void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string
                                 /// tag is a std::shared_ptr. We want to append 
                                 /// the value not the pointer. So deref tag
                                 json["tag_ids"].append(*tag);
-                            }            
+                            }
+                            ret["top_topics"].append(json);
                         }
 
                         callback(jsonResponse(std::move(ret)));
@@ -305,7 +255,7 @@ void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string
                         ret["error"] = (std::string)e.base().what();
                         callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                     },
-                    username
+                    userID
                 );
             },
             [=](const DrogonDbException &e) mutable {
@@ -313,7 +263,7 @@ void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-            username
+            userID
         );
     }
 }
