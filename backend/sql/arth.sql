@@ -122,7 +122,8 @@ CREATE TABLE public.topics (
     updated_at timestamp without time zone DEFAULT now() NOT NULL,    
     visible boolean DEFAULT true,
     op_id bigint DEFAULT 0 NOT NULL,
-    updated_by bigint
+    updated_by bigint,
+    likes int default 0 NOT NULL
 );
 
 

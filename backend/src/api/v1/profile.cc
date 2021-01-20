@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <drogon/HttpAppFramework.h>
 #include <drogon/orm/Exception.h>
+#include <json/value.h>
 #include <trantor/utils/Logger.h>
 
 #include "profile.h"
@@ -227,5 +228,92 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, std::
                 updateUser();
             }
         });
+    }
+}
+
+
+
+
+
+void Profile::getStats(const HttpRequestPtr &req, Callback callback, std::string &&username) {
+    LOG_DEBUG << "username: " << username;
+
+    Json::Value ret;
+
+    if (!isUsernameValid(username))
+    {
+        LOG_DEBUG << "Username not valid";
+        ret["error"] = "Username not valid";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto customConfig = app().getCustomConfig();
+    int paginationSize = customConfig.get("profile_pagination_size", 5).asInt();
+    {
+        auto clientPtr = app().getFastDbClient("default");
+
+        /// top replies
+        clientPtr->execSqlAsync(
+            "select id, title, description, tag_ids from topics "
+            "where posted_by = (select id from users where username = $1) "
+            "and op_id is null "
+            "order by likes desc limit " + std::to_string(paginationSize), 
+            [=] (const Result &r) mutable {
+                LOG_DEBUG << "in top replies";
+
+                ret["top_replies"] = Json::arrayValue;
+                for (const auto& row : r) {
+                    Json::Value json;
+                    json["id"] = row["id"].as<size_t>();
+                    json["title"] = row["title"].as<std::string>();
+                    json["tag_ids"] = Json::arrayValue;
+                    
+                    for (const auto& tag : row["tag_ids"].asArray<size_t>()) {
+                        /// tag is a std::shared_ptr. We want to append 
+                        /// the value not the pointer. So deref tag
+                        json["tag_ids"].append(*tag);
+                    }            
+                }
+
+                /// top topics
+                clientPtr->execSqlAsync(
+                    "select id, title, description, tag_ids from topics "
+                    "where op_id = (select id from users where username = $1) "                    
+                    "order by likes desc limit " + std::to_string(paginationSize), 
+                    [=] (const Result &r) mutable {
+                        LOG_DEBUG << "in top topics";
+
+                        ret["top_topics"] = Json::arrayValue;
+                        for (const auto& row : r) {
+                            Json::Value json;
+                            json["id"] = row["id"].as<size_t>();
+                            json["title"] = row["title"].as<std::string>();
+                            json["tag_ids"] = Json::arrayValue;
+                            
+                            for (const auto& tag : row["tag_ids"].asArray<size_t>()) {
+                                /// tag is a std::shared_ptr. We want to append 
+                                /// the value not the pointer. So deref tag
+                                json["tag_ids"].append(*tag);
+                            }            
+                        }
+
+                        callback(jsonResponse(std::move(ret)));
+                    },
+                    [=](const DrogonDbException &e) mutable {
+                        LOG_DEBUG << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                    },
+                    username
+                );
+            },
+            [=](const DrogonDbException &e) mutable {
+                LOG_DEBUG << e.base().what();
+                ret["error"] = (std::string)e.base().what();
+                callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+            },
+            username
+        );
     }
 }
