@@ -27,6 +27,7 @@ set(arth_sources
     src/api/v1/profile.cc
     src/api/v1/tags.cc
     src/api/v1/util/arth.cc
+    src/api/v1/stats.cc
     )
 
 add_executable(${PROJECT_NAME} ${arth_sources})
