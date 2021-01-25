@@ -26,7 +26,7 @@ namespace api
             // use METHOD_ADD to add your custom processing function here;
             ADD_METHOD_TO(Topic ::createTopic, "/api/v1/t/create-topic/", Post, Options);
             ADD_METHOD_TO(Topic ::getTopic, "/api/v1/t/{size_t id}/{string slug}", Get, Options);
-            // wihtout the / at end get-discussion will be captured by getTopic route
+            // without the / at end get-discussion will be captured by getTopic route
             ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/{size_t id}/get-discussion/?"
                                                  "time={string created_at}&limit={uint limit}",
                           Get, Options);

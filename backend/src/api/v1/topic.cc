@@ -273,7 +273,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         Json::Value ret;
         LOG_DEBUG << tid;
 
-        // never use offset in cocorachdb it does not work well in terms of execution speed
+        // never use offset in cockroachdb it does not work well in terms of execution speed
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             transPtr->execSqlAsync(
                 "select count(*) over(), t.* from topics t where op_id=$1  and created_at > $2 order by created_at asc limit $3",
