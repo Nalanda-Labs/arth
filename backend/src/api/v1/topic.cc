@@ -202,7 +202,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
     }
 }
 
-void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "")
+void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug)
 {
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
@@ -266,7 +266,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
 }
 
 void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
-                          const std::string &created_at, const size_t &limit = 10)
+                          const std::string &created_at, const size_t &limit)
 {
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
