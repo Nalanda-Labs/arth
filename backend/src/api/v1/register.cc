@@ -28,7 +28,7 @@ const std::string Registraion::emailBody(const std::string &username, const std:
                        link + " to verify your email.\n\n" +
                        "Thanks,\n Team Arth ";
 
-    return std::move(body);
+    return body;
 }
 
 void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
