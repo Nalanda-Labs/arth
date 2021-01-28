@@ -202,6 +202,15 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
     }
 }
 
+size_t toSizeT(std::string str) {
+    // string to size_t
+    std::stringstream ss;
+    ss << str;		
+    size_t temp;
+    ss >> temp;
+    return temp;
+}
+
 void Topic::createPost(const HttpRequestPtr &req, Callback callback, const size_t topic_id) {
 	Json::Value ret;
 	auto customConfig = app().getCustomConfig();
@@ -240,10 +249,10 @@ void Topic::createPost(const HttpRequestPtr &req, Callback callback, const size_
 		return;
 	}
 
-	std::optional<std::string> optionalReplyTo;
+	std::optional<size_t> optionalReplyTo;
 
-	if (!replyTo.empty()) {
-		optionalReplyTo = replyTo;
+	if (!replyTo.empty()) {    
+        optionalReplyTo = toSizeT(replyTo);
 	}
 
 	{
