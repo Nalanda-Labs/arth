@@ -258,47 +258,73 @@ void Topic::createPost(const HttpRequestPtr &req, Callback callback, const size_
 	{
 		auto clientPtr = app().getFastDbClient("default");
 
-		clientPtr->execSqlAsync(
-            "select id, op_id from topics where id = $1",
+        auto insertTopic = [=] () mutable {
+            clientPtr->execSqlAsync(
+                "select id, op_id from topics where id = $1",
+                [=] (const Result &r) mutable {
+                    if (r.size() == 0) {
+                        ret["error"] = "Topic or post does not exist";
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    }
+
+                    auto row = r[0];
+
+                    size_t op_id;
+
+                    bool isTopic = row["op_id"].isNull();
+                    if (isTopic) {
+                        op_id = row["id"].as<size_t>();
+                    } else {
+                        op_id = row["op_id"].as<size_t>();
+                    }
+
+                    *clientPtr << "insert into topics(description, posted_by, op_id, reply_to) "
+                                "values ($1, $2, $3, $4) returning id"
+                            << body << user_id << op_id << std::move(optionalReplyTo)
+                            >> [=] (const Result &r) mutable {
+                                auto post_id = r[0]["id"].as<std::string>();
+                                ret["post_id"] = post_id;
+                                callback(jsonResponse(std::move(ret)));
+                            } 
+                            >> [=](const DrogonDbException &e) mutable {
+                                LOG_DEBUG << e.base().what();
+                                ret["error"] = (std::string)e.base().what();
+                                callback(jsonResponse(std::move(ret)));
+                            };
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(jsonResponse(std::move(ret)));
+                },
+                topic_id
+            );            
+        };
+
+        if (!optionalReplyTo.has_value()) {
+            insertTopic();
+            return;
+        }
+
+        clientPtr->execSqlAsync(
+            "select id from users where id = $1", 
             [=] (const Result &r) mutable {
-                if (r.size() == 0) {
-                    ret["error"] = "Topic or post does not exist";
-					callback(jsonResponse(std::move(ret)));
-					return;
+                if (r.empty()) {
+                    ret["error"] = "User does not exist";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
                 }
 
-                auto row = r[0];
-
-				size_t op_id;
-
-				bool isTopic = row["op_id"].isNull();
-				if (isTopic) {
-					op_id = row["id"].as<size_t>();
-				} else {
-					op_id = row["op_id"].as<size_t>();
-				}
-
-				*clientPtr << "insert into topics(description, posted_by, op_id, reply_to) "
-					          "values ($1, $2, $3, $4) returning id"
-						   << body << user_id << op_id << std::move(optionalReplyTo)
-						   >> [=] (const Result &r) mutable {
-							   auto post_id = r[0]["id"].as<std::string>();
-							   ret["post_id"] = post_id;
-							   callback(jsonResponse(std::move(ret)));
-						   } 
-						   >> [=](const DrogonDbException &e) mutable {
-							   LOG_DEBUG << e.base().what();
-							   ret["error"] = (std::string)e.base().what();
-							   callback(jsonResponse(std::move(ret)));
-						   };
-            },
+                insertTopic();
+            }, 
             [=](const DrogonDbException &e) mutable {
                 LOG_DEBUG << e.base().what();
                 ret["error"] = (std::string)e.base().what();
                 callback(jsonResponse(std::move(ret)));
-            },
-            topic_id
-		);		
+            }, 
+            optionalReplyTo.value()
+        );
 	}
 	
 }
