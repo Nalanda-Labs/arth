@@ -121,7 +121,7 @@ CREATE TABLE public.topics (
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL,    
     visible boolean DEFAULT true,
-    op_id bigint references users(id),
+    op_id bigint references topics(id),
     updated_by bigint,
     likes int default 0 NOT NULL,
 	reply_to bigint references users(id)

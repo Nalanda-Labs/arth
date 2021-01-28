@@ -250,7 +250,7 @@ void Topic::createPost(const HttpRequestPtr &req, Callback callback, const size_
 		auto clientPtr = app().getFastDbClient("default");
 
 		clientPtr->execSqlAsync(
-            "select posted_by, op_id from topics where id = $1",
+            "select id, op_id from topics where id = $1",
             [=] (const Result &r) mutable {
                 if (r.size() == 0) {
                     ret["error"] = "Topic or post does not exist";
@@ -264,7 +264,7 @@ void Topic::createPost(const HttpRequestPtr &req, Callback callback, const size_
 
 				bool isTopic = row["op_id"].isNull();
 				if (isTopic) {
-					op_id = row["posted_by"].as<size_t>();
+					op_id = row["id"].as<size_t>();
 				} else {
 					op_id = row["op_id"].as<size_t>();
 				}
