@@ -135,3 +135,49 @@ void Posts::createPost(const HttpRequestPtr &req, Callback callback, const size_
 	
 }
 
+void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto clientPtr = app().getFastDbClient("default");
+
+	clientPtr->execSqlAsync(
+	    "select * from topics where id = $1",
+		[=] (const Result &r) mutable {
+			if (r.empty()) {
+				ret["error"] = "Post does not exist";
+				callback(jsonResponse(std::move(ret)));
+				return;
+			}
+
+			auto row = r[0];
+			/// JS cannot handle 64 bit ints
+			ret["id"] = row["id"].as<std::string>();
+			ret["title"] = row["title"].as<std::string>();
+			ret["description"] = row["description"].as<std::string>();
+			ret["posted_by"] = row["posted_by"].as<std::string>();
+			/// No timestamp type in json :(
+			ret["created_at"] = row["created_at"].as<std::string>();
+			ret["updated_at"] = row["updated_at"].as<std::string>();
+			ret["visible"] = row["visible"].as<bool>();
+			ret["op_id"] = row["op_id"].as<std::string>();
+			ret["updated_by"] = row["updated_by"].as<std::string>();
+			ret["likes"] = row["likes"].as<int>();
+			ret["reply_to"] = row["reply_to"].as<std::string>();
+
+			auto tags = row["tag_ids"].asArray<std::string>();
+
+			ret["tag_ids"] = Json::arrayValue;
+			for (const std::shared_ptr<std::string> &tag : tags) {
+				ret["tag_ids"].append(*tag);
+			}
+
+			callback(jsonResponse(std::move(ret)));
+		},
+		[=](const DrogonDbException &e) mutable {
+            LOG_DEBUG << e.base().what();
+			ret["error"] = (std::string)e.base().what();
+			callback(jsonResponse(std::move(ret)));
+        },
+		post_id
+	);
+}
