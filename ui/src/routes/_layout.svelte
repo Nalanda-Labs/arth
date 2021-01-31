@@ -69,16 +69,18 @@
 		},
 	];
 
+	let activeSection = sections.find(section => 'route' in section && section.route === $page.path);
+
 	onMount(setMiniWindow);
 
 	function pickSection(section) {
 		drawerOpen = false;
 		mainContent.scrollTop = 0;
 
-		sections.forEach((section) =>
-			section.component.$set({ activated: false })
-		);
-		section.component.$set({ activated: true });
+		// sections.forEach((section) =>
+		// 	section.component.$set({ activated: false })
+		// );
+		// section.component.$set({ activated: true });
 
 		activeSection =
 			"shortcut" in section

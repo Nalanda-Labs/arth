@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import * as api from "api.js";
     import "bytemd/dist/index.min.css";
+    import "../../../_utils.scss";
     import TagList from "../../../../components/_TagList.svelte";
 
     export let id;
@@ -54,6 +55,8 @@
     <hr />
     <svelte:component this={Viewer} {value} />
     <TagList {taglist} />
+    <a href="/edit/{id}/{slug}" class="anchor" title="Edit your post"><span class="material-icons" style="vertical-align:bottom">edit</span> Edit</a>
+    <a href="/report/{id}" class="anchor danger" title="Report abusive or inappropriate content"><span class="material-icons" style="vertical-align:bottom">report</span>Report</a>
     {#each descs as value}
     <hr/>
     <svelte:component this={Viewer} {value} />

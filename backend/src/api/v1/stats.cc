@@ -26,13 +26,13 @@ void Stats::summary(const HttpRequestPtr &req, Callback callback, size_t userID)
                 ret["top_replies"] = Json::arrayValue;
                 for (const auto& row : r) {
                     Json::Value json;
-                    json["id"] = row["id"].as<size_t>();
+                    json["id"] = row["id"].as<std::string>();
                     json["title"] = row["title"].as<std::string>();
                     json["description"] = row["description"].as<std::string>();
                     
                     json["tag_ids"] = Json::arrayValue;
                     
-                    for (const auto& tag : row["tag_ids"].asArray<size_t>()) {
+                    for (const auto& tag : row["tag_ids"].asArray<std::string>()) {
                         /// tag is a std::shared_ptr. We want to append 
                         /// the value not the pointer. So deref tag
                         json["tag_ids"].append(*tag);
@@ -51,11 +51,11 @@ void Stats::summary(const HttpRequestPtr &req, Callback callback, size_t userID)
                         ret["top_topics"] = Json::arrayValue;
                         for (const auto& row : r) {
                             Json::Value json;
-                            json["id"] = row["id"].as<size_t>();
+                            json["id"] = row["id"].as<std::string>();
                             json["title"] = row["title"].as<std::string>();
                             json["tag_ids"] = Json::arrayValue;
                             
-                            for (const auto& tag : row["tag_ids"].asArray<size_t>()) {
+                            for (const auto& tag : row["tag_ids"].asArray<std::string>()) {
                                 /// tag is a std::shared_ptr. We want to append 
                                 /// the value not the pointer. So deref tag
                                 json["tag_ids"].append(*tag);

@@ -26,6 +26,8 @@
         <div class="row">
             <div class="col-md-8 offset-md-2 col-xs-12">
                 <Topics {id} {slug} />
+                <h4>Post your ideas</h4>
+                <hr/>
                 {#if $session.user}
                     <Editor mode="tab" {body}/>
                 {/if}
