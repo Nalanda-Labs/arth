@@ -114,16 +114,17 @@ ALTER SEQUENCE public.topic_tags_id_seq OWNED BY public.topic_tags.id;
 
 CREATE TABLE public.topics (
     id bigint NOT NULL,
-    title character varying(512) NOT NULL,
+    title character varying(512),
     description character varying(1000000) NOT NULL,
     tag_ids bigint[],
-    posted_by bigint DEFAULT 0 NOT NULL,
+    posted_by bigint NOT NULL references users(id),
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL,    
     visible boolean DEFAULT true,
-    op_id bigint DEFAULT 0,
+    op_id bigint references topics(id),
     updated_by bigint,
-    likes int default 0 NOT NULL
+    likes int default 0 NOT NULL,
+	reply_to bigint references users(id)
 );
 
 

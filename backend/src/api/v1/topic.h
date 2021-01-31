@@ -26,16 +26,16 @@ namespace api
             // use METHOD_ADD to add your custom processing function here;
             ADD_METHOD_TO(Topic ::createTopic, "/api/v1/t/create-topic/", Post, Options);
             ADD_METHOD_TO(Topic ::getTopic, "/api/v1/t/{size_t id}/{string slug}", Get, Options);
-            // wihtout the / at end get-discussion will be captured by getTopic route
-            ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/{size_t id}/get-discussion/?"
+            // without the / at end get-discussion will be captured by getTopic route
+            ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/get-discussion/{size_t id}?"
                                                  "time={string created_at}&limit={uint limit}",
                           Get, Options);
             METHOD_LIST_END
 
             void createTopic(const HttpRequestPtr &req, Callback callback);
-            void getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug);
+            void getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "");
             void getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
-                               const std::string &created_at, const size_t &limit);
+                               const std::string &created_at, const size_t &limit = 10);
         };
     } // namespace v1
 } // namespace api

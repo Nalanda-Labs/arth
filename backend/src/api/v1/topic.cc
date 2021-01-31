@@ -202,7 +202,7 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
     }
 }
 
-void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "")
+void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug)
 {
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
@@ -266,14 +266,14 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
 }
 
 void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
-                          const std::string &created_at, const size_t &limit = 10)
+                          const std::string &created_at, const size_t &limit)
 {
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         Json::Value ret;
         LOG_DEBUG << tid;
 
-        // never use offset in cocorachdb it does not work well in terms of execution speed
+        // never use offset in cockroachdb it does not work well in terms of execution speed
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             transPtr->execSqlAsync(
                 "select count(*) over(), t.* from topics t where op_id=$1  and created_at > $2 order by created_at asc limit $3",
