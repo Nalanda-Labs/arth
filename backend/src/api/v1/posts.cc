@@ -136,13 +136,16 @@ void Posts::createPost(const HttpRequestPtr &req, Callback callback, const size_
 }
 
 void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	LOG_DEBUG << "Get post";
 	Json::Value ret;
 	
 	auto clientPtr = app().getFastDbClient("default");
-
+	LOG_DEBUG << clientPtr->connectionInfo();
+	LOG_DEBUG << "Got DB client";
 	clientPtr->execSqlAsync(
 	    "select * from topics where id = $1",
 		[=] (const Result &r) mutable {
+			LOG_DEBUG << "Debug got database result";
 			if (r.empty()) {
 				ret["error"] = "Post does not exist";
 				callback(jsonResponse(std::move(ret)));
@@ -180,4 +183,172 @@ void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id
         },
 		post_id
 	);
+
+	LOG_DEBUG << "Testing";
+}
+
+void Posts::updatePost(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	auto json = req->getJsonObject();
+	Json::Value ret;
+	if (json == nullptr) {
+		ret["error"] = "Malformed request";
+		callback(jsonResponse(std::move(ret)));
+		return;
+	}
+
+	auto title = json->get("title", "").asString();
+	auto description = json->get("description", "").asString();
+
+	if (title.empty() || description.empty()) {
+		ret["error"] = "Invalid input";
+		callback(jsonResponse(std::move(ret)));
+		return;
+	}
+
+	auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    Token jwt = optionalToken.value();
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			/// Could have been a simple update for now.
+			/// But when we add badge and reputations, we will need this anyway.
+			transPtr->execSqlAsync(
+			    "select posted_by from topics where id = $1",
+				[=] (const Result &r) mutable {
+					if (r.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					auto posted_by = r[0]["posted_by"].as<size_t>();
+					
+					if (posted_by != jwt.userID) {
+						ret["error"] = "You do not have the privileges to update this post";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					transPtr->execSqlAsync(
+					    "update topics "
+						"set title = $1, description = $2 "
+						"where id = $3",
+						[=] (const Result &r) mutable {
+							ret["success"] = true;
+							callback(jsonResponse(std::move(ret)));							
+						},
+						[=] (const DrogonDbException &e) mutable {
+							LOG_DEBUG << e.base().what();
+							ret["error"] = (std::string)e.base().what();
+							callback(jsonResponse(std::move(ret)));
+						},
+						title, description, post_id
+					);
+				},			
+				[=] (const DrogonDbException &e) mutable {
+					LOG_DEBUG << e.base().what();
+					ret["error"] = (std::string)e.base().what();
+					callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);
+		});
+	}
+}
+
+
+void Posts::acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto customConfig = app().getCustomConfig();
+	auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto userID = optionalToken.value().userID;
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			transPtr->execSqlAsync(
+				"select id, posted_by from topics where id = (select op_id from topics where id = $1)",
+				[=] (const Result &result) mutable {
+					if (result.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;						
+					}
+
+					auto original_post_id = result[0]["id"].as<size_t>();
+					auto posted_by = result[0]["posted_by"].as<size_t>();
+					
+					if (posted_by != userID) {
+						ret["error"] = "You cannot accept answer as you are not the origianl author of the topic";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					transPtr->execSqlAsync(
+						"select id from topics where op_id = $1 and accepted = true",
+						[=] (const Result &result) mutable {
+							if (!result.empty()) {
+								ret["error"] = "This topic already has an accepted answer";
+								callback(jsonResponse(std::move(ret)));
+								return;
+							}
+
+							transPtr->execSqlAsync(
+								"update topics set accepted = true where op_id = $1 and post_id = $2",
+								[=] (const Result &result) mutable {
+									   if (result.affectedRows() != 1) {
+										   ret["error"] = "Either the post does not exist or you are not the original poster. "
+											   "Only the original poster can accept the answer";
+										   callback(jsonResponse(std::move(ret)));
+										   return;
+									   }
+								},
+								[=] (const DrogonDbException &e) mutable {
+									   LOG_DEBUG << e.base().what();
+									   ret["error"] = (std::string)e.base().what();
+									   callback(jsonResponse(std::move(ret)));
+								},
+								userID, post_id
+							);
+						},
+						[=] (const DrogonDbException &e) mutable {
+						   LOG_DEBUG << e.base().what();
+						   ret["error"] = (std::string)e.base().what();
+						   callback(jsonResponse(std::move(ret)));
+						},
+						original_post_id
+					);
+				},
+				[=] (const DrogonDbException &e) mutable {
+				   LOG_DEBUG << e.base().what();
+				   ret["error"] = (std::string)e.base().what();
+				   callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);		   
+		});
+	}
 }

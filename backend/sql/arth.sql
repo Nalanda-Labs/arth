@@ -124,7 +124,8 @@ CREATE TABLE public.topics (
     op_id bigint references topics(id),
     updated_by bigint,
     likes int default 0 NOT NULL,
-	reply_to bigint references users(id)
+	reply_to bigint references users(id),
+	accepted default false
 );
 
 
