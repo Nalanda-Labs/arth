@@ -18,7 +18,6 @@
 </script>
 
 <div class="editor-page">
-    <hr />
     <fieldset class="form-group" style="margin-top:20px">
         <svelte:component this={Editor} on:change={handleChange} mode="tab" {body} />
     </fieldset>
