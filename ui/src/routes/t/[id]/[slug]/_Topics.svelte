@@ -17,6 +17,7 @@
     let limit = 10;
     let count = 0;
     let time = "";
+    let like_counter = 0;
 
     onMount(async () => {
         const bytemd = await import("bytemd");
@@ -32,6 +33,7 @@
             value = response.topic.description;
             taglist = response.tags.map((tag) => tag.name);
             time = response.topic.created_at;
+            like_counter = response.like_counter;
         }
         response = await api.get(
             `t/${id}/get-discussion/?time=${time}&limit=${limit}`,
@@ -43,7 +45,7 @@
             offset += limit;
             time = response.topics[response.topics.length - 1].created_at;
         }
-    });    
+    });
 </script>
 
 <svelte:head>
@@ -55,8 +57,10 @@
     <hr />
     <svelte:component this={Viewer} {value} />
     <TagList {taglist} />
+    <div style="float:right">
     <a href="/edit/{id}/{slug}" class="anchor" title="Edit your post"><span class="material-icons" style="vertical-align:bottom">edit</span> Edit</a>
     <a href="/report/{id}" class="anchor danger" title="Report abusive or inappropriate content"><span class="material-icons" style="vertical-align:bottom">report</span>Report</a>
+    </div>
     {#each descs as value}
     <hr/>
     <svelte:component this={Viewer} {value} />

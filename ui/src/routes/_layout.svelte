@@ -7,11 +7,12 @@
 	import "./_elevated.scss";
 
 	import TopAppBar, { Row, Section, Title } from "@smui/top-app-bar";
-	import Drawer, { Content, Scrim, AppContent } from "@smui/drawer";
+	import { Scrim, AppContent } from "@smui/drawer";
 	import IconButton from "@smui/icon-button";
-	import List, { Item, Text } from "@smui/list";
+	// import List, { Item, Text } from "@smui/list";
 	import { Icon } from "@smui/common";
 	import A from "@smui/common/A.svelte";
+	import Drawer from "../components/_Drawer.svelte";
 
 	import { post } from "utils.js";
 
@@ -27,69 +28,80 @@
 	// const iframe = $page.path.startsWith("/demo/top-app-bar-iframe");
 
 	let mainContent;
-	let miniWindow = false;
 	let drawerOpen = false;
+	let miniWindow = false;
+	// let user = undefined;
 
-	const sections = [
+	let sections = [
 		{
 			name: "Create Topic",
 			route: "/ask",
 			protected: true,
-			logout_only: false
+			logout_only: false,
 		},
 		{
 			name: "Browse Topics",
 			route: "/topics",
 			protected: false,
-			logout_only: false
+			logout_only: false,
 		},
 		{
 			name: "Tags",
 			route: "/tags",
 			protected: false,
-			logout_only: false
+			logout_only: false,
 		},
 		{
 			name: "Users",
 			route: "/users",
 			protected: false,
-			logout_only: false
+			logout_only: false,
 		},
 		{
 			name: "Profile",
 			route: `/profile/${$session.user}`,
 			protected: true,
-			logout_only: false
+			logout_only: false,
 		},
 		{
 			name: "Register",
 			route: "/register",
 			protected: false,
-			logout_only: true
+			logout_only: true,
 		},
 	];
 
-	let activeSection = sections.find(section => 'route' in section && section.route === $page.path);
+	onMount(async () => {
+		setMiniWindow;
+		const unsubscribe = session.subscribe(async ($session) => {
+			if($session.user){
+				sections[4].route = `/profile/${$session.user}`;
+				console.log(user);
+			}
+		});
+		return unsubscribe;
+	});
 
-	onMount(setMiniWindow);
+	function setMiniWindow() {
+		miniWindow = window.innerWidth < 720;
+	}
 
+	let activeSection = sections.find(
+		(section) => "route" in section && section.route === $page.path
+	);
 	function pickSection(section) {
 		drawerOpen = false;
 		mainContent.scrollTop = 0;
 
-		// sections.forEach((section) =>
-		// 	section.component.$set({ activated: false })
-		// );
-		// section.component.$set({ activated: true });
+		sections.forEach((section) =>
+			section.component.$set({ activated: false })
+		);
+		section.component.$set({ activated: true });
 
 		activeSection =
 			"shortcut" in section
 				? sections.find((sec) => sec.route === section.shortcut)
 				: section;
-	}
-
-	function setMiniWindow() {
-		miniWindow = window.innerWidth < 720;
 	}
 </script>
 
@@ -101,7 +113,8 @@
 			{#if miniWindow}
 				<IconButton
 					class="material-icons"
-					on:click={() => (drawerOpen = !drawerOpen)}>
+					on:click={() => (drawerOpen = !drawerOpen)}
+				>
 					menu
 				</IconButton>
 			{/if}
@@ -110,7 +123,8 @@
 				href="/"
 				on:click={() => (activeSection = null)}
 				class="mdc-theme--primary"
-				style={miniWindow ? 'padding-left: 0;' : ''}>
+				style={miniWindow ? "padding-left: 0;" : ""}
+			>
 				Arth
 			</Title>
 		</Section>
@@ -134,7 +148,8 @@
 			{/if}
 			<IconButton
 				href="htts://github.com/Nalanda-Labs/arth"
-				title="Source Code">
+				title="Source Code"
+			>
 				<Icon>
 					<svg style="width:24px;height:24px" viewBox="0 0 24 24">
 						<path fill="#000000" d={mdiGithub} />
@@ -145,43 +160,7 @@
 	</Row>
 </TopAppBar>
 <div class="drawer-container">
-	<Drawer
-		variant={miniWindow ? 'modal' : null}
-		bind:open={drawerOpen}
-		class="demo-drawer mdc-theme--secondary-bg {miniWindow ? 'demo-drawer-adjust' : ''}">
-		<Content>
-			<List>
-				{#each sections as section (section.name)}
-					{#if $session.user && !section.logout_only}
-						<Item
-							bind:this={section.component}
-							href={'route' in section ? section.route : section.shortcut}
-							on:click={() => pickSection(section)}
-							activated={'route' in section && section.route === $page.path}
-							title={section.name}
-							style={section.indent ? 'margin-left: ' + section.indent * 25 + 'px;' : ''}>
-							<Text class="mdc-theme--on-secondary">
-								{section.name}
-							</Text>
-						</Item>
-					{:else if !section.protected && !$session.user}
-						<Item
-							bind:this={section.component}
-							href={'route' in section ? section.route : section.shortcut}
-							on:click={() => pickSection(section)}
-							activated={'route' in section && section.route === $page.path}
-							title={section.name}
-							style={section.indent ? 'margin-left: ' + section.indent * 25 + 'px;' : ''}>
-							<Text class="mdc-theme--on-secondary">
-								{section.name}
-							</Text>
-						</Item>
-					{/if}
-				{/each}
-			</List>
-		</Content>
-	</Drawer>
-
+	<Drawer {miniWindow} {sections} {drawerOpen} {pickSection} />
 	{#if miniWindow}
 		<Scrim />
 	{/if}
@@ -189,7 +168,8 @@
 		<main
 			class="main-content"
 			bind:this={mainContent}
-			class:mdc-elevation--z4={true}>
+			class:mdc-elevation--z4={true}
+		>
 			<slot />
 		</main>
 	</AppContent>
