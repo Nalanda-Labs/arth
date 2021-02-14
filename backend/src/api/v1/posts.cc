@@ -141,6 +141,7 @@ void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id
 	
 	auto clientPtr = app().getFastDbClient("default");
 	LOG_DEBUG << clientPtr->connectionInfo();
+	LOG_DEBUG << clientPtr->hasAvailableConnections();
 	LOG_DEBUG << "Got DB client";
 	clientPtr->execSqlAsync(
 	    "select * from topics where id = $1",
@@ -317,21 +318,17 @@ void Posts::acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t 
 							}
 
 							transPtr->execSqlAsync(
-								"update topics set accepted = true where op_id = $1 and post_id = $2",
-								[=] (const Result &result) mutable {
-									   if (result.affectedRows() != 1) {
-										   ret["error"] = "Either the post does not exist or you are not the original poster. "
-											   "Only the original poster can accept the answer";
-										   callback(jsonResponse(std::move(ret)));
-										   return;
-									   }
+								"update topics set accepted = true where id = $1",
+								[=] (const Result &result) mutable {	
+									ret["success"] = true;
+									callback(jsonResponse(std::move(ret)));
 								},
 								[=] (const DrogonDbException &e) mutable {
-									   LOG_DEBUG << e.base().what();
-									   ret["error"] = (std::string)e.base().what();
-									   callback(jsonResponse(std::move(ret)));
+									LOG_DEBUG << e.base().what();
+									ret["error"] = (std::string)e.base().what();
+									callback(jsonResponse(std::move(ret)));
 								},
-								userID, post_id
+								post_id
 							);
 						},
 						[=] (const DrogonDbException &e) mutable {
