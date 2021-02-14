@@ -350,6 +350,70 @@ void Posts::acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t 
 	}
 }
 
+
+void Posts::unacceptAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto customConfig = app().getCustomConfig();
+	auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto userID = optionalToken.value().userID;
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			transPtr->execSqlAsync(
+				"select posted_by from topics where id = (select op_id from topics where id = $1)",
+				[=] (const Result &result) mutable {
+					if (result.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;						
+					}
+
+					auto posted_by = result[0]["posted_by"].as<size_t>();
+					
+					if (posted_by != userID) {
+						ret["error"] = "You cannot unaccept answer as you are not the original author of the topic";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					transPtr->execSqlAsync(
+						"update topics set accepted = false where id = $1",
+						[=] (const Result &result) mutable {	
+							ret["success"] = true;
+							callback(jsonResponse(std::move(ret)));
+						},
+						[=] (const DrogonDbException &e) mutable {
+							LOG_DEBUG << e.base().what();
+							ret["error"] = (std::string)e.base().what();
+							callback(jsonResponse(std::move(ret)));
+						},
+						post_id
+					);					
+				},
+				[=] (const DrogonDbException &e) mutable {
+				   LOG_DEBUG << e.base().what();
+				   ret["error"] = (std::string)e.base().what();
+				   callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);		   
+		});
+	}
+}
+
+
 void Posts::upvote(const HttpRequestPtr &req, Callback callback, size_t post_id) {
 	Json::Value ret;
 	

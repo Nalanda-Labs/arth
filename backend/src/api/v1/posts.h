@@ -14,6 +14,7 @@ class Posts:public drogon::HttpController<Posts>
 	ADD_METHOD_TO(Posts::getPost, "/api/v1/post/{size_t id}", Get, Options);
 	ADD_METHOD_TO(Posts::updatePost, "/api/v1/post/{size_t id}", Put, Options);
 	ADD_METHOD_TO(Posts::acceptAsAnswer, "/api/v1/post/accept_as_ans/{size_t id}", Post, Options);
+	ADD_METHOD_TO(Posts::unacceptAnswer, "/api/v1/post/unaccept_ans/{size_t id}", Post, Options);
 	ADD_METHOD_TO(Posts::upvote, "/api/v1/post/upvote/{size_t id}", Post, Options);
 	ADD_METHOD_TO(Posts::downvote, "/api/v1/post/downvote/{size_t id}", Post, Options);
 	
@@ -23,6 +24,7 @@ class Posts:public drogon::HttpController<Posts>
 	void getPost(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void updatePost(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id);
+	void unacceptAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void upvote(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void downvote(const HttpRequestPtr &req, Callback callback, size_t post_id);
 };
