@@ -125,19 +125,14 @@ CREATE TABLE public.topics (
     updated_by bigint,
 	reply_to bigint references users(id),
 	accepted bool default false not null,
-	upvotes int default 0 not null,
+	votes int default 0 not null,
 );
 
 
-CREATE TABLE public.upvotes (
+CREATE TABLE public.votes (
     topic_id bigint references topics(id),
 	user_id bigint references users(id),
-	primary key (topic_id, user_id)
-);
-
-CREATE TABLE public.downvotes (
-    topic_id bigint references topics(id),
-	user_id bigint references users(id),
+	upvote bool not null,
 	primary key (topic_id, user_id)
 );
 

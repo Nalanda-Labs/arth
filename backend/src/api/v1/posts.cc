@@ -165,7 +165,7 @@ void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id
 			ret["visible"] = row["visible"].as<bool>();
 			ret["op_id"] = row["op_id"].as<std::string>();
 			ret["updated_by"] = row["updated_by"].as<std::string>();
-			ret["upvotes"] = row["upvotes"].as<int>();
+			ret["votes"] = row["votes"].as<int>();
 			ret["reply_to"] = row["reply_to"].as<std::string>();
 
 			auto tags = row["tag_ids"].asArray<std::string>();
@@ -443,54 +443,71 @@ void Posts::upvote(const HttpRequestPtr &req, Callback callback, size_t post_id)
 						callback(jsonResponse(std::move(ret)));
 						return;
 					}
-					
-					transPtr->execSqlAsync(						
-						"select user_id from upvotes where topic_id = $1 and user_id = $2",
-						[=] (const Result &result) mutable {
-							if (!result.empty()) {
-								ret["error"] = "Post already upvoted";
-								callback(jsonResponse(std::move(ret)));
-								return;
-							}
-			  
 
-							transPtr->execSqlAsync(
-								"insert into upvotes(topic_id, user_id) values ($1, $2)",
-								[=] (const Result &result) mutable {
-									transPtr->execSqlAsync(
-										"delete from downvotes where topic_id = $1 and user_id = $2",
-										[=] (const Result &result) mutable {
-											/// If someone downvotes and then upvotes, 2 votes should be added
-											int upvotesToAdd = result.affectedRows() + 1;
-											transPtr->execSqlAsync(
-												"update topics set upvotes = upvotes + $1 where id = $2",
-												[=] (const Result &result) mutable {
-													ret["success"] = true;
-													callback(jsonResponse(std::move(ret)));
-												},
-												[=] (const DrogonDbException &e) mutable {
-													LOG_DEBUG << e.base().what();
-													ret["error"] = (std::string)e.base().what();
-													callback(jsonResponse(std::move(ret)));
-												},				
-												upvotesToAdd, post_id
-											);																						
-										},
-										[=] (const DrogonDbException &e) mutable {
-											LOG_DEBUG << e.base().what();
-											ret["error"] = (std::string)e.base().what();
-											callback(jsonResponse(std::move(ret)));
-										},
-										post_id, userID
-									);									
-								},
-								[=] (const DrogonDbException &e) mutable {
-									LOG_DEBUG << e.base().what();
-									ret["error"] = (std::string)e.base().what();
-									callback(jsonResponse(std::move(ret)));
-								},
-								post_id, userID
-							);
+					/// --- boilerplate starts ---
+					auto addVotesInTopics = [=] (int votes) mutable {
+						transPtr->execSqlAsync(
+							"update topics set votes = votes + $1 where id = $2",
+							[=] (const Result &result) mutable {
+								ret["success"] = true;
+								callback(jsonResponse(std::move(ret)));
+							},
+							[=] (const DrogonDbException &e) mutable {
+								LOG_DEBUG << e.base().what();
+								ret["error"] = (std::string)e.base().what();
+								callback(jsonResponse(std::move(ret)));
+							},
+							votes, post_id
+						);
+					};
+
+					auto insertUpvote = [=] () mutable {
+						transPtr->execSqlAsync(
+							"insert into votes(topic_id, user_id, upvote) values ($1, $2, true)",
+							[=] (const Result &result) {},
+							[=] (const DrogonDbException &e) mutable {
+							   LOG_DEBUG << e.base().what();
+							   ret["error"] = (std::string)e.base().what();
+							   callback(jsonResponse(std::move(ret)));
+							},
+							post_id, userID
+						);
+					};
+					/// --- boilerplate ends ---
+					
+					transPtr->execSqlAsync(
+						"delete from votes where topic_id = $1 and user_id = $2 returning upvote",
+						[=] (const Result &result) mutable {							
+							bool alreadyVoted = result.affectedRows() == 1;							
+							
+							/// by default we add one vote
+							int votesToAdd = 1;
+							
+							if (alreadyVoted) {								
+								bool upvoted = result[0]["upvote"].as<bool>();
+
+								/// if we had upvoted, upvoting again should delete the vote.
+								/// But we have already deleted the vote.
+								/// So change the vote count in topics and exit
+								if (upvoted) {
+									/// note: add votes in topics also responds with success true to the callback
+									addVotesInTopics(-1);
+									return;
+								}
+								
+								/// if the person had downvoted earlier, we add two votes.
+								/// if the question has 0 votes when you downvoted
+								/// now it has -1 votes. Now if you upvote,
+								/// the votes should be +1 not 0. 
+								votesToAdd = 2;		   								
+							}
+
+							/// at this point, we either had an existing downvote (which we deleted)
+							/// or no vote. In either case, we can insert a new vote with upvote = true
+							/// and add votesToAdd in topics
+							insertUpvote();							
+							/// note: add votes in topics also responds with success true to the callback
+							addVotesInTopics(votesToAdd);
 						},
 						[=] (const DrogonDbException &e) mutable {
 						   LOG_DEBUG << e.base().what();
@@ -498,7 +515,7 @@ void Posts::upvote(const HttpRequestPtr &req, Callback callback, size_t post_id)
 						   callback(jsonResponse(std::move(ret)));
 						},
 						post_id, userID
-						);
+					);										
 				},
 				[=] (const DrogonDbException &e) mutable {
 				   LOG_DEBUG << e.base().what();
@@ -506,8 +523,7 @@ void Posts::upvote(const HttpRequestPtr &req, Callback callback, size_t post_id)
 				   callback(jsonResponse(std::move(ret)));
 				},
 				post_id
-			);
-			
+			);			
 		});
 	}
 }
@@ -542,52 +558,71 @@ void Posts::downvote(const HttpRequestPtr &req, Callback callback, size_t post_i
 						return;
 					}
 					
-					transPtr->execSqlAsync(						
-						"select user_id from downvotes where topic_id = $1 and user_id = $2",
-						[=] (const Result &result) mutable {
-							if (!result.empty()) {
-								ret["error"] = "Post already downvoted";
+					/// --- boilerplate starts ---
+					auto subtractVotesInTopics = [=] (int votes) mutable {
+						transPtr->execSqlAsync(
+							"update topics set votes = votes - $1 where id = $2",
+							[=] (const Result &result) mutable {
+								ret["success"] = true;
 								callback(jsonResponse(std::move(ret)));
-								return;
+							},
+							[=] (const DrogonDbException &e) mutable {
+								LOG_DEBUG << e.base().what();
+								ret["error"] = (std::string)e.base().what();
+								callback(jsonResponse(std::move(ret)));
+							},
+							votes, post_id
+						);
+					};
+
+					auto insertDownVote = [=] () mutable {
+						transPtr->execSqlAsync(
+							"insert into votes(topic_id, user_id, upvote) values ($1, $2, false)",
+							[=] (const Result &result) {},
+							[=] (const DrogonDbException &e) mutable {
+							   LOG_DEBUG << e.base().what();
+							   ret["error"] = (std::string)e.base().what();
+							   callback(jsonResponse(std::move(ret)));
+							},
+							post_id, userID
+						);
+					};
+					/// --- boilerplate ends ---
+					
+					transPtr->execSqlAsync(
+						"delete from votes where topic_id = $1 and user_id = $2 returning upvote",
+						[=] (const Result &result) mutable {							
+							bool alreadyVoted = result.affectedRows() == 1;							
+							
+							/// by default we subtract one vote
+							int votesToSubtract = 1;
+							
+							if (alreadyVoted) {								
+								bool downvoted = !result[0]["upvote"].as<bool>();
+
+								/// if we had downvoted, downvoting again should delete the vote.
+								/// But we have already deleted the vote.
+								/// So change the vote count in topics and exit
+								if (downvoted) {
+									/// note: add votes in topics also responds with success true to the callback
+									/// note: - (- 1) = + 1
+									subtractVotesInTopics(-1);
+									return;
+								}
+								
+								/// if the person had upvoted earlier, we subtract two votes.
+								/// if the question has 0 votes when you upvoted
+								/// now it has 1 votes. Now if you downvote,
+								/// the votes should be -1 not 0. 
+								votesToSubtract = 2;		   								
 							}
-			  
-							transPtr->execSqlAsync(
-								"insert into downvotes(topic_id, user_id) values ($1, $2)",
-								[=] (const Result &result) mutable {
-									transPtr->execSqlAsync(
-										"delete from upvotes where topic_id = $1 and user_id = $2",
-										[=] (const Result &result) mutable {
-											/// If someone upvotes and then downvoted, two votes should be subtracted
-											int upvotesToSubtract = result.affectedRows() + 1;
-											transPtr->execSqlAsync(
-												"update topics set upvotes = upvotes - $1 where id = $2",
-												[=] (const Result &result) mutable {
-													ret["success"] = true;
-													callback(jsonResponse(std::move(ret)));
-												},
-												[=] (const DrogonDbException &e) mutable {
-													LOG_DEBUG << e.base().what();
-													ret["error"] = (std::string)e.base().what();
-													callback(jsonResponse(std::move(ret)));
-												},				
-												upvotesToSubtract, post_id
-											);											
-										},
-										[=] (const DrogonDbException &e) mutable {
-											LOG_DEBUG << e.base().what();
-											ret["error"] = (std::string)e.base().what();
-											callback(jsonResponse(std::move(ret)));
-										}, post_id, userID
-									);
-									
-								},
-								[=] (const DrogonDbException &e) mutable {
-									LOG_DEBUG << e.base().what();
-									ret["error"] = (std::string)e.base().what();
-									callback(jsonResponse(std::move(ret)));
-								},
-								post_id, userID
-							);
+
+							/// at this point, we either had an existing upvote (which we deleted)
+							/// or no vote. In either case, we can insert a new vote with upvote = false
+							/// and add votesToAdd in topics
+							insertDownVote();							
+							/// note: add votes in topics also responds with success true to the callback
+							subtractVotesInTopics(votesToSubtract);
 						},
 						[=] (const DrogonDbException &e) mutable {
 						   LOG_DEBUG << e.base().what();
@@ -595,7 +630,7 @@ void Posts::downvote(const HttpRequestPtr &req, Callback callback, size_t post_i
 						   callback(jsonResponse(std::move(ret)));
 						},
 						post_id, userID
-						);
+					);
 				},
 				[=] (const DrogonDbException &e) mutable {
 				   LOG_DEBUG << e.base().what();
