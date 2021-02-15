@@ -123,9 +123,17 @@ CREATE TABLE public.topics (
     visible boolean DEFAULT true,
     op_id bigint references topics(id),
     updated_by bigint,
-    likes int default 0 NOT NULL,
 	reply_to bigint references users(id),
-	accepted default false
+	accepted bool default false not null,
+	votes int default 0 not null,
+);
+
+
+CREATE TABLE public.votes (
+    topic_id bigint references topics(id),
+	user_id bigint references users(id),
+	upvote bool not null,
+	primary key (topic_id, user_id)
 );
 
 

@@ -141,6 +141,7 @@ void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id
 	
 	auto clientPtr = app().getFastDbClient("default");
 	LOG_DEBUG << clientPtr->connectionInfo();
+	LOG_DEBUG << clientPtr->hasAvailableConnections();
 	LOG_DEBUG << "Got DB client";
 	clientPtr->execSqlAsync(
 	    "select * from topics where id = $1",
@@ -164,7 +165,7 @@ void Posts::getPost(const HttpRequestPtr &req, Callback callback, size_t post_id
 			ret["visible"] = row["visible"].as<bool>();
 			ret["op_id"] = row["op_id"].as<std::string>();
 			ret["updated_by"] = row["updated_by"].as<std::string>();
-			ret["likes"] = row["likes"].as<int>();
+			ret["votes"] = row["votes"].as<int>();
 			ret["reply_to"] = row["reply_to"].as<std::string>();
 
 			auto tags = row["tag_ids"].asArray<std::string>();
@@ -317,21 +318,17 @@ void Posts::acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t 
 							}
 
 							transPtr->execSqlAsync(
-								"update topics set accepted = true where op_id = $1 and post_id = $2",
-								[=] (const Result &result) mutable {
-									   if (result.affectedRows() != 1) {
-										   ret["error"] = "Either the post does not exist or you are not the original poster. "
-											   "Only the original poster can accept the answer";
-										   callback(jsonResponse(std::move(ret)));
-										   return;
-									   }
+								"update topics set accepted = true where id = $1",
+								[=] (const Result &result) mutable {	
+									ret["success"] = true;
+									callback(jsonResponse(std::move(ret)));
 								},
 								[=] (const DrogonDbException &e) mutable {
-									   LOG_DEBUG << e.base().what();
-									   ret["error"] = (std::string)e.base().what();
-									   callback(jsonResponse(std::move(ret)));
+									LOG_DEBUG << e.base().what();
+									ret["error"] = (std::string)e.base().what();
+									callback(jsonResponse(std::move(ret)));
 								},
-								userID, post_id
+								post_id
 							);
 						},
 						[=] (const DrogonDbException &e) mutable {
@@ -349,6 +346,299 @@ void Posts::acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t 
 				},
 				post_id
 			);		   
+		});
+	}
+}
+
+
+void Posts::unacceptAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto customConfig = app().getCustomConfig();
+	auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto userID = optionalToken.value().userID;
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			transPtr->execSqlAsync(
+				"select posted_by from topics where id = (select op_id from topics where id = $1)",
+				[=] (const Result &result) mutable {
+					if (result.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;						
+					}
+
+					auto posted_by = result[0]["posted_by"].as<size_t>();
+					
+					if (posted_by != userID) {
+						ret["error"] = "You cannot unaccept answer as you are not the original author of the topic";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					transPtr->execSqlAsync(
+						"update topics set accepted = false where id = $1",
+						[=] (const Result &result) mutable {	
+							ret["success"] = true;
+							callback(jsonResponse(std::move(ret)));
+						},
+						[=] (const DrogonDbException &e) mutable {
+							LOG_DEBUG << e.base().what();
+							ret["error"] = (std::string)e.base().what();
+							callback(jsonResponse(std::move(ret)));
+						},
+						post_id
+					);					
+				},
+				[=] (const DrogonDbException &e) mutable {
+				   LOG_DEBUG << e.base().what();
+				   ret["error"] = (std::string)e.base().what();
+				   callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);		   
+		});
+	}
+}
+
+
+void Posts::upvote(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto customConfig = app().getCustomConfig();
+	auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto userID = optionalToken.value().userID;
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			transPtr->execSqlAsync(
+				"select id from topics where id = $1",
+				[=] (const Result &result) mutable {
+					if (result.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+
+					/// --- boilerplate starts ---
+					auto addVotesInTopics = [=] (int votes) mutable {
+						transPtr->execSqlAsync(
+							"update topics set votes = votes + $1 where id = $2",
+							[=] (const Result &result) mutable {
+								ret["success"] = true;
+								callback(jsonResponse(std::move(ret)));
+							},
+							[=] (const DrogonDbException &e) mutable {
+								LOG_DEBUG << e.base().what();
+								ret["error"] = (std::string)e.base().what();
+								callback(jsonResponse(std::move(ret)));
+							},
+							votes, post_id
+						);
+					};
+
+					auto insertUpvote = [=] () mutable {
+						transPtr->execSqlAsync(
+							"insert into votes(topic_id, user_id, upvote) values ($1, $2, true)",
+							[=] (const Result &result) {},
+							[=] (const DrogonDbException &e) mutable {
+							   LOG_DEBUG << e.base().what();
+							   ret["error"] = (std::string)e.base().what();
+							   callback(jsonResponse(std::move(ret)));
+							},
+							post_id, userID
+						);
+					};
+					/// --- boilerplate ends ---
+					
+					transPtr->execSqlAsync(
+						"delete from votes where topic_id = $1 and user_id = $2 returning upvote",
+						[=] (const Result &result) mutable {							
+							bool alreadyVoted = result.affectedRows() == 1;							
+							
+							/// by default we add one vote
+							int votesToAdd = 1;
+							
+							if (alreadyVoted) {								
+								bool upvoted = result[0]["upvote"].as<bool>();
+
+								/// if we had upvoted, upvoting again should delete the vote.
+								/// But we have already deleted the vote.
+								/// So change the vote count in topics and exit
+								if (upvoted) {
+									/// note: add votes in topics also responds with success true to the callback
+									addVotesInTopics(-1);
+									return;
+								}
+								
+								/// if the person had downvoted earlier, we add two votes.
+								/// if the question has 0 votes when you downvoted
+								/// now it has -1 votes. Now if you upvote,
+								/// the votes should be +1 not 0. 
+								votesToAdd = 2;		   								
+							}
+
+							/// at this point, we either had an existing downvote (which we deleted)
+							/// or no vote. In either case, we can insert a new vote with upvote = true
+							/// and add votesToAdd in topics
+							insertUpvote();							
+							/// note: add votes in topics also responds with success true to the callback
+							addVotesInTopics(votesToAdd);
+						},
+						[=] (const DrogonDbException &e) mutable {
+						   LOG_DEBUG << e.base().what();
+						   ret["error"] = (std::string)e.base().what();
+						   callback(jsonResponse(std::move(ret)));
+						},
+						post_id, userID
+					);										
+				},
+				[=] (const DrogonDbException &e) mutable {
+				   LOG_DEBUG << e.base().what();
+				   ret["error"] = (std::string)e.base().what();
+				   callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);			
+		});
+	}
+}
+
+void Posts::downvote(const HttpRequestPtr &req, Callback callback, size_t post_id) {
+	Json::Value ret;
+	
+	auto customConfig = app().getCustomConfig();
+	auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
+    auto userID = optionalToken.value().userID;
+
+	{
+		auto clientPtr = app().getFastDbClient("default");
+
+		clientPtr->newTransactionAsync([=] (TransactionPtr transPtr) mutable {
+			transPtr->execSqlAsync(
+				"select id from topics where id = $1",
+				[=] (const Result &result) mutable {
+					if (result.empty()) {
+						ret["error"] = "Post does not exist";
+						callback(jsonResponse(std::move(ret)));
+						return;
+					}
+					
+					/// --- boilerplate starts ---
+					auto subtractVotesInTopics = [=] (int votes) mutable {
+						transPtr->execSqlAsync(
+							"update topics set votes = votes - $1 where id = $2",
+							[=] (const Result &result) mutable {
+								ret["success"] = true;
+								callback(jsonResponse(std::move(ret)));
+							},
+							[=] (const DrogonDbException &e) mutable {
+								LOG_DEBUG << e.base().what();
+								ret["error"] = (std::string)e.base().what();
+								callback(jsonResponse(std::move(ret)));
+							},
+							votes, post_id
+						);
+					};
+
+					auto insertDownVote = [=] () mutable {
+						transPtr->execSqlAsync(
+							"insert into votes(topic_id, user_id, upvote) values ($1, $2, false)",
+							[=] (const Result &result) {},
+							[=] (const DrogonDbException &e) mutable {
+							   LOG_DEBUG << e.base().what();
+							   ret["error"] = (std::string)e.base().what();
+							   callback(jsonResponse(std::move(ret)));
+							},
+							post_id, userID
+						);
+					};
+					/// --- boilerplate ends ---
+					
+					transPtr->execSqlAsync(
+						"delete from votes where topic_id = $1 and user_id = $2 returning upvote",
+						[=] (const Result &result) mutable {							
+							bool alreadyVoted = result.affectedRows() == 1;							
+							
+							/// by default we subtract one vote
+							int votesToSubtract = 1;
+							
+							if (alreadyVoted) {								
+								bool downvoted = !result[0]["upvote"].as<bool>();
+
+								/// if we had downvoted, downvoting again should delete the vote.
+								/// But we have already deleted the vote.
+								/// So change the vote count in topics and exit
+								if (downvoted) {
+									/// note: add votes in topics also responds with success true to the callback
+									/// note: - (- 1) = + 1
+									subtractVotesInTopics(-1);
+									return;
+								}
+								
+								/// if the person had upvoted earlier, we subtract two votes.
+								/// if the question has 0 votes when you upvoted
+								/// now it has 1 votes. Now if you downvote,
+								/// the votes should be -1 not 0. 
+								votesToSubtract = 2;		   								
+							}
+
+							/// at this point, we either had an existing upvote (which we deleted)
+							/// or no vote. In either case, we can insert a new vote with upvote = false
+							/// and add votesToAdd in topics
+							insertDownVote();							
+							/// note: add votes in topics also responds with success true to the callback
+							subtractVotesInTopics(votesToSubtract);
+						},
+						[=] (const DrogonDbException &e) mutable {
+						   LOG_DEBUG << e.base().what();
+						   ret["error"] = (std::string)e.base().what();
+						   callback(jsonResponse(std::move(ret)));
+						},
+						post_id, userID
+					);
+				},
+				[=] (const DrogonDbException &e) mutable {
+				   LOG_DEBUG << e.base().what();
+				   ret["error"] = (std::string)e.base().what();
+				   callback(jsonResponse(std::move(ret)));
+				},
+				post_id
+			);			
 		});
 	}
 }
