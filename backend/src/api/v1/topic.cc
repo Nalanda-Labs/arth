@@ -289,6 +289,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
                         topic["posted_by"] = r["posted_by"].as<std::string>();
                         topic["created_at"] = r["created_at"].as<std::string>();
                         topic["updated_at"] = r["updated_at"].as<std::string>();
+                        topic["topic_id"] = r["id"].as<std::string>();
 
                         ret["topics"].append(topic);
                     }

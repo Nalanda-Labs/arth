@@ -27,7 +27,7 @@ namespace api
             ADD_METHOD_TO(Topic ::createTopic, "/api/v1/t/create-topic/", Post, Options);
             ADD_METHOD_TO(Topic ::getTopic, "/api/v1/t/{size_t id}/{string slug}", Get, Options);
             // without the / at end get-discussion will be captured by getTopic route
-            ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/get-discussion/{size_t id}?"
+            ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/get-discussion/{size_t id}/?"
                                                  "time={string created_at}&limit={uint limit}",
                           Get, Options);
             METHOD_LIST_END

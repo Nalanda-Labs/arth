@@ -3,9 +3,9 @@
     import { onMount } from "svelte";
     // import gfm from "@bytemd/plugin-gfm";
 
-    export let body;
     let Editor = null;
     let plugins = null;
+    export let value = "";
 
     onMount(async () => {
         const bytemd = await import("bytemd");
@@ -13,12 +13,7 @@
     });
 
     function handleChange(e) {
-        body = e.detail.value;
+        value = e.detail.value;
     }
 </script>
-
-<div class="editor-page">
-    <fieldset class="form-group" style="margin-top:20px">
-        <svelte:component this={Editor} on:change={handleChange} mode="tab" {body} />
-    </fieldset>
-</div>
+<svelte:component this={Editor} on:change={handleChange} mode="tab" {value} />

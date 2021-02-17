@@ -76,7 +76,6 @@
 		const unsubscribe = session.subscribe(async ($session) => {
 			if($session.user){
 				sections[4].route = `/profile/${$session.user}`;
-				console.log(user);
 			}
 		});
 		return unsubscribe;
