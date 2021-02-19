@@ -25,8 +25,6 @@
 		goto("/");
 	}
 
-	// const iframe = $page.path.startsWith("/demo/top-app-bar-iframe");
-
 	let mainContent;
 	let drawerOpen = false;
 	let miniWindow = false;

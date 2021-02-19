@@ -43,7 +43,7 @@ void Posts::createPost(const HttpRequestPtr &req, Callback callback, const size_
 		callback(jsonResponse(std::move(ret)));
 	}
 
-	const std::string body = json->get("body", "").asString();
+	const std::string body = json->get("value", "").asString();
 	/// reply_to is actually a size_t but js cannot represent numbers > 2^53 - 1.
 	/// So it needs to be passed as string. Database knows the type of column,
 	/// so it will implicitly convert it to int
@@ -114,7 +114,7 @@ void Posts::createPost(const HttpRequestPtr &req, Callback callback, const size_
         }
 
         clientPtr->execSqlAsync(
-            "select id from users where id = $1", 
+            "select id from users where id = $1",
             [=] (const Result &r) mutable {
                 if (r.empty()) {
                     ret["error"] = "User does not exist";

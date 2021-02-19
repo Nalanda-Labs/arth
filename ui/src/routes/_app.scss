@@ -43,10 +43,10 @@ app {
   display: flex;
 }
 
-.demo-drawer,
-.demo-main-content {
+.drawer,
+.main-content {
   overflow: auto;
-  height: 100%;
+  height: 90%;
 }
 
 @import "@material/top-app-bar/variables";

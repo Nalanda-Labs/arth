@@ -5,12 +5,16 @@
     import "../../../_utils.scss";
     import TagList from "../../../../components/_TagList.svelte";
     import Editor from "../../../_components/Editor.svelte";
+    import { stores } from "@sapper/app";
 
     export let id;
     export let slug;
+    export let reply_to_id;
+    export let topics;
+    export let topic;
+    export let user_replied;
     let value = "";
 
-    let topics = [];
     let title = "";
     let taglist = [];
     let Viewer = null;
@@ -18,9 +22,14 @@
     let limit = 10;
     let count = 0;
     let time = "";
-    let like_counter = 0;
-    let reply_id = null;
+    let votes = 0;
     let bytemd = null;
+    let posted_by;
+    let username;
+    let image_url;
+    let initials;
+
+    const { session } = stores();
 
     onMount(async () => {
         bytemd = await import("bytemd");
@@ -36,7 +45,15 @@
             value = response.topic.description;
             taglist = response.tags.map((tag) => tag.name);
             time = response.topic.created_at;
-            like_counter = response.like_counter;
+            votes = response.votes;
+            posted_by = response.topic.posted_by;
+            username = response.topic.username;
+            reply_to_id = posted_by;
+            user_replied = username;
+            image_url = response.topic.image_url;
+            if (image_url === "") {
+                initials = username[0];
+            }
         }
         response = await api.get(
             `t/get-discussion/${id}/?time=${time}&limit=${limit}`,
@@ -44,20 +61,26 @@
         );
 
         if (response.topics) {
-            topics = response.topics.map((topic) => {
-                topic.description, topic.id, topic.votes;
-            });
+            topics = response.topics;
+            for (var i = 0; i < topics.length; i++) {
+                if (topics[i].image_url === "") {
+                    topics[i].initials = response.topics[i].username[0];
+                }
+            }
+            console.log(topics);
             offset += limit;
             if (response.topics.length) {
                 time = response.topics[response.topics.length - 1].created_at;
             }
         }
     });
-    function show_editor(topic_id) {
-        reply_id = topic_id;
-        if(document.getElementById("editor").style.display === "none") {
+    function show_editor(reply_to, username) {
+        reply_to_id = reply_to;
+        user_replied = username;
+        console.log(reply_to_id, user_replied);
+        if (document.getElementById("editor").style.display === "none") {
             document.getElementById("editor").style.display = "block";
-        } else{
+        } else {
             document.getElementById("editor").style.display = "none";
         }
     }
@@ -66,110 +89,175 @@
 <svelte:head>
     <title>{title}</title>
 </svelte:head>
-
 <div>
     <h3>{title}</h3>
     <hr />
-    <svelte:component this={Viewer} {value} />
-    <TagList {taglist} />
-    <div style="float:right">
-        <a
-            href="/edit/{id}/{slug}"
-            class="anchor"
-            title="Edit your post"
-            style="margin-right:5px"
-            ><span class="material-icons" style="vertical-align:bottom"
-                >edit</span
-            > Edit</a
-        >
-        <a
-            href="/report/{id}"
-            class="anchor danger"
-            title="Report abusive or inappropriate content"
-            style="margin-right:5px"
-            ><span class="material-icons" style="vertical-align:bottom"
-                >report</span
-            >Report</a
-        >
-        <a
-            href="/share/{id}"
-            class="anchor"
-            title="Share a link to this post"
-            style="margin-right:5px"
-            ><span class="material-icons" style="vertical-align:bottom"
-                >share</span
-            >Share</a
-        >
-        <a
-            href="/bookmark/{id}"
-            class="anchor"
-            title="Bookmark this post"
-            style="margin-right:5px"
-            ><span class="material-icons" style="vertical-align:bottom"
-                >bookmark</span
-            >Bookmark</a
-        >
-        <a
-            href="/reply/{id}"
-            on:click|preventDefault={show_editor(id)}
-            class="anchor"
-            title="Reply to this post"
-            style="margin-right:5px"
-            ><span class="material-icons" style="vertical-align:bottom"
-                >reply</span
-            >Reply</a
-        >
-    </div>
-    {#each topics as { topic_id, desc, votes }}
-        <hr style="border-bottom:1px solidl;color:#eee" />
-        <svelte:component this={Viewer} {desc} />
-        <div style="float:right">
-            <a
-                href="/edit/{topic_id}/{slug}"
-                class="anchor"
-                title="Edit your post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >edit</span
-                > Edit</a
-            >
-            <a
-                href="/report/{topic_id}"
-                class="anchor danger"
-                title="Report abusive or inappropriate content"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >report</span
-                >Report</a
-            >
-            <a
-                href="/reply/{topic_id}"
-                on:click|preventDefault={show_editor(topic_id)}
-                class="anchor"
-                title="Reply to this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >reply</span
-                >Reply</a
-            >
-            <a
-                href="/share/{topic_id}"
-                class="anchor"
-                title="Share a link to this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >share</span
-                >Share</a
-            >
-            <a
-                href="/bookmark/{topic_id}"
-                class="anchor"
-                title="Bookmark this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >bookmark</span
-                >Bookmark</a
-            >
+    <div>
+        <div style="float:left;margin-right:10px">
+            {#if image_url === ""}
+                <a href="/u/{posted_by}/{username}">
+                    <p data-letters={initials.toUpperCase()} />
+                </a>
+            {:else}
+                <a href="/u/{posted_by}/{username}">
+                    <img src={image_url} />
+                </a>
+            {/if}
         </div>
+        <div>
+            <svelte:component this={Viewer} {value} />
+            <TagList {taglist} />
+            {#if $session.user}
+                <div style="float:right">
+                    <a
+                        href="/edit/{id}/{slug}"
+                        class="anchor"
+                        title="Edit your post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">edit</span
+                        > Edit</a
+                    >
+                    <a
+                        href="/report/{id}"
+                        class="anchor danger"
+                        title="Report abusive or inappropriate content"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">report</span
+                        >Report</a
+                    >
+                    <a
+                        href="/share/{id}"
+                        class="anchor"
+                        title="Share a link to this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">share</span
+                        >Share</a
+                    >
+                    <a
+                        href="/bookmark/{id}"
+                        class="anchor"
+                        title="Bookmark this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">bookmark</span
+                        >Bookmark</a
+                    >
+                    <a
+                        href="/reply"
+                        on:click|preventDefault={show_editor(
+                            posted_by,
+                            username
+                        )}
+                        class="anchor"
+                        title="Reply to this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">reply</span
+                        >Reply</a
+                    >
+                </div>
+            {/if}
+        </div>
+    </div>
+    <div style="clear:both"/>
+    {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url }}
+        <hr style="border-bottom:1px solid;color:#eee" />
+        <div>
+            <div style="float:left;margin-right:10px">
+                {#if image_url === ""}
+                    <a href="/u/{posted_by}/{username}">
+                        <p data-letters={initials.toUpperCase()} />
+                    </a>
+                {:else}
+                    <a href="/u/{posted_by}/{username}">
+                        <img src={image_url} />
+                    </a>
+                {/if}
+            </div>
+            <div>
+                <svelte:component this={Viewer} value={description} />
+                <div style="float:right">
+                    <a
+                        href="/edit/{topic_id}/{slug}"
+                        class="anchor"
+                        title="Edit your post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">edit</span
+                        > Edit</a
+                    >
+                    <a
+                        href="/report/{topic_id}"
+                        class="anchor danger"
+                        title="Report abusive or inappropriate content"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">report</span
+                        >Report</a
+                    >
+                    <a
+                        href="/reply"
+                        on:click|preventDefault={show_editor(
+                            posted_by,
+                            username
+                        )}
+                        class="anchor"
+                        title="Reply to this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">reply</span
+                        >Reply</a
+                    >
+                    <a
+                        href="/share/{topic_id}"
+                        class="anchor"
+                        title="Share a link to this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">share</span
+                        >Share</a
+                    >
+                    <a
+                        href="/bookmark/{topic_id}"
+                        class="anchor"
+                        title="Bookmark this post"
+                        style="margin-right:5px"
+                        ><span
+                            class="material-icons"
+                            style="vertical-align:bottom">bookmark</span
+                        >Bookmark</a
+                    >
+                </div>
+            </div>
+        </div>
+        <div style="clear:both" />
     {/each}
 </div>
+
+<style>
+    [data-letters]:before {
+        content: attr(data-letters);
+        display: inline-block;
+        font-size: 1.5em;
+        width: 2.5em;
+        height: 2.5em;
+        line-height: 2.5em;
+        text-align: center;
+        border-radius: 50%;
+        background: plum;
+        vertical-align: middle;
+        color: white;
+    }
+</style>

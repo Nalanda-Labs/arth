@@ -2,4 +2,6 @@
 	import Home from './_components/Home.svelte';
 </script>
 
-<Home/>
+
+<section style="padding: 36px;">
+</section>

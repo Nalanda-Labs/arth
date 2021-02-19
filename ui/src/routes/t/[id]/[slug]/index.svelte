@@ -15,25 +15,54 @@
 
     export let id;
     export let slug;
+    let reply_to_id;
+    let user_replied;
+    let image_url;
     let value = "";
-    let reply_id = null;
     let Editor = null;
+    let topic = {};
+    let inProgress = false;
+    let topics = [];
 
     const { session } = stores();
 
-    function show_editor(topic_id) {
-        reply_id = topic_id;
-        if(document.getElementById("editor").style.display === "none") {
+    function show_editor(reply_to, username) {
+        reply_to_id = reply_to;
+        user_replied = username;
+        console.log(reply_to_id, user_replied);
+        if (document.getElementById("editor").style.display === "none") {
             document.getElementById("editor").style.display = "block";
-        } else{
+        } else {
             document.getElementById("editor").style.display = "none";
         }
     }
-    function reply() {
-        console.log(value, reply_id);
-        if($session.user) {
-            
-        }
+    async function reply() {
+        if ($session.user) {
+            inProgress = true;
+            if (value.length < 20 || value.length > 100000) {
+				alert(
+					"Body should not be less than 20 or more than 100000 characters."
+				);
+				return;
+			}
+
+            let reply_to = reply_to_id;
+
+			const response = await api.post(
+				`create-post?topic_id=${id}`,
+				{ value, reply_to },
+				localStorage.getItem("jwt")
+			);
+
+			if (response.post_id) {
+				document.getElementById("editor").style.display = "none";
+                const l = topics.length;
+                topics[l] = {topic_id: response.post_id, description: value, votes: 0, image_url: response.image_url};
+			}
+			inProgress = false;
+		} else {
+			alert("You are not logged in.");
+		}
     }
     onMount(async () => {
         const bytemd = await import("bytemd");
@@ -49,65 +78,74 @@
     <title />
 </svelte:head>
 
-<div class="row">
-    <div class="col-xs-12">
-        <Topics {id} {slug} />
-        <hr style="border-bottom:1px solidl;color:#eee" />
-        {#if $session.user}
-            <a
-                href="/edit/{id}/{slug}"
-                class="anchor"
-                title="Edit your post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >edit</span
-                > Edit</a
-            >
-            <a
-                href="/report/{id}"
-                class="anchor danger"
-                title="Report abusive or inappropriate content"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >report</span
-                >Report</a
-            >
-            <a
-                href="/share/{id}"
-                class="anchor"
-                title="Share a link to this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >share</span
-                >Share</a
-            >
-            <a
-                href="/bookmark/{id}"
-                class="anchor"
-                title="Bookmark this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >bookmark</span
-                >Bookmark</a
-            >
-            <a
-                href="/reply/{id}"
-                on:click|preventDefault={show_editor(id)}
-                class="anchor"
-                title="Reply to this post"
-                style="margin-right:5px"
-                ><span class="material-icons" style="vertical-align:bottom"
-                    >reply</span
-                >Reply</a
-            >
-        {/if}
-        <div id="editor" style="display:none;margin-top:10px">
-            <svelte:component this={Editor} on:change={handleChange} mode="tab" {value} />
-            <div style="margin-top:10px">
-				<Button variant="raised" on:click="{reply}">
-					<Label>Post</Label>
-				</Button>
-			</div>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <Topics {id} {slug} bind:reply_to_id bind:topics bind:topic bind:user_replied />
+            <div id="topics-end" style="display:none" />
+            <hr style="border-bottom:1px solidl;color:#eee" />
+            {#if $session.user}
+                <a
+                    href="/edit/{id}/{slug}"
+                    class="anchor"
+                    title="Edit your post"
+                    style="margin-right:5px"
+                    ><span class="material-icons" style="vertical-align:bottom"
+                        >edit</span
+                    > Edit</a
+                >
+                <a
+                    href="/report/{id}"
+                    class="anchor danger"
+                    title="Report abusive or inappropriate content"
+                    style="margin-right:5px"
+                    ><span class="material-icons" style="vertical-align:bottom"
+                        >report</span
+                    >Report</a
+                >
+                <a
+                    href="/share/{id}"
+                    class="anchor"
+                    title="Share a link to this post"
+                    style="margin-right:5px"
+                    ><span class="material-icons" style="vertical-align:bottom"
+                        >share</span
+                    >Share</a
+                >
+                <a
+                    href="/bookmark/{id}"
+                    class="anchor"
+                    title="Bookmark this post"
+                    style="margin-right:5px"
+                    ><span class="material-icons" style="vertical-align:bottom"
+                        >bookmark</span
+                    >Bookmark</a
+                >
+                <a
+                    href="/reply"
+                    on:click|preventDefault={show_editor(reply_to_id, user_replied)}
+                    class="anchor"
+                    title="Reply to this post"
+                    style="margin-right:5px"
+                    ><span class="material-icons" style="vertical-align:bottom"
+                        >reply</span
+                    >Reply</a
+                >
+            {/if}
+            <div id="editor" style="display:none;margin-top:10px">
+                <span style="color:#08c">Replying to @{user_replied}</span>
+                <svelte:component
+                    this={Editor}
+                    on:change={handleChange}
+                    mode="tab"
+                    {value}
+                />
+                <div style="margin-top:10px">
+                    <Button variant="raised" on:click={reply}>
+                        <Label>Post</Label>
+                    </Button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -115,5 +153,8 @@
 <style>
     :global(.bytemd-editor .CodeMirror) {
         height: 90% !important;
+    }
+    .container {
+        margin-left: 0px;
     }
 </style>
