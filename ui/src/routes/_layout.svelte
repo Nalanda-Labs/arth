@@ -57,7 +57,7 @@
 		},
 		{
 			name: "Profile",
-			route: `/profile/${$session.user}`,
+			route: `/users/${$session.user_id}/${$session.user}`,
 			protected: true,
 			logout_only: false,
 		},
@@ -73,7 +73,7 @@
 		setMiniWindow;
 		const unsubscribe = session.subscribe(async ($session) => {
 			if($session.user){
-				sections[4].route = `/profile/${$session.user}`;
+				sections[4].route = `/users/${$session.user_id}/${$session.user}`;
 			}
 		});
 		return unsubscribe;

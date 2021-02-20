@@ -33,6 +33,7 @@
 			const decoded = jwt_decode(response.jwt);
 			localStorage.setItem("jwt", response.jwt);
 			$session.user = decoded["username"];
+			$session.user_id = decoded["user_id"];
 			goto("/");
 		}
 	}

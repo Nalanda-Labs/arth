@@ -13,7 +13,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Profile::getProfile(const HttpRequestPtr &req, Callback callback, size_t userID)
+void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const size_t userID, const std::string username)
 {
     LOG_DEBUG << "user id: " << userID;
 
@@ -67,7 +67,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, size_t us
 }
 
 
-void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, size_t userID)
+void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const size_t userID, const std::string username)
 {
     auto json = req->getJsonObject();
 
@@ -79,7 +79,6 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, size_
         return;
     }
 
-    auto username = json->get("username", "").asString();
     auto name = json->get("name", "").asString();
     auto title = json->get("title", "").asString();
     auto designation = json->get("designation", "").asString();

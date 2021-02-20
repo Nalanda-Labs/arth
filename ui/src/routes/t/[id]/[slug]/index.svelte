@@ -29,7 +29,6 @@
     function show_editor(reply_to, username) {
         reply_to_id = reply_to;
         user_replied = username;
-        console.log(reply_to_id, user_replied);
         if (document.getElementById("editor").style.display === "none") {
             document.getElementById("editor").style.display = "block";
         } else {
@@ -57,6 +56,7 @@
 			if (response.post_id) {
 				document.getElementById("editor").style.display = "none";
                 const l = topics.length;
+                // TODO: Make following like other topics
                 topics[l] = {topic_id: response.post_id, description: value, votes: 0, image_url: response.image_url};
 			}
 			inProgress = false;

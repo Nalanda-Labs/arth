@@ -28,6 +28,7 @@
     let username;
     let image_url;
     let initials;
+    let shown_ts;
 
     const { session } = stores();
 
@@ -54,6 +55,23 @@
             if (image_url === "") {
                 initials = username[0];
             }
+            let asked_ts = Date.parse(time);
+            let now = Date.now();
+            shown_ts = Math.floor((now - asked_ts)/1000);
+            if(shown_ts < 60) {
+                shown_ts = shown_ts + ' s';
+            } else if(60 <= shown_ts && shown_ts < 3600) {
+                console.log(shown_ts);
+                shown_ts = Math.floor(shown_ts/60) + ' m';
+            } else if(3600 <= shown_ts && shown_ts < 8640000) {
+                shown_ts = Math.floor(shown_ts/3600) + ' h';
+            } else if(86400 <= shown_ts && shown_ts < 172800) {
+                shown_ts = 'yesterday';
+            } else if(172800 <= shown_ts && shown_ts < 259200 ) {
+                shown_ts = '2 days ago';
+            } else {
+                shown_ts = askted_ts.getDay() + '/' + asked_ts.getMonth() + '/' + asked_ts.getYear();
+            }
         }
         response = await api.get(
             `t/get-discussion/${id}/?time=${time}&limit=${limit}`,
@@ -62,10 +80,28 @@
 
         if (response.topics) {
             topics = response.topics;
+            let now = Date.now();
             for (var i = 0; i < topics.length; i++) {
                 if (topics[i].image_url === "") {
                     topics[i].initials = response.topics[i].username[0];
                 }
+                let asked_ts = Date.parse(topics[i].created_at);
+                let shown_ts = Math.floor((now - asked_ts)/1000);
+                if(shown_ts < 60) {
+                    shown_ts = shown_ts + ' s';
+                } else if(60 <= shown_ts && shown_ts < 3600) {
+                    console.log(shown_ts);
+                    shown_ts = Math.floor(shown_ts/60) + ' m';
+                } else if(3600 <= shown_ts && shown_ts < 8640000) {
+                    shown_ts = Math.floor(shown_ts/3600) + ' h';
+                } else if(86400 <= shown_ts && shown_ts < 172800) {
+                    shown_ts = 'yesterday';
+                } else if(172800 <= shown_ts && shown_ts < 259200 ) {
+                    shown_ts = '2 days ago';
+                } else {
+                    shown_ts = askted_ts.getDay() + '/' + asked_ts.getMonth() + '/' + asked_ts.getYear();
+                }
+                topics[i].shown_ts = shown_ts;
             }
             console.log(topics);
             offset += limit;
@@ -77,7 +113,6 @@
     function show_editor(reply_to, username) {
         reply_to_id = reply_to;
         user_replied = username;
-        console.log(reply_to_id, user_replied);
         if (document.getElementById("editor").style.display === "none") {
             document.getElementById("editor").style.display = "block";
         } else {
@@ -93,7 +128,7 @@
     <h3>{title}</h3>
     <hr />
     <div>
-        <div style="float:left;margin-right:10px">
+        <div style="float:left;margin-right:10px;z-index:2;">
             {#if image_url === ""}
                 <a href="/u/{posted_by}/{username}">
                     <p data-letters={initials.toUpperCase()} />
@@ -104,7 +139,9 @@
                 </a>
             {/if}
         </div>
-        <div>
+        <div style="float:left; position:relative;width:calc(100% - 70px)">
+            <span style="font-weight:bold;color:#888">{username}</span>
+            <span style="float:right">{shown_ts}</span>
             <svelte:component this={Viewer} {value} />
             <TagList {taglist} />
             {#if $session.user}
@@ -168,7 +205,7 @@
         </div>
     </div>
     <div style="clear:both"/>
-    {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url }}
+    {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts }}
         <hr style="border-bottom:1px solid;color:#eee" />
         <div>
             <div style="float:left;margin-right:10px">
@@ -182,8 +219,11 @@
                     </a>
                 {/if}
             </div>
-            <div>
+            <div style="float:left; position:relative;width:calc(100% - 70px)">
+                <span style="font-weight:bold;color:#888">{username}</span>
+                <span style="float:right">{shown_ts}</span>
                 <svelte:component this={Viewer} value={description} />
+                {#if $session.user}
                 <div style="float:right">
                     <a
                         href="/edit/{topic_id}/{slug}"
@@ -240,6 +280,7 @@
                         >Bookmark</a
                     >
                 </div>
+                {/if}
             </div>
         </div>
         <div style="clear:both" />
@@ -259,5 +300,6 @@
         background: plum;
         vertical-align: middle;
         color: white;
+        margin-top: -10px;
     }
 </style>
