@@ -39,30 +39,38 @@
         if ($session.user) {
             inProgress = true;
             if (value.length < 20 || value.length > 100000) {
-				alert(
-					"Body should not be less than 20 or more than 100000 characters."
-				);
-				return;
-			}
+                alert(
+                    "Body should not be less than 20 or more than 100000 characters."
+                );
+                return;
+            }
 
             let reply_to = reply_to_id;
 
-			const response = await api.post(
-				`create-post?topic_id=${id}`,
-				{ value, reply_to },
-				localStorage.getItem("jwt")
-			);
+            const response = await api.post(
+                `create-post?topic_id=${id}`,
+                { value, reply_to },
+                localStorage.getItem("jwt")
+            );
 
-			if (response.post_id) {
-				document.getElementById("editor").style.display = "none";
+            if (response.post_id) {
+                document.getElementById("editor").style.display = "none";
                 const l = topics.length;
-                // TODO: Make following like other topics
-                topics[l] = {topic_id: response.post_id, description: value, votes: 0, image_url: response.image_url};
-			}
-			inProgress = false;
-		} else {
-			alert("You are not logged in.");
-		}
+                topics[l] = {
+                    topic_id: response.post_id,
+                    description: value,
+                    votes: 0,
+                    posted_by: $session.user_id,
+                    username: $session.user,
+                    image_url: response.image_url,
+                    shown_ts: "0 s",
+                    initials: $session.user[0],
+                };
+            }
+            inProgress = false;
+        } else {
+            alert("You are not logged in.");
+        }
     }
     onMount(async () => {
         const bytemd = await import("bytemd");
@@ -81,7 +89,14 @@
 <div class="container">
     <div class="row">
         <div class="col-xs-12">
-            <Topics {id} {slug} bind:reply_to_id bind:topics bind:topic bind:user_replied />
+            <Topics
+                {id}
+                {slug}
+                bind:reply_to_id
+                bind:topics
+                bind:topic
+                bind:user_replied
+            />
             <div id="topics-end" style="display:none" />
             <hr style="border-bottom:1px solidl;color:#eee" />
             {#if $session.user}
@@ -123,7 +138,10 @@
                 >
                 <a
                     href="/reply"
-                    on:click|preventDefault={show_editor(reply_to_id, user_replied)}
+                    on:click|preventDefault={show_editor(
+                        reply_to_id,
+                        user_replied
+                    )}
                     class="anchor"
                     title="Reply to this post"
                     style="margin-right:5px"

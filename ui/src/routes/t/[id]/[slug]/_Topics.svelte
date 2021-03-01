@@ -209,7 +209,7 @@
         <hr style="border-bottom:1px solid;color:#eee" />
         <div>
             <div style="float:left;margin-right:10px">
-                {#if image_url === ""}
+                {#if image_url === "" || image_url === undefined}
                     <a href="/u/{posted_by}/{username}">
                         <p data-letters={initials.toUpperCase()} />
                     </a>
