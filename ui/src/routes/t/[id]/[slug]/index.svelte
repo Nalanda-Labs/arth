@@ -34,6 +34,9 @@
         } else {
             document.getElementById("editor").style.display = "none";
         }
+        // TODO: Fix scroll on showing editor
+        var editorDiv = document.getElementById("editor");
+        editorDiv.scrollTop = editorDiv.scrollHeight;
     }
     async function reply() {
         if ($session.user) {
