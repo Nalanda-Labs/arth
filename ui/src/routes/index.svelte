@@ -2,6 +2,6 @@
 	import Home from './_components/Home.svelte';
 </script>
 
-
-<section style="padding: 36px;">
-</section>
+<svelte:head>
+	<title>Discussions • Arth</title>
+</svelte:head>

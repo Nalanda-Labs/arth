@@ -18,9 +18,9 @@ polka()
 		secret: 'conduit',
 		resave: false,
 		saveUninitialized: true,
-		cookie: {
-			maxAge: 31536000
-		},
+		// cookie: {
+		// 	maxAge: 31536000
+		// },
 		store: new FileStore({
 			path: process.env.NOW ? `/tmp/sessions` : `.sessions`
 		})
