@@ -35,8 +35,10 @@
             document.getElementById("editor").style.display = "none";
         }
         // TODO: Fix scroll on showing editor
-        var editorDiv = document.getElementById("editor");
-        editorDiv.scrollTop = editorDiv.scrollHeight;
+        // var editorDiv = document.getElementById("container");
+        // console.log(editorDiv.scrollHeight, editorDiv.scrollTop);
+        // editorDiv.scrollTop = editorDiv.scrollHeight;
+        // console.log(editorDiv.scrollHeight, editorDiv.scrollTop);
     }
     async function reply() {
         if ($session.user) {
@@ -89,7 +91,7 @@
     <title />
 </svelte:head>
 
-<div class="container">
+<div class="container" id="container">
     <div class="row">
         <div class="col-xs-12">
             <Topics

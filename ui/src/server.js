@@ -15,7 +15,7 @@ const dev = NODE_ENV === 'development';
 polka()
 	.use(bodyParser.json())
 	.use(session({
-		secret: 'conduit',
+		secret: 'ath',
 		resave: false,
 		saveUninitialized: true,
 		// cookie: {
@@ -31,7 +31,7 @@ polka()
 		sapper.middleware({
 			session: (req, res) => {
 				res.setHeader('cache-control', 'no-cache, no-store');
-				return {user: req.session.user}
+				return {user: req.session.user, user_id: req.session.user_id}
 			}
 		})
 	)

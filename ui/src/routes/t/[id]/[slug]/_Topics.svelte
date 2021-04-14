@@ -4,14 +4,12 @@
     import "bytemd/dist/index.min.css";
     import "../../../_utils.scss";
     import TagList from "../../../../components/_TagList.svelte";
-    import Editor from "../../../_components/Editor.svelte";
     import { stores } from "@sapper/app";
 
     export let id;
     export let slug;
     export let reply_to_id;
     export let topics;
-    export let topic;
     export let user_replied;
     let value = "";
 
@@ -56,21 +54,29 @@
                 initials = username[0];
             }
             let asked_ts = Date.parse(time);
+            console.log(asked_ts);
             let now = Date.now();
-            shown_ts = Math.floor((now - asked_ts)/1000);
-            if(shown_ts < 60) {
-                shown_ts = shown_ts + ' s';
-            } else if(60 <= shown_ts && shown_ts < 3600) {
+            shown_ts = Math.floor((now - asked_ts) / 1000);
+            if (shown_ts >= 259200) {
+                asked_ts = new Date(time);
+                let year = asked_ts.getYear() + 1900;
+                shown_ts =
+                    asked_ts.getDay() +
+                    "/" +
+                    asked_ts.getMonth() +
+                    "/" +
+                    year;
+            } else if (172800 <= shown_ts && shown_ts < 259200) {
+                shown_ts = "2 days ago";
+            } else if (86400 <= shown_ts && shown_ts < 172800) {
+                shown_ts = "yesterday";
+            } else if (3600 <= shown_ts && shown_ts < 8640000) {
+                shown_ts = Math.floor(shown_ts / 3600) + " h";
+            } else if (60 <= shown_ts && shown_ts < 3600) {
                 console.log(shown_ts);
-                shown_ts = Math.floor(shown_ts/60) + ' m';
-            } else if(3600 <= shown_ts && shown_ts < 8640000) {
-                shown_ts = Math.floor(shown_ts/3600) + ' h';
-            } else if(86400 <= shown_ts && shown_ts < 172800) {
-                shown_ts = 'yesterday';
-            } else if(172800 <= shown_ts && shown_ts < 259200 ) {
-                shown_ts = '2 days ago';
+                shown_ts = Math.floor(shown_ts / 60) + " m";
             } else {
-                shown_ts = askted_ts.getDay() + '/' + asked_ts.getMonth() + '/' + asked_ts.getYear();
+                shown_ts = shown_ts + " s";
             }
         }
         response = await api.get(
@@ -86,20 +92,28 @@
                     topics[i].initials = response.topics[i].username[0];
                 }
                 let asked_ts = Date.parse(topics[i].created_at);
-                let shown_ts = Math.floor((now - asked_ts)/1000);
-                if(shown_ts < 60) {
-                    shown_ts = shown_ts + ' s';
-                } else if(60 <= shown_ts && shown_ts < 3600) {
+                let now = Date.now();
+                let shown_ts = Math.floor((now - asked_ts) / 1000);
+                if (shown_ts >= 259200) {
+                    asked_ts = new Date(topics[i].created_at);
+                    let year = asked_ts.getYear() + 1900;
+                    shown_ts =
+                        asked_ts.getDay() +
+                        "/" +
+                        asked_ts.getMonth() +
+                        "/" +
+                        year;
+                } else if (172800 <= shown_ts && shown_ts < 259200) {
+                    shown_ts = "2 days ago";
+                } else if (86400 <= shown_ts && shown_ts < 172800) {
+                    shown_ts = "yesterday";
+                } else if (3600 <= shown_ts && shown_ts < 8640000) {
+                    shown_ts = Math.floor(shown_ts / 3600) + " h";
+                } else if (60 <= shown_ts && shown_ts < 3600) {
                     console.log(shown_ts);
-                    shown_ts = Math.floor(shown_ts/60) + ' m';
-                } else if(3600 <= shown_ts && shown_ts < 8640000) {
-                    shown_ts = Math.floor(shown_ts/3600) + ' h';
-                } else if(86400 <= shown_ts && shown_ts < 172800) {
-                    shown_ts = 'yesterday';
-                } else if(172800 <= shown_ts && shown_ts < 259200 ) {
-                    shown_ts = '2 days ago';
+                    shown_ts = Math.floor(shown_ts / 60) + " m";
                 } else {
-                    shown_ts = askted_ts.getDay() + '/' + asked_ts.getMonth() + '/' + asked_ts.getYear();
+                    shown_ts = shown_ts + " s";
                 }
                 topics[i].shown_ts = shown_ts;
             }
@@ -118,6 +132,10 @@
         } else {
             document.getElementById("editor").style.display = "none";
         }
+        // var editorDiv = document.getElementById("container");
+        // console.log(editorDiv.scrollHeight, editorDiv.scrollTop, editorDiv.clientHeight);
+        // editorDiv.scrollTop = editorDiv.scrollHeight;
+        // console.log(editorDiv.scrollHeight, editorDiv.scrollTop, editorDiv.clientHeight);
     }
 </script>
 
@@ -204,7 +222,7 @@
             {/if}
         </div>
     </div>
-    <div style="clear:both"/>
+    <div style="clear:both" />
     {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts }}
         <hr style="border-bottom:1px solid;color:#eee" />
         <div>
@@ -224,62 +242,62 @@
                 <span style="float:right">{shown_ts}</span>
                 <svelte:component this={Viewer} value={description} />
                 {#if $session.user}
-                <div style="float:right">
-                    <a
-                        href="/edit/{topic_id}/{slug}"
-                        class="anchor"
-                        title="Edit your post"
-                        style="margin-right:5px"
-                        ><span
-                            class="material-icons"
-                            style="vertical-align:bottom">edit</span
-                        > Edit</a
-                    >
-                    <a
-                        href="/report/{topic_id}"
-                        class="anchor danger"
-                        title="Report abusive or inappropriate content"
-                        style="margin-right:5px"
-                        ><span
-                            class="material-icons"
-                            style="vertical-align:bottom">report</span
-                        >Report</a
-                    >
-                    <a
-                        href="/reply"
-                        on:click|preventDefault={show_editor(
-                            posted_by,
-                            username
-                        )}
-                        class="anchor"
-                        title="Reply to this post"
-                        style="margin-right:5px"
-                        ><span
-                            class="material-icons"
-                            style="vertical-align:bottom">reply</span
-                        >Reply</a
-                    >
-                    <a
-                        href="/share/{topic_id}"
-                        class="anchor"
-                        title="Share a link to this post"
-                        style="margin-right:5px"
-                        ><span
-                            class="material-icons"
-                            style="vertical-align:bottom">share</span
-                        >Share</a
-                    >
-                    <a
-                        href="/bookmark/{topic_id}"
-                        class="anchor"
-                        title="Bookmark this post"
-                        style="margin-right:5px"
-                        ><span
-                            class="material-icons"
-                            style="vertical-align:bottom">bookmark</span
-                        >Bookmark</a
-                    >
-                </div>
+                    <div style="float:right">
+                        <a
+                            href="/edit/{topic_id}/{slug}"
+                            class="anchor"
+                            title="Edit your post"
+                            style="margin-right:5px"
+                            ><span
+                                class="material-icons"
+                                style="vertical-align:bottom">edit</span
+                            > Edit</a
+                        >
+                        <a
+                            href="/report/{topic_id}"
+                            class="anchor danger"
+                            title="Report abusive or inappropriate content"
+                            style="margin-right:5px"
+                            ><span
+                                class="material-icons"
+                                style="vertical-align:bottom">report</span
+                            >Report</a
+                        >
+                        <a
+                            href="/reply"
+                            on:click|preventDefault={show_editor(
+                                posted_by,
+                                username
+                            )}
+                            class="anchor"
+                            title="Reply to this post"
+                            style="margin-right:5px"
+                            ><span
+                                class="material-icons"
+                                style="vertical-align:bottom">reply</span
+                            >Reply</a
+                        >
+                        <a
+                            href="/share/{topic_id}"
+                            class="anchor"
+                            title="Share a link to this post"
+                            style="margin-right:5px"
+                            ><span
+                                class="material-icons"
+                                style="vertical-align:bottom">share</span
+                            >Share</a
+                        >
+                        <a
+                            href="/bookmark/{topic_id}"
+                            class="anchor"
+                            title="Bookmark this post"
+                            style="margin-right:5px"
+                            ><span
+                                class="material-icons"
+                                style="vertical-align:bottom">bookmark</span
+                            >Bookmark</a
+                        >
+                    </div>
                 {/if}
             </div>
         </div>

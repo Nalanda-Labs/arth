@@ -119,12 +119,12 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
 
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
+        clientPtr->newTransactionAsync([=, this](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
             
 			transPtr->execSqlAsync(
 				"select * from users where username=$1 or email=$2",
-				[=](const Result &r) mutable {
+				[=, this](const Result &r) mutable {
 					if (r.size() > 0)
 					{
 						LOG_DEBUG << "User exists";
@@ -162,7 +162,7 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
 					*transPtr << "insert into users(username, username_lower, email, trust_level,"
 								 "password_hash, salt, email_verification_code) values($1, $2, $3, 0, $4, $5, $6);"
 							  << username << username_lower << email << password_hash << salt << token >>
-						[=](const Result &r) mutable {
+						[=, this](const Result &r) mutable {
 							auto smtp = SMTPMail();
 							// TODO: move subject string to translation file
 							auto msgid = smtp.sendEmail(

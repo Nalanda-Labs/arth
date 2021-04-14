@@ -1,7 +1,5 @@
-<script>
-	import Home from './_components/Home.svelte';
+<script context="module">
+	export async function preload({ params }) {
+		this.redirect(302, "/topics");
+	}
 </script>
-
-<svelte:head>
-	<title>Discussions • Arth</title>
-</svelte:head>
