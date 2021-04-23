@@ -1,0 +1,16 @@
+\documentclass{standalone}
+\usepackage{tikz}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+\draw[line width=2,line cap=round] (1.5,0) .. controls ++(0,2) and ++(0,-2) .. (4,4)
+                                             to[out=90,in=0] (2,6)
+                                             to[out=180,in=90] (0,4);
+
+\fill (1.5,-1) circle (0.25);
+
+\end{tikzpicture}
+
+\end{document}
