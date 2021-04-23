@@ -12,3 +12,13 @@ handling environmental issues.
 A piece of code is written once, modified few times, read
 many times and ran even more number of times. Thus performance
 matters.
+
+Please read LICENSE carefully. At the bottom there are additional
+clauses.
+
+Goals
+=====
+Be very fast but not necessarily fastest.
+Be minimalistic in UI and data collection. Do not generate
+unnecessary metadata. Usually web application generate metadata
+for no good reason.
