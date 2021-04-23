@@ -280,7 +280,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         // never use offset in cockroachdb it does not work well in terms of execution speed
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable {
             transPtr->execSqlAsync(
-                "select count(*) over(), t.id, t.description, t.visible, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
+                "select count(1) over(), t.id, t.description, t.visible, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
                 [=](const Result &rows) mutable {
                     ret["topics"] = Json::arrayValue;
 

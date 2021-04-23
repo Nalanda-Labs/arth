@@ -16,21 +16,50 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Index::index(const HttpRequestPtr &req, Callback callback, const size_t &limit = 50, const size_t& page = 1)
+void Index::index(const HttpRequestPtr &req, Callback callback, const std::string &page = "1")
 {
     Json::Value ret;
 
+    auto customConfig = app().getCustomConfig();
+    auto page_no = atol(page.c_str());
+    int limit = customConfig.get("limit_per_page", 50).asInt();
+    LOG_DEBUG << limit;
+    LOG_DEBUG << (page_no - 1) * limit;
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select * from topics limit= $1, offset=$1",
-            [=](const Result &r) mutable {
-                if (r.size() == 0)
+            "select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, "
+            "users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left "
+            "join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join "
+            "tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by "
+            "t.updated_at limit $1 offset $2",
+            [=](const Result &rows) mutable {
+                if (rows.size() == 0)
                 {
                     return;
                 }
                 else
                 {
+                    ret["topics"] = Json::arrayValue;
+                    for (auto &r : rows)
+                    {
+                        Json::Value topic;
+
+                        topic["id"] = r["id"].as<std::string>();
+                        topic["visible"] = r["visible"].as<bool>();
+                        topic["titile"] = r["title"].as<std::string>();
+                        topic["created_at"] = r["created_at"].as<std::string>();
+                        topic["updated_at"] = r["updated_at"].as<std::string>();
+                        topic["votes"] = r["votes"].as<std::string>();
+                        topic["username"] = r["username"].as<std::string>();
+                        topic["uid"] = r["uid"].as<std::string>();
+                        topic["tid"] = r["tag_id"].as<std::string>();
+                        topic["tags"] = r["tags"].as<std::string>();
+
+                        ret["topics"].append(topic);
+                    }
+                    callback(jsonResponse(std::move(ret)));
+                    return;
                 }
             },
             [=](const DrogonDbException &e) mutable {
@@ -38,6 +67,6 @@ void Index::index(const HttpRequestPtr &req, Callback callback, const size_t &li
                 ret["error"] = (std::string)e.base().what();
                 callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
             },
-            limit, (page - 1)*limit);
+            (long)limit, (long)limit *(page_no - 1));
     }
 }

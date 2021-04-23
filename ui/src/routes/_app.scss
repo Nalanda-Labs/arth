@@ -60,6 +60,8 @@ app {
   width: 0;
   flex-grow: 1;
   background-color: #dddddd;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content {
@@ -72,9 +74,10 @@ app {
   border: 1px solid #eee;
   box-shadow: -1px 1px #eee;
   font-weight: 300;
+  flex-direction: column;
 }
 
-.main-content section {
+.main-content > section {
   padding: 16px;
   width: 100%;
   box-sizing: border-box;

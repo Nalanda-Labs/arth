@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.1 (Ubuntu 13.1-1.pgdg20.04+1)
--- Dumped by pg_dump version 13.1 (Ubuntu 13.1-1.pgdg20.04+1)
+-- Dumped from database version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -117,23 +117,15 @@ CREATE TABLE public.topics (
     title character varying(512),
     description character varying(1000000) NOT NULL,
     tag_ids bigint[],
-    posted_by bigint NOT NULL references users(id),
+    posted_by bigint DEFAULT 0 NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,    
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    upadted_by bigint DEFAULT 0 NOT NULL,
     visible boolean DEFAULT true,
-    op_id bigint references topics(id),
+    op_id bigint DEFAULT 0,
     updated_by bigint,
-	reply_to bigint references users(id),
-	accepted bool default false not null,
-	votes int default 0 not null,
-);
-
-
-CREATE TABLE public.votes (
-    topic_id bigint references topics(id),
-	user_id bigint references users(id),
-	upvote bool not null,
-	primary key (topic_id, user_id)
+    votes bigint DEFAULT 0,
+    reply_to bigint
 );
 
 
@@ -179,7 +171,9 @@ CREATE TABLE public.users (
     last_seen_at timestamp without time zone,
     admin boolean DEFAULT false NOT NULL,
     last_emailed_at timestamp without time zone,
-    reputation bigint NOT NULL,
+    trust_level bigint NOT NULL,
+    approved boolean DEFAULT false NOT NULL,
+    approved_by_id bigint,
     approved_at timestamp without time zone,
     previous_visit_at timestamp without time zone,
     suspended_at timestamp without time zone,
@@ -196,6 +190,10 @@ CREATE TABLE public.users (
     registration_ip_address inet,
     staged boolean DEFAULT false NOT NULL,
     first_seen_at timestamp without time zone,
+    silenced_till timestamp without time zone,
+    group_locked_trust_level bigint,
+    manual_locked_trust_level bigint,
+    secure_identifier character varying,
     email character varying(255) NOT NULL,
     email_verified boolean DEFAULT false,
     email_verification_code character varying(64) DEFAULT ''::character varying,
@@ -229,6 +227,19 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: votes; Type: TABLE; Schema: public; Owner: shiv
+--
+
+CREATE TABLE public.votes (
+    topic_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    upvote boolean NOT NULL
+);
+
+
+ALTER TABLE public.votes OWNER TO shiv;
+
+--
 -- Name: tags id; Type: DEFAULT; Schema: public; Owner: shiv
 --
 
@@ -254,82 +265,6 @@ ALTER TABLE ONLY public.topics ALTER COLUMN id SET DEFAULT nextval('public.topic
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
-
-
---
--- Data for Name: email_tokens; Type: TABLE DATA; Schema: public; Owner: shiv
---
-
-COPY public.email_tokens (email, user_id, token, created_at, confirmed, expired) FROM stdin;
-\.
-
-
---
--- Data for Name: tags; Type: TABLE DATA; Schema: public; Owner: shiv
---
-
-COPY public.tags (id, name, topic_count, created_at, updated_at) FROM stdin;
-1	c	0	2021-01-18 06:17:16.301578	2021-01-18 06:17:16.301578
-2	c++	0	2021-01-18 06:17:19.71306	2021-01-18 06:17:19.71306
-4	java	0	2021-01-18 06:17:26.843186	2021-01-18 06:17:26.843186
-5	javascript	0	2021-01-18 06:17:31.900998	2021-01-18 06:17:31.900998
-3	rust	1	2021-01-18 06:17:23.220869	2021-01-18 06:17:23.220869
-\.
-
-
---
--- Data for Name: topic_tags; Type: TABLE DATA; Schema: public; Owner: shiv
---
-
-COPY public.topic_tags (id, topic_id, tag_id, created_at, updated_at) FROM stdin;
-1	1	3	2021-01-18 06:19:38.040455	2021-01-18 06:19:38.040455
-\.
-
-
---
--- Data for Name: topics; Type: TABLE DATA; Schema: public; Owner: shiv
---
-
-COPY public.topics (id, title, description, tag_ids, posted_by, created_at, updated_at, upadted_by, visible, op_id, updated_by) FROM stdin;
-1	This is my first post	This is my first postThis is my first postThis is my first postThis is my first postThis is my first postThis is my first postThis is my first post	\N	2	2021-01-18 06:19:38.040455	2021-01-18 06:19:38.040455	0	t	0	2
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: shiv
---
-
-COPY public.users (id, username, created_at, updated_at, name, seen_notification_id, last_posted_at, password_hash, salt, active, username_lower, last_seen_at, admin, last_emailed_at, trust_level, approved, approved_by_id, approved_at, previous_visit_at, suspended_at, suspended_till, date_of_birth, views, flag_level, ip_address, moderator, title, uploaded_avatar_id, locale, primary_group_id, registration_ip_address, staged, first_seen_at, silenced_till, group_locked_trust_level, manual_locked_trust_level, secure_identifier, email, email_verified, email_verification_code, designation, location, image_url) FROM stdin;
-2	shiv	2021-01-17 12:49:16.707607	2021-01-17 12:49:16.707607	\N	0	\N	$argon2i$v=19$m=262144,t=4,p=1$MzgxMTExODcxMzUxNTIzMTgwMjAyMjA2MjI1MjQ1MjIxMjE2MTg2MjE2MTE4$zShBV2WHZOYk3vMqic9dJqswdFdlsXymkuR9SCIBlUYkr7QkAsW3RccNxc894z49JUyE4SmfuCulkAARqunFoQ	381111871351523180202206225245221216186216118	f	shiv	\N	f	\N	0	f	\N	\N	\N	\N	\N	\N	0	0	\N	f	\N	\N	\N	\N	\N	f	\N	\N	\N	\N	\N	shivshankar.dayal@gmail.com	t		\N	\N	
-\.
-
-
---
--- Name: tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shiv
---
-
-SELECT pg_catalog.setval('public.tags_id_seq', 5, true);
-
-
---
--- Name: topic_tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shiv
---
-
-SELECT pg_catalog.setval('public.topic_tags_id_seq', 1, true);
-
-
---
--- Name: topics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shiv
---
-
-SELECT pg_catalog.setval('public.topics_id_seq', 1, true);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: shiv
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 2, true);
 
 
 --
@@ -370,6 +305,37 @@ ALTER TABLE ONLY public.topics
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: votes votes_pkey; Type: CONSTRAINT; Schema: public; Owner: shiv
+--
+
+ALTER TABLE ONLY public.votes
+    ADD CONSTRAINT votes_pkey PRIMARY KEY (topic_id, user_id);
+
+
+--
+-- Name: uatime_idx; Type: INDEX; Schema: public; Owner: shiv
+--
+
+CREATE INDEX uatime_idx ON public.topics USING btree (updated_at);
+
+
+--
+-- Name: votes votes_topic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: shiv
+--
+
+ALTER TABLE ONLY public.votes
+    ADD CONSTRAINT votes_topic_id_fkey FOREIGN KEY (topic_id) REFERENCES public.topics(id);
+
+
+--
+-- Name: votes votes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: shiv
+--
+
+ALTER TABLE ONLY public.votes
+    ADD CONSTRAINT votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

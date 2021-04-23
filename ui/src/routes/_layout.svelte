@@ -39,7 +39,7 @@
 		},
 		{
 			name: "Browse Topics",
-			route: "/topics",
+			route: "/topics/1",
 			protected: false,
 			logout_only: false,
 		},
@@ -90,10 +90,10 @@
 		drawerOpen = false;
 		mainContent.scrollTop = 0;
 
-		sections.forEach((section) =>
-			section.component.$set({ activated: false })
-		);
-		section.component.$set({ activated: true });
+		// sections.forEach((section) =>
+		// 	section.component.$set({ activated: false })
+		// );
+		// section.component.$set({ activated: true });
 
 		activeSection =
 			"shortcut" in section
