@@ -16,10 +16,28 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Index::index(const HttpRequestPtr &req, Callback callback, const size_t &limit = 50)
+void Index::index(const HttpRequestPtr &req, Callback callback, const size_t &limit = 50, const size_t& page = 1)
 {
+    Json::Value ret;
+
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->execSqlAsync("select * from ");
+        clientPtr->execSqlAsync(
+            "select * from topics limit= $1, offset=$1",
+            [=](const Result &r) mutable {
+                if (r.size() == 0)
+                {
+                    return;
+                }
+                else
+                {
+                }
+            },
+            [=](const DrogonDbException &e) mutable {
+                LOG_DEBUG << e.base().what();
+                ret["error"] = (std::string)e.base().what();
+                callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+            },
+            limit, (page - 1)*limit);
     }
 }

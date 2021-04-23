@@ -12,18 +12,21 @@
 
 using namespace drogon;
 
-namespace api::v1 {
-/**
+namespace api::v1
+{
+    /**
  * @brief this class is created by the drogon_ctl command (drogon_ctl create
  * controller -r arth::login). this class is a restful API controller.
  */
-class Index : public drogon::HttpController<Index> {
-public:
-    METHOD_LIST_BEGIN
-    // use METHOD_ADD to add your custom processing function here;
-    ADD_METHOD_TO(Login ::doLogin, "/api/v1/", Get);
-    METHOD_LIST_END
+    class Index : public drogon::HttpController<Index>
+    {
+    public:
+        METHOD_LIST_BEGIN
+        // use METHOD_ADD to add your custom processing function here;
+        ADD_METHOD_TO(Index::index, "/api/v1/", Get);
+        ADD_METHOD_TO(Index::index, "/api/v1/{size_t page}/", Get);
+        METHOD_LIST_END
 
-    void index(const HttpRequestPtr &req, Callback callback, const size_t &limit = 50);
-};
+        void index(const HttpRequestPtr &req, Callback callback, const size_t &limit, const size_t &page);
+    };
 } // namespace api::v1
