@@ -57,13 +57,12 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 
             // transform each element in tagList to string
             std::transform(
-                topic["tagList"].begin(), 
-                topic["tagList"].end(), 
-                std::back_inserter(tagList), 
+                topic["tagList"].begin(),
+                topic["tagList"].end(),
+                std::back_inserter(tagList),
                 [](auto tag) {
                     return tag.asString();
-                }
-            );
+                });
 
             if (title.length() < 10 || title.length() > 256)
             {
@@ -107,97 +106,93 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 
             auto binder = *transPtr << "select * from tags where name in " + toPostgresParmeterizedSql(tagList.size());
             addVector(binder, tagList);
-            binder 
-            >> [=](const Result &r) mutable {
-                    if (r.size() != tagList.size())
-                    {
-                        LOG_DEBUG << "One of the supplied tags do not exist.";
-                        ret["error"] = "One of the supplied tags do not exist.";
-                        callback(jsonResponse(std::move(ret)));
-                    }
-                    else
-                    {
-                        auto binder = *transPtr << "update tags set topic_count=topic_count + 1 where name in " + toPostgresParmeterizedSql(tagList.size());
-                        addVector(binder, tagList);
+            binder >> [=](const Result &r) mutable {
+                if (r.size() != tagList.size())
+                {
+                    LOG_DEBUG << "One of the supplied tags do not exist.";
+                    ret["error"] = "One of the supplied tags do not exist.";
+                    callback(jsonResponse(std::move(ret)));
+                }
+                else
+                {
+                    auto binder = *transPtr << "update tags set topic_count=topic_count + 1 where name in " + toPostgresParmeterizedSql(tagList.size());
+                    addVector(binder, tagList);
 
-                        binder
-                        >> [=](const Result &r1) mutable {
-                            transPtr->execSqlAsync(
-                                "insert into topics(title, description, posted_by, updated_by) values($1, $2, $3, $4) returning *",
-                                [=](const Result &r2) mutable {
-                                    for (auto &row : r)
-                                    {
-                                        auto tag_id = row["id"].as<size_t>();
+                    binder >> [=](const Result &r1) mutable {
+                        std::string slug;
+                        bool prev_dash = false;
 
-                                        transPtr->execSqlAsync(
-                                            "insert into topic_tags(topic_id, tag_id) values($1, $2)",
-                                            [=](const Result &r3) {
-                                            },
-                                            [=](const DrogonDbException &e) mutable {
-                                                LOG_DEBUG << e.base().what();
-                                                ret["error"] = (std::string)e.base().what();
-                                                callback(jsonResponse(std::move(ret)));
-                                                return;
-                                            },
-                                            r2[0]["id"].as<size_t>(), tag_id);
-                                    }
-
-                                    LOG_DEBUG << "Topic added";
-                                    std::string slug;
-                                    bool prev_dash = false;
-
-                                    for (auto &c : title)
-                                    {
-                                        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
-                                        {
-                                            slug += c;
-                                            prev_dash = false;
-                                        }
-                                        else if (c >= 'A' and c <= 'Z')
-                                        {
-                                            slug += c;
-                                            prev_dash = false;
-                                        }
-                                        else if (c == ' ' || c == ',' || c == '.' || c == '/' || c == '\\' || c == '-' || c == '_' || c == '=')
-                                        {
-                                            if ((!prev_dash) && (slug.length() > 0))
-                                            {
-                                                slug += '-';
-                                                prev_dash = true;
-                                            }
-                                        }   
-                                    }
-                                    if (prev_dash)
-                                        slug = slug.substr(0, slug.size() - 1);
-
-                                    LOG_DEBUG << slug;
-                                    ret["slug"] = slug;
-                                    ret["id"] = r2[0]["id"].as<std::string>();
-                                    LOG_DEBUG << r2[0]["id"].as<std::string>();
-                                    callback(jsonResponse(std::move(ret)));
-                                    return;
-                                },
-                                [=](const DrogonDbException &e) mutable {
-                                    LOG_DEBUG << e.base().what();
-                                    ret["error"] = (std::string)e.base().what();
-                                    callback(jsonResponse(std::move(ret)));
-                                    return;
-                                },
-                                title, body, user_id, user_id
-                            );
+                        for (auto &c : title)
+                        {
+                            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+                            {
+                                slug += c;
+                                prev_dash = false;
+                            }
+                            else if (c >= 'A' and c <= 'Z')
+                            {
+                                slug += c;
+                                prev_dash = false;
+                            }
+                            else if (c == ' ' || c == ',' || c == '.' || c == '/' || c == '\\' || c == '-' || c == '_' || c == '=')
+                            {
+                                if ((!prev_dash) && (slug.length() > 0))
+                                {
+                                    slug += '-';
+                                    prev_dash = true;
+                                }
+                            }
                         }
-                    >> [=](const DrogonDbException &e) mutable {
+                        if (prev_dash)
+                            slug = slug.substr(0, slug.size() - 1);
+
+                        transPtr->execSqlAsync(
+                            "insert into topics(title, description, posted_by, updated_by, slug) values($1, $2, $3, $4, $5) returning *",
+                            [=](const Result &r2) mutable {
+                                for (auto &row : r)
+                                {
+                                    auto tag_id = row["id"].as<size_t>();
+
+                                    transPtr->execSqlAsync(
+                                        "insert into topic_tags(topic_id, tag_id) values($1, $2)",
+                                        [=](const Result &r3) {
+                                        },
+                                        [=](const DrogonDbException &e) mutable {
+                                            LOG_DEBUG << e.base().what();
+                                            ret["error"] = (std::string)e.base().what();
+                                            callback(jsonResponse(std::move(ret)));
+                                            return;
+                                        },
+                                        r2[0]["id"].as<size_t>(), tag_id);
+                                }
+
+                                LOG_DEBUG << "Topic added";
+
+                                LOG_DEBUG << slug;
+                                ret["slug"] = slug;
+                                ret["id"] = r2[0]["id"].as<std::string>();
+                                LOG_DEBUG << r2[0]["id"].as<std::string>();
+                                callback(jsonResponse(std::move(ret)));
+                                return;
+                            },
+                            [=](const DrogonDbException &e) mutable {
+                                LOG_DEBUG << e.base().what();
+                                ret["error"] = (std::string)e.base().what();
+                                callback(jsonResponse(std::move(ret)));
+                                return;
+                            },
+                            title, body, user_id, user_id, slug);
+                    } >> [=](const DrogonDbException &e) mutable {
                         LOG_DEBUG << e.base().what();
                         ret["error"] = (std::string)e.base().what();
                         callback(jsonResponse(std::move(ret)));
                     };
                 }
-            }
-            >> [=](const DrogonDbException &e) mutable {
-                    LOG_DEBUG << e.base().what();
-                    ret["error"] = (std::string)e.base().what();
-                    callback(jsonResponse(std::move(ret)));
-            };            
+            } >> [=](const DrogonDbException &e) mutable {
+                LOG_DEBUG << e.base().what();
+                ret["error"] = (std::string)e.base().what();
+                callback(jsonResponse(std::move(ret)));
+            };
         });
     }
 }
@@ -222,7 +217,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
                         ret["title"] = r[0]["title"].as<std::string>();
                         Json::Value topic;
                         topic["description"] = r[0]["description"].as<std::string>();
-                        topic["visible"] = r[0]["visible"].as<bool>();                        
+                        topic["visible"] = r[0]["visible"].as<bool>();
                         topic["posted_by"] = r[0]["posted_by"].as<std::string>();
                         topic["created_at"] = r[0]["created_at"].as<std::string>();
                         topic["updated_at"] = r[0]["updated_at"].as<std::string>();
@@ -253,8 +248,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
                                 callback(jsonResponse(std::move(ret)));
                                 return;
                             },
-                            tid
-                        );
+                            tid);
                     }
                 },
                 [=](const DrogonDbException &e) mutable {
@@ -262,8 +256,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
                     ret["error"] = (std::string)e.base().what();
                     callback(jsonResponse(std::move(ret)));
                 },
-                tid
-            );
+                tid);
         });
     }
 }

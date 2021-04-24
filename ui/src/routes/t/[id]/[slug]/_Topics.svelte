@@ -233,7 +233,7 @@
                     </a>
                 {:else}
                     <a href="/u/{posted_by}/{username}">
-                        <img src={image_url} />
+                        <img src="{image_url}" />
                     </a>
                 {/if}
             </div>

@@ -28,7 +28,7 @@ void Index::index(const HttpRequestPtr &req, Callback callback, const std::strin
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, "
+            "select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.slug, "
             "users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left "
             "join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join "
             "tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by "
@@ -47,10 +47,11 @@ void Index::index(const HttpRequestPtr &req, Callback callback, const std::strin
 
                         topic["id"] = r["id"].as<std::string>();
                         topic["visible"] = r["visible"].as<bool>();
-                        topic["titile"] = r["title"].as<std::string>();
+                        topic["title"] = r["title"].as<std::string>();
                         topic["created_at"] = r["created_at"].as<std::string>();
                         topic["updated_at"] = r["updated_at"].as<std::string>();
                         topic["votes"] = r["votes"].as<std::string>();
+                        topic["slug"] = r["slug"].as<std::string>();
                         topic["username"] = r["username"].as<std::string>();
                         topic["uid"] = r["uid"].as<std::string>();
                         topic["tid"] = r["tag_id"].as<std::string>();

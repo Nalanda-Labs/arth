@@ -4,7 +4,9 @@
         return { page };
     }
 </script>
-
+<svelte:head>
+	<title>All Topics • Arth</title>
+</svelte:head>
 <script>
     import { stores } from "@sapper/app";
     import Button, { Label } from "@smui/button";
@@ -20,14 +22,90 @@
         }
 
         let response = await api.get(
-            `topics/${page}`,
-            localStorage.getItem("jwt")
+            `topics/${page}`
         );
 
-        console.log(response)
+        if(response.topics) {
+            topics = response.topics;
+        }
+        for(let i=0; i<topics.length; i++) {
+            topics[i]["tags"] = topics[i]["tags"].slice(1, -1);
+            topics[i]["tags"] = topics[i]["tags"].split(',');
+            topics[i]["tid"] = topics[i]['tid'].slice(1, -1);
+            topics[i]['tid'] = topics[i]['tid'].split(',');
+            let asked_ts = Date.parse(topics[i].created_at);
+            let updated_ts = Date.parse(topics[i].updated_at);
+            let now = Date.now();
+
+            if(asked_ts == updated_ts) {
+                let shown_ts = Math.floor((now - asked_ts) / 1000);
+                if (shown_ts >= 259200) {
+                    asked_ts = new Date(topics[i].created_at);
+                    let year = asked_ts.getYear() + 1900;
+                    shown_ts = "asked on " +
+                        asked_ts.getDay() +
+                        "/" +
+                        asked_ts.getMonth() +
+                        "/" +
+                        year;
+                } else if (172800 <= shown_ts && shown_ts < 259200) {
+                    shown_ts = "asked 2 days ago";
+                } else if (86400 <= shown_ts && shown_ts < 172800) {
+                    shown_ts = "asked yesterday";
+                } else if (3600 <= shown_ts && shown_ts < 8640000) {
+                    shown_ts = "asked " + Math.floor(shown_ts / 3600) + "h ago";
+                } else if (60 <= shown_ts && shown_ts < 3600) {
+                    console.log(shown_ts);
+                    shown_ts = "asked " + Math.floor(shown_ts / 60) + "m ago";
+                } else {
+                    shown_ts = "asked " + shown_ts + "s ago";
+                }
+                topics[i].shown_ts = shown_ts;
+            } else {
+                let shown_ts = Math.floor((now - updated_ts) / 1000);
+                if (shown_ts >= 259200) {
+                    asked_ts = new Date(topics[i].created_at);
+                    let year = updated_ts.getYear() + 1900;
+                    shown_ts =
+                        "modified on " + updated_ts.getDay() +
+                        "/" +
+                        updated_ts.getMonth() +
+                        "/" +
+                        year;
+                } else if (172800 <= shown_ts && shown_ts < 259200) {
+                    shown_ts = "modiffed 2 days ago";
+                } else if (86400 <= shown_ts && shown_ts < 172800) {
+                    shown_ts = "modified yesterday";
+                } else if (3600 <= shown_ts && shown_ts < 8640000) {
+                    shown_ts = "modified " + Math.floor(shown_ts / 3600) + "h ago";
+                } else if (60 <= shown_ts && shown_ts < 3600) {
+                    console.log(shown_ts);
+                    shown_ts = "modified " + Math.floor(shown_ts / 60) + "m ago";
+                } else {
+                    shown_ts = "modified " + shown_ts + "s ago";
+                }
+                topics[i].shown_ts = shown_ts;
+            }
+            
+        }
     });
 </script>
 
-<div>
-    <p>Hello</p>
+<div class="container">
+    <h2 style="border-bottom: 2px solid;width:100%;">All topics</h2>
+    <div class="row" style="width:100%">
+        {#each topics as { id, slug, title, tags, shown_ts, uid, username}}
+        <div style="width:100%">
+            <a href="/t/{id}/{slug}" style="text-decoration:none; color: #4285F4; font-size:16px; font-weight:400">{title}</a>
+            <div style="margin-top:10px;clear:both"/>
+            {#each tags as tag, i}
+                <a href="/tags/topics/tagged/{tag}" style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 16px">{tag}</a>
+            {/each}
+            <span style="float:right">{shown_ts} <a href="/users/{uid}/{username}" style="text-decoration:none; color:#4285F4;">{username}</a></span>
+            <div style="margin-top:10px;clear:both"/>
+            <hr style="border-bottom:1px solid;color:#eee" />
+            <div style="margin-top:10px;clear:both"/>
+        </div>
+        {/each}
+    </div>
 </div>
