@@ -11,63 +11,74 @@
 #include <trantor/utils/Logger.h>
 
 #include "index.h"
+#include "util/arth.h"
 
 using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Index::index(const HttpRequestPtr &req, Callback callback, const std::string &page = "1")
+auto Index::index(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &page = "1") -> Task<>
 {
     Json::Value ret;
 
     auto customConfig = app().getCustomConfig();
     auto page_no = atol(page.c_str());
-    int limit = customConfig.get("limit_per_page", 50).asInt();
+    int limit = customConfig.get("limit_per_page", 50).asInt64();
     LOG_DEBUG << limit;
     LOG_DEBUG << (page_no - 1) * limit;
     {
-        auto clientPtr = drogon::app().getFastDbClient("default");
-        clientPtr->execSqlAsync(
-            "select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.slug, "
-            "users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left "
-            "join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join "
-            "tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by "
-            "t.updated_at limit $1 offset $2",
-            [=](const Result &rows) mutable {
-                if (rows.size() == 0)
+        ret["topics"] = Json::arrayValue;
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            auto result = co_await clientPtr->execSqlCoro("select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.views, t.slug, \
+                                                          users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left \
+                                                          join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join \
+                                                          tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by \
+                                                          t.updated_at limit 50 offset 0");
+            if (result.size() == 0)
+            {
+                callback(jsonResponse(std::move(ret)));
+            }
+            else
+            {
+                for (auto &r : result)
                 {
-                    return;
-                }
-                else
-                {
-                    ret["topics"] = Json::arrayValue;
-                    for (auto &r : rows)
+                    Json::Value topic;
+
+                    topic["id"] = r["id"].as<std::string>();
+                    topic["visible"] = r["visible"].as<bool>();
+                    topic["title"] = r["title"].as<std::string>();
+                    topic["created_at"] = r["created_at"].as<std::string>();
+                    topic["updated_at"] = r["updated_at"].as<std::string>();
+                    topic["votes"] = r["votes"].as<std::string>();
+                    topic["views"] = r["views"].as<std::string>();
+                    topic["slug"] = r["slug"].as<std::string>();
+                    topic["username"] = r["username"].as<std::string>();
+                    topic["uid"] = r["uid"].as<std::string>();
+                    topic["tid"] = r["tag_id"].as<std::string>();
+                    topic["tags"] = r["tags"].as<std::string>();
+
+                    auto rows = co_await clientPtr->execSqlCoro("select count(1) from topics where op_id!=0 and op_id=$1", r["id"].as<std::string>());
+                    for (auto &r1 : rows)
                     {
-                        Json::Value topic;
-
-                        topic["id"] = r["id"].as<std::string>();
-                        topic["visible"] = r["visible"].as<bool>();
-                        topic["title"] = r["title"].as<std::string>();
-                        topic["created_at"] = r["created_at"].as<std::string>();
-                        topic["updated_at"] = r["updated_at"].as<std::string>();
-                        topic["votes"] = r["votes"].as<std::string>();
-                        topic["slug"] = r["slug"].as<std::string>();
-                        topic["username"] = r["username"].as<std::string>();
-                        topic["uid"] = r["uid"].as<std::string>();
-                        topic["tid"] = r["tag_id"].as<std::string>();
-                        topic["tags"] = r["tags"].as<std::string>();
-
+                        // LOG_DEBUG << r1[(Row::SizeType)0].as<size_t>();
+                        topic["answers"] = r1[(Row::SizeType)0].as<std::string>();
                         ret["topics"].append(topic);
                     }
-                    callback(jsonResponse(std::move(ret)));
-                    return;
                 }
-            },
-            [=](const DrogonDbException &e) mutable {
-                LOG_DEBUG << e.base().what();
-                ret["error"] = (std::string)e.base().what();
-                callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-            },
-            (long)limit, (long)limit *(page_no - 1));
+            }
+
+            callback(jsonResponse(std::move(ret)));
+        }
+        catch (const DrogonDbException &err)
+        {
+            // Exception works as sync interfaces.
+            auto resp = HttpResponse::newHttpResponse();
+            resp->setBody(err.base().what());
+            callback(resp);
+        }
     }
+
+    co_return;    
 }

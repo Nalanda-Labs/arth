@@ -92,20 +92,27 @@
 </script>
 
 <div class="container">
-    <h2 style="border-bottom: 2px solid;width:100%;">All topics</h2>
+    <h3>All topics</h3>
     <div class="row" style="width:100%">
-        {#each topics as { id, slug, title, tags, shown_ts, uid, username}}
-        <div style="width:100%">
+        {#each topics as { id, slug, title, tags, shown_ts, uid, username, answers, views}}
+        <hr style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px;margin-bottom:20px" />
+        <div style="margin-right:10px;flex-basis: 5%;max-width:5%;height:60px" class="mdc-elevation--z4">
+            <p style="text-align:center;font-size:16px;margin-top:5px">{answers}</p>
+            <p style="text-align:center;font-size:9px;margin-top:-20px;">answers</p>
+        </div>
+        <div style="margin-right:10px;flex-basis: 5%;max-width:5%;height:60px" class="mdc-elevation--z4">
+            <p style="text-align:center;font-size:16px;margin-top:5px">{views}</p>
+            <p style="text-align:center;font-size:9px;margin-top:-20px;">views</p>
+        </div>
+        <div style="width:85%;float:left;position:relative">
             <a href="/t/{id}/{slug}" style="text-decoration:none; color: #4285F4; font-size:16px; font-weight:400">{title}</a>
             <div style="margin-top:10px;clear:both"/>
             {#each tags as tag, i}
                 <a href="/tags/topics/tagged/{tag}" style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 16px">{tag}</a>
             {/each}
             <span style="float:right">{shown_ts} <a href="/users/{uid}/{username}" style="text-decoration:none; color:#4285F4;">{username}</a></span>
-            <div style="margin-top:10px;clear:both"/>
-            <hr style="border-bottom:1px solid;color:#eee" />
-            <div style="margin-top:10px;clear:both"/>
         </div>
         {/each}
+        <hr style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px" />
     </div>
 </div>

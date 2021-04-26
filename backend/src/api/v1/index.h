@@ -24,9 +24,9 @@ namespace api::v1
         METHOD_LIST_BEGIN
         // use METHOD_ADD to add your custom processing function here;
         // ADD_METHOD_TO(Index::index, "/api/v1/topics", Get);
-        ADD_METHOD_TO(Index::index, "/api/v1/topics/{size_t page}", Get);
+        ADD_METHOD_TO(Index::index, "/api/v1/topics/{std::string page}", Get);
         METHOD_LIST_END
 
-        void index(const HttpRequestPtr &req, Callback callback, const std::string &page);
+        auto index(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &page) -> Task<>;
     };
 } // namespace api::v1
