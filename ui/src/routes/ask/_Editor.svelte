@@ -7,6 +7,7 @@
 	import Textfield from "@smui/textfield";
 	import Button, { Label } from "@smui/button";
 	import HelperText from "@smui/textfield/helper-text/index";
+	import Swal from 'sweetalert2'
 	// import gfm from "@bytemd/plugin-gfm";
 
 	export let topic;
@@ -19,8 +20,14 @@
 	async function onSubmit() {
 		if ($session.user) {
 			inProgress = true;
+			if(topic.title < 6 || topic.title > 256) {
+				Swal.fire(
+					"Title should not be less than 6 or more than 256 characters."
+				);
+				return;
+			}
 			if (value.length < 20 || value.length > 100000) {
-				alert(
+				Swal.fire(
 					"Topic should not be less than 20 or more than 100000 characters."
 				);
 				return;
@@ -29,7 +36,7 @@
 			topic.body = value;
 
 			if (topic.tagList.length < 1) {
-				alert("At least one tag should be supplied.");
+				Swal.fire("At least one tag should be supplied.");
 			}
 
 			const response = await api.post(
@@ -45,7 +52,7 @@
 
 			inProgress = false;
 		} else {
-			alert("You are not logged in.");
+			Swal.fire("You are not logged in.");
 		}
 	}
 

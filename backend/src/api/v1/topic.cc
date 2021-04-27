@@ -30,6 +30,13 @@ void Topic::createTopic(const HttpRequestPtr &req, Callback callback)
 
     auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
 
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+
     if (!optionalToken.has_value())
     {
         ret["error"] = "Authentication Error";

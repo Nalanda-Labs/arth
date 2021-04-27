@@ -18,6 +18,24 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const siz
     LOG_DEBUG << "user id: " << userID;
 
     Json::Value ret;
+    auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        return;
+    }
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+    bool logged_in = false;
+    if (optionalToken.has_value())
+    {
+        logged_in = true;
+    }
+
+    auto token = optionalToken.value();
+    auto viewer_id = token.userID;
 
     {
         auto clientPtr = app().getFastDbClient("default");
@@ -48,7 +66,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const siz
 
                 bool authenticated = optionalToken.has_value();
 
-                if (authenticated)
+                if (authenticated && viewer_id == userID)
                 {
                     ret["email"] = row["email"].as<std::string>();
                 }
@@ -84,13 +102,7 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
     auto designation = json->get("designation", "").asString();
     auto email = json->get("email", "").asString();
 
-    LOG_DEBUG << "new username: " << username;
-    LOG_DEBUG << "name: " << name;
-    LOG_DEBUG << "title: " << title;
-    LOG_DEBUG << "designation: " << designation;
-    LOG_DEBUG << "email: " << email;
     EmailUtils::cleanEmail(email);
-    LOG_DEBUG << "cleaned email: " << email;
 
     auto customConfig = app().getCustomConfig();
     auto jwt_secret = customConfig.get("jwt_secret", "").asString();

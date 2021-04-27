@@ -80,6 +80,8 @@
 
     const onFileSelected = (e) => {
         let image = e.target.files[0];
+        const pimage = document.getElementById("pimage");
+        alert(pimage.dataset.maxSize);
         let reader = new FileReader();
         reader.readAsDataURL(image);
         reader.onload = (e) => {
@@ -92,9 +94,11 @@
     <div class="col-12 col-sm-12 col-md-2" style="float:left;margin-right:10px">
         <img
             src={image_url}
-            alt={image_alt}
+            alt="{username}'s proile image"
             width="160px"
             height="200px"
+            id="pimage"
+            data-max-size="10"
             on:click={() => {
                 fileinput.click();
             }}
@@ -109,6 +113,16 @@
     </div>
     <div class="col-12 col-sm-12 col-md-6" style="float:left">
         <table>
+            <tr>
+                {#if $session.user == username}
+                    <td
+                        ><span contenteditable="true" id="title" style="font-size:20px;font-weight: 500;" title="Click to edit">{username}</span
+                        ></td
+                    >
+                {:else}
+                    <td><span id="title">{title}</span></td>
+                {/if}
+            </tr>
             <tr>
                 {#if $session.user == username}
                     <td
