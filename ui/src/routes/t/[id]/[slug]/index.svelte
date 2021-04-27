@@ -12,6 +12,7 @@
     import Button, { Label } from "@smui/button";
     import { onMount } from "svelte";
     import * as api from "api.js";
+    import Swal from 'sweetalert2';
 
     export let id;
     export let slug;
@@ -44,7 +45,7 @@
         if ($session.user) {
             inProgress = true;
             if (value.length < 20 || value.length > 100000) {
-                alert(
+                Swal.fire(
                     "Body should not be less than 20 or more than 100000 characters."
                 );
                 return;
@@ -74,7 +75,7 @@
             }
             inProgress = false;
         } else {
-            alert("You are not logged in.");
+            Swal.fire("You are not logged in.");
         }
     }
     onMount(async () => {

@@ -11,6 +11,7 @@
     import ListErrors from "../_components/ListErrors.svelte";
     import { onMount } from "svelte";
     import * as api from "api.js";
+    import Swal from 'sweetalert2';
 
     let response = {};
     let new_password = "";
@@ -24,10 +25,10 @@
         errors = response.error;
 
         if (errors) {
-            alert(errors);
+            Swal.fire(errors);
             return;
         } else {
-            alert(response.message);
+            Swal.fire(response.message);
             goto("/");
         }
     }

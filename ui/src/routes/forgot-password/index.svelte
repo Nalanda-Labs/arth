@@ -11,6 +11,7 @@
 	import Icon from "@smui/textfield/icon/index";
 	import Button, { Label } from "@smui/button";
 	import HelperText from "@smui/textfield/helper-text/index";
+	import Swal from 'sweetalert2';
 	import "../_utils.scss";
 
 	let username = "";
@@ -20,7 +21,7 @@
 
 	async function onSubmit(token) {
         if(username === "" && email === "") {
-            alert("Please fill either email or username");
+            Swal.fire("Please fill either email or username");
             return;
         }
 		response = await api.post(`forgot-password`, {
@@ -32,10 +33,10 @@
 		errors = response.error;
 
 		if (errors) {
-			alert(errors);
+			Swal.fire(errors);
 			return;
 		} else {
-            alert(response.message);
+            Swal.fire(response.message);
             goto('/')
 		}
 	}

@@ -15,6 +15,7 @@
 	import Icon from "@smui/textfield/icon/index";
 	import Button, { Label } from "@smui/button";
 	import HelperText from "@smui/textfield/helper-text/index";
+	import Swal from 'sweetalert2';
 	import "../_utils.scss";
 
 	const { session } = stores();
@@ -28,7 +29,7 @@
 		const response = await post(`auth/login`, { email, password });
 
 		if (response.error) {
-			alert(response.error);
+			Swal.fire(response.error);
 		} else if (response.jwt) {
 			const decoded = jwt_decode(response.jwt);
 			localStorage.setItem("jwt", response.jwt);

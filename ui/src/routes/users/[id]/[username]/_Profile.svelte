@@ -5,6 +5,8 @@
     import { stores } from "@sapper/app";
     import { onMount } from "svelte";
     import * as api from "api.js";
+    import Swal from 'sweetalert2';
+import { mdiScrewLag } from "@mdi/js";
 
     export let username;
     export let id;
@@ -81,7 +83,11 @@
     const onFileSelected = (e) => {
         let image = e.target.files[0];
         const pimage = document.getElementById("pimage");
-        alert(pimage.dataset.maxSize);
+        // max image size is 2MB
+        if(image.size > 2048*1024) {
+            Swal.fire("Max profile image size is 2MB");
+            return;
+        }
         let reader = new FileReader();
         reader.readAsDataURL(image);
         reader.onload = (e) => {
@@ -98,7 +104,7 @@
             width="160px"
             height="200px"
             id="pimage"
-            data-max-size="10"
+            data-max-size="2048"
             on:click={() => {
                 fileinput.click();
             }}

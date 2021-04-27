@@ -76,7 +76,7 @@
 		let re = /[a-zA-Z0-0\-\+]+/;
 		for (let i = 0; i < topic.tagList.length; i++) {
 			if (topic.tagList[i].length > 32) {
-				alert("32 Characterx max.");
+				Swal.fire("32 Characterx max.");
 			}
 		}
 	}
