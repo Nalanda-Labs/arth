@@ -13,7 +13,7 @@
 #include "util/datetime.h"
 #include "util/password.h"
 #include "util/input_validation.h"
-
+#include "util/md5.h"
 #include "plugins/email.h"
 
 #include "register.h"
@@ -61,8 +61,8 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
     LOG_DEBUG << "username: " << username;
     LOG_DEBUG << "password: " << password;
 
-	EmailUtils::cleanEmail(email);
-	LOG_DEBUG << "clean email" << email;
+    EmailUtils::cleanEmail(email);
+    LOG_DEBUG << "clean email" << email;
 
     // always validate user input. never rely on what is coming from the other side
     if (name.empty() || !isUsernameValid(username) || !isEmailValid(email) || !isPasswordValid(password))
@@ -95,12 +95,18 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
         req->setPath("/recaptcha/api/siteverify");
         req->setParameter("secret", secret);
         req->setParameter("response", token.get("isTrusted", false).asString());
+        req->addHeader("Content-Length", std::to_string(req->bodyLength()));
+        LOG_DEBUG << req->bodyLength();
 
         client->sendRequest(
             req,
             [ret = ret, callback = callback](ReqResult result, const HttpResponsePtr &response) mutable {
-                LOG_DEBUG << "received response!";
-                // auto headers=response.
+                if(response->getStatusCode() != k200OK) {
+                    ret["error"] = "Server failed to verify recaptcha. Retry later or contact supprot.";
+                    callback(jsonResponse(std::move(ret)));
+                    return;
+                }
+
                 std::shared_ptr<Json::Value> res = response->getJsonObject();
                 if (res->isMember("success") && not res->get("success", false))
                 {
@@ -121,82 +127,83 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=, this](const std::shared_ptr<Transaction> &transPtr) mutable {
             assert(transPtr);
-            
-			transPtr->execSqlAsync(
-				"select * from users where username=$1 or email=$2",
-				[=, this](const Result &r) mutable {
-					if (r.size() > 0)
-					{
-						LOG_DEBUG << "User exists";
-						ret["error"] = "User exists";
-						callback(jsonResponse(std::move(ret)));
-						return;
-					}
 
-					auto username_lower = username;
+            transPtr->execSqlAsync(
+                "select * from users where username=$1 or email=$2",
+                [=, this](const Result &r) mutable {
+                    if (r.size() > 0)
+                    {
+                        LOG_DEBUG << "User exists";
+                        ret["error"] = "User exists";
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    }
 
-					transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
-					LOG_DEBUG << username_lower;
-					auto [password_hash, salt] = PasswordUtils::hashPassword(password, "");
+                    auto username_lower = username;
 
-					LOG_DEBUG << "password_hash: " << password_hash;
-					LOG_DEBUG << "salt: " << salt;
-					if (password_hash.empty() || salt.empty()) {
-						LOG_ERROR << "Error hashing password";
-						ret["error"] = "An error occurred. Please contact support.";
-						callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-						return;
-					}
-					
-					uint8_t t[16];
-					arc4random_buf((void *)t, 16); // it takes a void* so we cast it
-					std::ostringstream convert;
-					for (int i = 0; i < 16; i++)
-					{
-						convert << (int)t[i];
-					}
+                    transform(username_lower.begin(), username_lower.end(), username_lower.begin(), ::tolower);
+                    LOG_DEBUG << username_lower;
+                    auto [password_hash, salt] = PasswordUtils::hashPassword(password, "");
+                    auto email_hash = generate_md5(email);
+                    LOG_DEBUG << email_hash;
 
-					std::string ec = convert.str();
-					std::string token = Base64::encode(ec);
+                    LOG_DEBUG << "password_hash: " << password_hash;
+                    LOG_DEBUG << "salt: " << salt;
+                    if (password_hash.empty() || salt.empty())
+                    {
+                        LOG_ERROR << "Error hashing password";
+                        ret["error"] = "An error occurred. Please contact support.";
+                        callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                        return;
+                    }
 
-					*transPtr << "insert into users(username, username_lower, email, trust_level,"
-								 "password_hash, salt, email_verification_code) values($1, $2, $3, 0, $4, $5, $6);"
-							  << username << username_lower << email << password_hash << salt << token >>
-						[=, this](const Result &r) mutable {
-							auto smtp = SMTPMail();
-							// TODO: move subject string to translation file
-							auto msgid = smtp.sendEmail(
-								customConfig.get("smtp_server", "").asString(),
-								customConfig.get("smtp_port", 587).asInt(),
-								customConfig.get("admin_email", "").asString(),
-								email,
-								"Registration at arth",
-								emailBody(username, customConfig.get("base_url", "").asString(), token),
-								customConfig.get("admin_username", "").asString(),
-								customConfig.get("password", "").asString(), nullptr);
-							LOG_DEBUG << msgid;
-							ret["username"] = username_lower;
+                    uint8_t t[16];
+                    arc4random_buf((void *)t, 16); // it takes a void* so we cast it
+                    std::ostringstream convert;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        convert << (int)t[i];
+                    }
 
-							// we cannot check whether email has been sent or not
-							// so we will need to fix this in another way in app
-							ret["message"] = "An email has been sent to you. Please verify your email.";
-							callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-							return;
-						} >>
-						[=](const DrogonDbException &e) mutable {
-							LOG_ERROR << "err:" << e.base().what();
-							ret["error"] = (std::string)e.base().what();
-							callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
-							return;
-						};
-				},
-				[=](const DrogonDbException &e) mutable {
-					LOG_DEBUG << e.base().what();
-					ret["error"] = (std::string)e.base().what();
-					callback(jsonResponse(std::move(ret)));
-				},
-				username, email
-		    );
+                    std::string ec = convert.str();
+                    std::string token = Base64::encode(ec);
+
+                    *transPtr << "insert into users(username, username_lower, email, trust_level,"
+                                 "password_hash, salt, email_verification_code, image_url) values($1, $2, $3, 0, $4, $5, $6, $7);"
+                              << username << username_lower << email << password_hash << salt << token  << "https://www.gravatar.com/avatar/" + email_hash >>
+                        [=, this](const Result &r) mutable {
+                            auto smtp = SMTPMail();
+                            // TODO: move subject string to translation file
+                            auto msgid = smtp.sendEmail(
+                                customConfig.get("smtp_server", "").asString(),
+                                customConfig.get("smtp_port", 587).asInt(),
+                                customConfig.get("admin_email", "").asString(),
+                                email,
+                                "Registration at arth",
+                                emailBody(username, customConfig.get("base_url", "").asString(), token),
+                                customConfig.get("admin_username", "").asString(),
+                                customConfig.get("password", "").asString(), nullptr);
+                            LOG_DEBUG << msgid;
+
+                            // we cannot check whether email has been sent or not
+                            // so we will need to fix this in another way in app
+                            ret["message"] = "An email has been sent to you. Please verify your email.";
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                            return;
+                        } >>
+                        [=](const DrogonDbException &e) mutable {
+                            LOG_ERROR << "err:" << e.base().what();
+                            ret["error"] = (std::string)e.base().what();
+                            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+                            return;
+                        };
+                },
+                [=](const DrogonDbException &e) mutable {
+                    LOG_DEBUG << e.base().what();
+                    ret["error"] = (std::string)e.base().what();
+                    callback(jsonResponse(std::move(ret)));
+                },
+                username, email);
         });
     }
 }

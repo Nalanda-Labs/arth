@@ -77,44 +77,14 @@ import { mdiScrewLag } from "@mdi/js";
             false
         );
     });
-
-    let fileinput;
-
-    const onFileSelected = (e) => {
-        let image = e.target.files[0];
-        const pimage = document.getElementById("pimage");
-        // max image size is 2MB
-        if(image.size > 2048*1024) {
-            Swal.fire("Max profile image size is 2MB");
-            return;
-        }
-        let reader = new FileReader();
-        reader.readAsDataURL(image);
-        reader.onload = (e) => {
-            image_url = e.target.result;
-        };
-    };
 </script>
 
 <div class="row" style="margin-top:10px">
     <div class="col-12 col-sm-12 col-md-2" style="float:left;margin-right:10px">
         <img
-            src={image_url}
+            src="{image_url}?s=160"
             alt="{username}'s proile image"
             width="160px"
-            height="200px"
-            id="pimage"
-            data-max-size="2048"
-            on:click={() => {
-                fileinput.click();
-            }}
-        />
-        <input
-            style="display:none"
-            type="file"
-            accept=".jpg, .jpeg, .png"
-            on:change={(e) => onFileSelected(e)}
-            bind:this={fileinput}
         />
     </div>
     <div class="col-12 col-sm-12 col-md-6" style="float:left">

@@ -16,7 +16,9 @@
 	import Icon from "@smui/textfield/icon/index";
 	import HelperText from "@smui/textfield/helper-text/index";
 	import Button, { Label } from "@smui/button";
+	import Swal from 'sweetalert2';
 	import "../_utils.scss";
+import { mdiScrewLag } from "@mdi/js";
 
 	const { session } = stores();
 
@@ -41,8 +43,12 @@
 		errors = response.error;
 
 		if (errors) {
+			if(errors === 'User exists') {
+				Swal.fire("Email already registered. If this is an error try restting your password or contact support.");
+			}
 			return;
 		} else {
+			Swal.fire(response.message);
 		}
 	}
 
