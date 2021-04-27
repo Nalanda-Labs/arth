@@ -48,11 +48,8 @@
 </style>
 
 <div class="sm-topic md-topic">
-	<!--app navigation -->
-	<h3 style="margin-top:20px">{username}'s Profile</h3>
-	<hr />
 	<TabBar tabs={navOptions.map(option => option.page)} let:tab>
-		<Tab {tab} minWidth on:click={setTabName(tab)}>
+		<Tab {tab} minWidth on:click={setTabName(tab)} style="color: #4285F4">
 			<Label>{tab}</Label>
 		</Tab>
 	</TabBar>

@@ -108,7 +108,7 @@
             <a href="/t/{id}/{slug}" style="text-decoration:none; color: #4285F4; font-size:16px; font-weight:400">{title}</a>
             <div style="margin-top:10px;clear:both"/>
             {#each tags as tag, i}
-                <a href="/tags/topics/tagged/{tag}" style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 16px">{tag}</a>
+                <a href="/tags/topics/tagged/{tag}" style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 4px">{tag}</a>
             {/each}
             <span style="float:right">{shown_ts} <a href="/users/{uid}/{username}" style="text-decoration:none; color:#4285F4;">{username}</a></span>
         </div>

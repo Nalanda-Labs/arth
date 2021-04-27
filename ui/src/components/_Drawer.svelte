@@ -35,7 +35,7 @@
                             ? "margin-left: " + section.indent * 25 + "px;"
                             : ""}
                     >
-                        <Text class="mdc-theme--on-secondary">
+                        <Text style="color: #4285F4">
                             {section.name}
                         </Text>
                     </Item>
@@ -53,7 +53,7 @@
                             ? "margin-left: " + section.indent * 25 + "px;"
                             : ""}
                     >
-                        <Text class="mdc-theme--on-secondary">
+                        <Text style="color: #4285F4">
                             {section.name}
                         </Text>
                     </Item>

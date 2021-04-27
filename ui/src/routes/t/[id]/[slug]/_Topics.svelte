@@ -315,7 +315,7 @@
         line-height: 2.5em;
         text-align: center;
         border-radius: 50%;
-        background: plum;
+        background: #0F9D58;
         vertical-align: middle;
         color: white;
         margin-top: -10px;

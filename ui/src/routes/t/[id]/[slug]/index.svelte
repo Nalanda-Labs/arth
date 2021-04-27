@@ -91,7 +91,25 @@
     <title />
 </svelte:head>
 
-<div class="container" id="container">
+<style>
+    @media (max-width: 720px) {
+		.topic {
+			width: 100%;
+		}
+	}
+	@media (max-width: 4096px) {
+		.topic {
+			width: 800px;
+		}
+    :global(.bytemd-editor .CodeMirror) {
+        height: 90% !important;
+    }
+    .container {
+        margin-left: 0px;
+    }}
+</style>
+
+<div class="topic" id="container">
     <div class="row">
         <div class="col-xs-12">
             <Topics
@@ -156,16 +174,16 @@
                 >
             {/if}
             <div id="editor" style="display:none;margin-top:10px">
-                <span style="color:#08c">Replying to @{user_replied}</span>
+                <span style="color:#4285F4">Replying to @{user_replied}</span>
                 <svelte:component
                     this={Editor}
                     on:change={handleChange}
                     mode="tab"
                     {value}
                 />
-                <div style="margin-top:10px">
-                    <Button variant="raised" on:click={reply}>
-                        <Label>Post</Label>
+                <div class="b-wrapper">
+                    <Button variant="raised">
+                        <Label>Ask</Label>
                     </Button>
                 </div>
             </div>
@@ -173,12 +191,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    :global(.bytemd-editor .CodeMirror) {
-        height: 90% !important;
-    }
-    .container {
-        margin-left: 0px;
-    }
-</style>
