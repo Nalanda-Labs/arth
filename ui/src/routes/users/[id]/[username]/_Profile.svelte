@@ -17,6 +17,8 @@
     let location = "";
     let image_url = "";
     let image_alt = "";
+    let github = "";
+    let website ="";
     let response = {};
 
     let { session } = stores();
@@ -51,6 +53,12 @@
             }
             if (location === "" && $session.user === response.username) {
                 location = "Click to edit your location";
+            }
+            if (github === "" && $session.user === response.username) {
+                github = "Add your github url";
+            }
+            if (website === "" && $session.user === response.username) {
+                website = "Add your website link";
             }
         }
 
@@ -215,16 +223,50 @@
             <tr>
                 {#if $session.user == username}
                     <td>
-                        <span class="material-icons"> place </span>
+                        <i class="fas fa-map-marker-alt" style="color:#666"></i>
                         <span contenteditable="true" id="location">
                             {location}
                         </span>
                     </td>
                 {:else}
                     <td>
-                        <span class="material-icons"> place </span>
+                        <i class="fas map-marker-alt" style="color:#666"></i>
                         <span id="location">
                             {location}
+                        </span>
+                    </td>
+                {/if}
+            </tr>
+            <tr>
+                {#if $session.user == username}
+                    <td>
+                        <i class="fab fa-github" style="color:#666"></i>
+                        <span contenteditable="true" id="github">
+                            {github}
+                        </span>
+                    </td>
+                {:else}
+                    <td>
+                        <i class="fab fa-github" style="color:#666"></i>
+                        <span id="location">
+                            {github}
+                        </span>
+                    </td>
+                {/if}
+            </tr>
+            <tr>
+                {#if $session.user == username}
+                    <td>
+                        <i class="fas fa-link" style="color:#666"></i>
+                        <span contenteditable="true" id="website">
+                            {website}
+                        </span>
+                    </td>
+                {:else}
+                    <td>
+                        <i class="fas fa-link" style="color:#666"></i>
+                        <span id="website">
+                            {website}
                         </span>
                     </td>
                 {/if}

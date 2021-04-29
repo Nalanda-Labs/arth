@@ -22,3 +22,16 @@ Be very fast but not necessarily fastest.
 Be minimalistic in UI and data collection. Do not generate
 unnecessary metadata. Usually web application generate metadata
 for no good reason.
+
+Features
+========
+1. Built with C++/Drogon which is one of the fastest web frameworks.
+   So the application can handle quite high load with moderate hardware.
+   Also,it is fully asynchronous app.
+2. UI code is small, simple and snappy. Thanks to Svelte.
+3. Password is encrypted using award winner argon algorithm.
+
+TODO
+====
+1. Implement Redis LRU cache.
+2. Imlpement Elasticsearch for searching questions.
