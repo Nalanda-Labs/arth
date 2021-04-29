@@ -256,3 +256,69 @@ auto Profile::updateTitle(const HttpRequestPtr req, std::function<void(const Htt
 
     co_return;
 }
+
+auto Profile::updateName(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const long user_id, const std::string &name) -> Task<>
+{
+    auto json = req->getJsonObject();
+
+    Json::Value ret;
+    if (json == nullptr)
+    {
+        ret["error"] = "Malformed request";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    auto token = optionalToken.value();
+    if (token.userID != user_id)
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    if (name.empty())
+    {
+        ret["error"] = "Some or all of the parameters are empty";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    {
+        Json::Value ret;
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            co_await clientPtr->execSqlCoro("update users set name=$1 where id = $2", trim(name), (long)user_id);
+            ret["message"] = "Title updated";
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+        catch (const DrogonDbException &err)
+        {
+            auto resp = HttpResponse::newHttpResponse();
+            resp->setBody(err.base().what());
+            callback(resp);
+        }
+    }
+
+    co_return;
+}

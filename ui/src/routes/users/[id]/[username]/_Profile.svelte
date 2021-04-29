@@ -107,9 +107,20 @@
 
         name_elem.addEventListener(
             "blur",
-            function () {
+            async function () {
                 if (name != name_elem.innerHTML) {
-                    name = name_elem.innerHTML;
+                    let name1 = name_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/name/${name1}/`,
+                        name1.trim(),
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        name = name_elem.innerHTML;
+                    }
                 }
             },
             false
@@ -124,7 +135,7 @@
             alt="{username}'s proile image"
             width="160px"
         />
-        <p>Your gravatar, update gravatar to change it.</p>
+        <p>Your gravatar, <a href="https://en.gravatar.com/site/signup/">update gravatar</a> to change it.</p>
     </div>
     <div class="col-12 col-sm-12 col-md-6" style="float:left">
         <table>
