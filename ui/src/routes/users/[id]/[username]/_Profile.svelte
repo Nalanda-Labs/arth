@@ -86,14 +86,17 @@
             "blur",
             async function () {
                 if (title != title_elem.innerHTML) {
-                    title = title_elem.innerHTML;
+                    let title1 = title_elem.innerHTML;
+
                     response = await api.post(
-                        `profile/${id}/title/`,
-                        { title },
+                        `profile/${id}/title/${title1}/`,
+                        title1.trim(),
                         localStorage.getItem("jwt")
                     );
                     if (response.error) {
                         Swal.fire(response.error);
+                    } else {
+                        title = title_elem.innerHTML;
                     }
                 }
             },

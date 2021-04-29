@@ -35,7 +35,7 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
                                                           users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left \
                                                           join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join \
                                                           tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by \
-                                                          t.updated_at limit 50 offset 0");
+                                                          t.updated_at limit $1 offset $2", (long)limit, (long)limit*(page_no -1));
             if (result.size() == 0)
             {
                 callback(jsonResponse(std::move(ret)));
