@@ -125,6 +125,29 @@
             },
             false
         );
+
+        let d_elem = document.getElementById("designation");
+
+        d_elem.addEventListener(
+            "blur",
+            async function () {
+                if (designation != d_elem.innerHTML) {
+                    let d1 = d_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/designation/${d1}/`,
+                        d1.trim(),
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        designation = d_elem.innerHTML;
+                    }
+                }
+            },
+            false
+        );
     });
 </script>
 

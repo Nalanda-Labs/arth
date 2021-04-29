@@ -35,6 +35,7 @@ app {
   display: flex;
   flex-direction: column;
   height: 100%;
+  font-family: Roboto;
 }
 
 .drawer-container {
@@ -75,6 +76,7 @@ app {
   box-shadow: -1px 1px #eee;
   font-weight: 300;
   flex-direction: column;
+  font-size: 16px;
 }
 
 .main-content > section {
