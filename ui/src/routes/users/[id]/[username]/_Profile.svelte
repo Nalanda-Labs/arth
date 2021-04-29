@@ -2,11 +2,12 @@
 </script>
 
 <script>
-    import { stores } from "@sapper/app";
+    import { goto, stores } from "@sapper/app";
     import { onMount } from "svelte";
     import * as api from "api.js";
-    import Swal from 'sweetalert2';
-import { mdiScrewLag } from "@mdi/js";
+    import jwt_decode from "jwt-decode";
+    import Swal from "sweetalert2";
+    import { mdiScrewLag } from "@mdi/js";
 
     export let username;
     export let id;
@@ -53,13 +54,47 @@ import { mdiScrewLag } from "@mdi/js";
             }
         }
 
+        let username_elem = document.getElementById("username");
+
+        username_elem.addEventListener(
+            "blur",
+            async function () {
+                if (username != username_elem.innerHTML) {
+                    let username1 = username_elem.innerHTML;
+                    response = await api.post(
+                        `profile/${id}/username/${username1}/`,
+                        username1,
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else if (response.jwt) {
+                        Swal.fire("You will be logged out for username change");
+                        await api.post(`auth/logout`);
+		                $session.user = null;
+                        localStorage.removeItem("jwt");
+                        goto("/login");
+                    }
+                }
+            },
+            false
+        );
+
         let title_elem = document.getElementById("title");
 
         title_elem.addEventListener(
             "blur",
-            function () {
+            async function () {
                 if (title != title_elem.innerHTML) {
                     title = title_elem.innerHTML;
+                    response = await api.post(
+                        `profile/${id}/title/`,
+                        { title },
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    }
                 }
             },
             false
@@ -92,17 +127,24 @@ import { mdiScrewLag } from "@mdi/js";
             <tr>
                 {#if $session.user == username}
                     <td
-                        ><span contenteditable="true" id="title" style="font-size:20px;font-weight: 500;" title="Click to edit">{username}</span
+                        ><span
+                            contenteditable="true"
+                            id="username"
+                            style="font-size:20px;font-weight: 500;"
+                            title="Click to edit">{username}</span
                         ></td
                     >
                 {:else}
-                    <td><span id="title">{title}</span></td>
+                    <td><span id="username">{username}</span></td>
                 {/if}
             </tr>
             <tr>
                 {#if $session.user == username}
                     <td
-                        ><span contenteditable="true" id="title" title="Click to edit">{title}</span
+                        ><span
+                            contenteditable="true"
+                            id="title"
+                            title="Click to edit">{title}</span
                         ></td
                     >
                 {:else}

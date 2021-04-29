@@ -85,7 +85,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const siz
 }
 
 
-void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const size_t userID, const std::string username)
+void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, const size_t userID, const std::string username)
 {
     auto json = req->getJsonObject();
 
@@ -96,13 +96,6 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
         callback(jsonResponse(std::move(ret)));
         return;
     }
-
-    auto name = json->get("name", "").asString();
-    auto title = json->get("title", "").asString();
-    auto designation = json->get("designation", "").asString();
-    auto email = json->get("email", "").asString();
-
-    EmailUtils::cleanEmail(email);
 
     auto customConfig = app().getCustomConfig();
     auto jwt_secret = customConfig.get("jwt_secret", "").asString();
@@ -130,14 +123,14 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
         return;
     }
 
-    if (username.empty() || name.empty() || title.empty() || designation.empty() || email.empty())
+    if (username.empty())
     {
         ret["error"] = "Some or all of the parameters are empty";
         callback(jsonResponse(std::move(ret)));
         return;
     }
 
-    if (!isUsernameValid(username) || !isEmailValid(email))
+    if (!isUsernameValid(username))
     {
         ret["error"] = "Invalid input";
         callback(jsonResponse(std::move(ret)));
@@ -164,12 +157,8 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
                     transPtr->execSqlAsync(
                         "update users "
                         "set username = $1, "
-                        "username_lower = $2, "
-                        "name = $3, "
-                        "title = $4, "
-                        "designation = $5, "
-                        "email = $6 "
-                        "where id = $7",
+                        "username_lower = $2"
+                        "where id = $3",
                         [=](const Result &r) mutable {
 
                             if (r.affectedRows() == 0) {
@@ -178,6 +167,12 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
 
                             LOG_DEBUG << "in result callback";
                             ret["message"] = "Changes saved";
+
+                            LOG_DEBUG << "Log in successful";
+
+                            ret["jwt"] = signJWT(userID, usernameLower, jwt_secret);
+                            callback(jsonResponse(std::move(ret)));
+                            return;
                             callback(jsonResponse(std::move(ret)));
                         },
                         [=](const DrogonDbException &e) mutable {
@@ -185,7 +180,7 @@ void Profile ::updateProfile(const HttpRequestPtr &req, Callback callback, const
                             ret["error"] = (std::string)e.base().what();
                             callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
                         },
-                        username, usernameLower, name, title, designation, email, userID
+                        username, usernameLower, userID
                     );
                 },
                 [=](const DrogonDbException &e) mutable {

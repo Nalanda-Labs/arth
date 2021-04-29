@@ -7,7 +7,7 @@
 	import Textfield from "@smui/textfield";
 	import Button, { Label } from "@smui/button";
 	import HelperText from "@smui/textfield/helper-text/index";
-	import Swal from 'sweetalert2'
+	import Swal from 'sweetalert2';
 	// import gfm from "@bytemd/plugin-gfm";
 
 	export let topic;

@@ -99,7 +99,7 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
         auto clientPtr = drogon::app().getFastDbClient("default");
 
         clientPtr->execSqlAsync(
-            "select id, username, password_hash, salt, email_verified from users where username = $1 or email = $2",
+            "select id, username_lower, password_hash, salt, email_verified from users where username = $1 or email = $2",
 
             [=](const Result &r) mutable {
                 if (r.size() != 1)
@@ -128,11 +128,11 @@ void Login::doLogin(const HttpRequestPtr &req, Callback callback)
 
                 if (PasswordUtils::verifyPassword(password, password_hash, salt)) {
                     auto user_id = row["id"].as<size_t>();
-                    auto username = row["username"].as<std::string>();
+                    auto username_lower = row["username_lower"].as<std::string>();
 
                     LOG_DEBUG << "Log in successful";
 
-                    ret["jwt"] = signJWT(user_id, username, jwtSecret);
+                    ret["jwt"] = signJWT(user_id, username_lower, jwtSecret);
                     callback(jsonResponse(std::move(ret)));
                     return;
                 }
