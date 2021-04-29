@@ -121,6 +121,7 @@
             alt="{username}'s proile image"
             width="160px"
         />
+        <p>Your gravatar, update gravatar to change it.</p>
     </div>
     <div class="col-12 col-sm-12 col-md-6" style="float:left">
         <table>

@@ -9,7 +9,15 @@
 
 
 inline bool isUsernameValid(const std::string &username) {    
-    return !username.empty() && !contains(username, " ") && username.length() < 60;
+    if (username.length() > 60)
+        return false;
+
+    for(size_t i = 0; i<username.length(); ++i) {
+        if(!(('a' <= username[i] <= 'z') || ('A' <= username[i] <= 'Z') ||(0 <= username[i] <= 9)))
+        return false;
+    }
+
+    return !username.empty() && !contains(username, " ");
 }
 
 
