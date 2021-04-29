@@ -45,7 +45,8 @@ CREATE TABLE public.tags (
     name character varying(64) NOT NULL,
     topic_count bigint DEFAULT 0,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    info character varying DEFAULT ''::character varying
 );
 
 
@@ -125,7 +126,9 @@ CREATE TABLE public.topics (
     op_id bigint DEFAULT 0,
     updated_by bigint,
     votes bigint DEFAULT 0,
-    reply_to bigint
+    reply_to bigint,
+    slug character varying(256) DEFAULT NULL::character varying,
+    views bigint DEFAULT 0
 );
 
 
@@ -199,7 +202,11 @@ CREATE TABLE public.users (
     email_verification_code character varying(64) DEFAULT ''::character varying,
     designation character varying,
     location character varying,
-    image_url text DEFAULT ''::text
+    image_url text DEFAULT ''::text,
+    github character varying(128) DEFAULT ''::character varying,
+    website character varying(256) DEFAULT ''::character varying,
+    twitter character varying(128) DEFAULT ''::character varying,
+    about_me character varying DEFAULT ''::character varying
 );
 
 

@@ -18,10 +18,10 @@ clauses.
 
 Goals
 =====
-Be very fast but not necessarily fastest.
-Be minimalistic in UI and data collection. Do not generate
-unnecessary metadata. Usually web application generate metadata
-for no good reason.
+1. Be very fast but not necessarily fastest.
+2. Be minimalistic in UI and data collection. Do not generate
+   unnecessary metadata. Usually web application generate metadata
+   for no good reason.
 
 Features
 ========
