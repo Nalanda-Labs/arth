@@ -1,0 +1,89 @@
+<script context="module">
+	export function preload({ params }, { user }) {
+		let page = params.page;
+		return { page };
+	}
+</script>
+
+<script>
+	import { onMount } from "svelte";
+	import * as api from "api.js";
+	import Card, { Content } from "@smui/card";
+	import { LightPaginationNav } from "svelte-paginate";
+	import "../../_utils.scss";
+
+	export let page;
+	let currentPage = page;
+	let tags = [];
+	let count = 0;
+
+	onMount(async () => {
+		if (!page) {
+			page = 1;
+		}
+
+		let response = await api.get(`tags/${page}`);
+		if (response.tags) {
+			tags = response.tags;
+			count = tags.length;
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>Tags • Arth</title>
+</svelte:head>
+
+<div class="tags">
+	<h3>Tags</h3>
+	<p>
+		A tag lets you know technologies, concepts involved with a
+		topic/question. It helps you find similar questions or watch a
+		particular tag for topics/questions.
+	</p>
+	<div class="row">
+		{#each tags as { tid, info, name, topic_count }}
+			<Card
+				style="width:150px;height:200px;margin-right:20px;margin-top:10px;margin-left:10px"
+			>
+				<a
+					class="anchor"
+					style="margin-left:10px;font-size:20px;margin-top:10px;border-bottom:1px solid #ddd"
+					href="/topics/tagged/{name}">{name}</a
+				>
+				<span style="margin-left:10px;float:right"
+					>{topic_count} questions</span
+				>
+				<!-- <hr/> -->
+				<Content>{info.slice(0, 100)}</Content>
+				<a
+					class="anchor"
+					style="margin-left:10px;"
+					href="/tags/edit/{tid}/{name}">Edit</a
+				>
+			</Card>
+		{/each}
+	</div>
+	<svelte:component
+		this={LightPaginationNav}
+		totalItems={count}
+		pageSize="50"
+		{currentPage}
+		limit={50}
+		showStepOptions={true}
+		on:setPage={(e) => (currentPage = e.detail.page)}
+	/>
+</div>
+
+<style>
+	@media (max-width: 720px) {
+		.tags {
+			width: 100%;
+		}
+	}
+	@media (max-width: 4096px) {
+		.tags {
+			width: 800px;
+		}
+	}
+</style>
