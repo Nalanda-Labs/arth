@@ -8,7 +8,7 @@
 	<title>All Topics • Arth</title>
 </svelte:head>
 <script>
-    import { stores } from "@sapper/app";
+    import { goto, stores } from "@sapper/app";
     import Button, { Label } from "@smui/button";
     import { onMount } from "svelte";
     import * as api from "api.js";
@@ -92,7 +92,10 @@
 </script>
 
 <div class="container">
-    <h3>All topics</h3>
+    <h3>All topics
+        <Button on:click={()=>goto('/ask')} variant="raised" style="float:right;margin-right:50px;margin-top:20px">
+        <Label>Post topic</Label>
+      </Button></h3>
     <div class="row" style="width:100%">
         {#each topics as { id, slug, title, tags, shown_ts, uid, username, answers, views}}
         <hr style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px;margin-bottom:20px" />

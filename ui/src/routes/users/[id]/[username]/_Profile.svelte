@@ -18,7 +18,8 @@
     let image_url = "";
     let image_alt = "";
     let github = "";
-    let website ="";
+    let website = "";
+    let twitter = "";
     let response = {};
 
     let { session } = stores();
@@ -60,6 +61,9 @@
             if (website === "" && $session.user === response.username) {
                 website = "Add your website link";
             }
+            if (twitter === "" && $session.user === response.username) {
+                twitter = "Add your twitter profile";
+            }
         }
 
         let username_elem = document.getElementById("username");
@@ -79,7 +83,7 @@
                     } else if (response.jwt) {
                         Swal.fire("You will be logged out for username change");
                         await api.post(`auth/logout`);
-		                $session.user = null;
+                        $session.user = null;
                         localStorage.removeItem("jwt");
                         goto("/login");
                     }
@@ -156,6 +160,29 @@
             },
             false
         );
+
+        let location_elem = document.getElementById("location");
+
+        location_elem.addEventListener(
+            "blur",
+            async function () {
+                if (location != location_elem.innerHTML) {
+                    let location1 = location_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/location/${d1}/`,
+                        location1.trim(),
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        location = location_elem.innerHTML;
+                    }
+                }
+            },
+            false
+        );
     });
 </script>
 
@@ -166,7 +193,11 @@
             alt="{username}'s proile image"
             width="160px"
         />
-        <p>Your gravatar, <a href="https://en.gravatar.com/site/signup/">update gravatar</a> to change it.</p>
+        <p>
+            Your gravatar, <a href="https://en.gravatar.com/site/signup/"
+                >update gravatar</a
+            > to change it.
+        </p>
     </div>
     <div class="col-12 col-sm-12 col-md-6" style="float:left">
         <table>
@@ -223,14 +254,14 @@
             <tr>
                 {#if $session.user == username}
                     <td>
-                        <i class="fas fa-map-marker-alt" style="color:#666"></i>
+                        <i class="fas fa-map-marker-alt" style="color:#666" />
                         <span contenteditable="true" id="location">
                             {location}
                         </span>
                     </td>
                 {:else}
                     <td>
-                        <i class="fas map-marker-alt" style="color:#666"></i>
+                        <i class="fas map-marker-alt" style="color:#666" />
                         <span id="location">
                             {location}
                         </span>
@@ -240,14 +271,14 @@
             <tr>
                 {#if $session.user == username}
                     <td>
-                        <i class="fab fa-github" style="color:#666"></i>
+                        <i class="fab fa-github" style="color:#666" />
                         <span contenteditable="true" id="github">
                             {github}
                         </span>
                     </td>
                 {:else}
                     <td>
-                        <i class="fab fa-github" style="color:#666"></i>
+                        <i class="fab fa-github" style="color:#666" />
                         <span id="location">
                             {github}
                         </span>
@@ -257,16 +288,33 @@
             <tr>
                 {#if $session.user == username}
                     <td>
-                        <i class="fas fa-link" style="color:#666"></i>
+                        <i class="fas fa-link" style="color:#666" />
                         <span contenteditable="true" id="website">
                             {website}
                         </span>
                     </td>
                 {:else}
                     <td>
-                        <i class="fas fa-link" style="color:#666"></i>
+                        <i class="fas fa-link" style="color:#666" />
                         <span id="website">
                             {website}
+                        </span>
+                    </td>
+                {/if}
+            </tr>
+            <tr>
+                {#if $session.user == username}
+                    <td>
+                        <i class="fab fa-twitter" style="color:#666" />
+                        <span contenteditable="true" id="twitter">
+                            {twitter}
+                        </span>
+                    </td>
+                {:else}
+                    <td>
+                        <i class="fab fa-twitter" style="color:#666" />
+                        <span id="twitter">
+                            {twitter}
                         </span>
                     </td>
                 {/if}

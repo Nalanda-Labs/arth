@@ -17,7 +17,7 @@
     let taglist = [];
     let Viewer = null;
     let offset = 0;
-    let limit = 10;
+    let limit = 50;
     let count = 0;
     let time = "";
     let votes = 0;
@@ -153,7 +153,7 @@
                 </a>
             {:else}
                 <a href="/u/{posted_by}/{username}">
-                    <img src={image_url} />
+                    <img src={image_url}  style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                 </a>
             {/if}
         </div>
@@ -233,7 +233,7 @@
                     </a>
                 {:else}
                     <a href="/u/{posted_by}/{username}">
-                        <img src="{image_url}" />
+                        <img src="{image_url}" style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                     </a>
                 {/if}
             </div>

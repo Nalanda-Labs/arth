@@ -14,7 +14,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const long userID, const std::string& username)
+void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const long userID, const std::string &username)
 {
     LOG_DEBUG << "user id: " << userID;
 
@@ -84,16 +84,13 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     }
 }
 
-void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, const long userID, const std::string& username)
+std::string request_check(Json::Value &ret, const HttpRequestPtr &req, Callback& callback, auto& json, const long userID)
 {
-    auto json = req->getJsonObject();
-
-    Json::Value ret;
     if (json == nullptr)
     {
         ret["error"] = "Malformed request";
         callback(jsonResponse(std::move(ret)));
-        return;
+        return "";
     }
 
     auto customConfig = app().getCustomConfig();
@@ -103,7 +100,7 @@ void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, cons
     {
         ret["error"] = "JWT not configured";
         callback(jsonResponse(std::move(ret)));
-        return;
+        return "";
     }
     auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
 
@@ -111,7 +108,7 @@ void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, cons
     {
         ret["error"] = "Authentication Error";
         callback(jsonResponse(std::move(ret)));
-        return;
+        return "";
     }
 
     auto token = optionalToken.value();
@@ -119,8 +116,19 @@ void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, cons
     {
         ret["error"] = "Authentication Error";
         callback(jsonResponse(std::move(ret)));
-        return;
+        return "";
     }
+
+    return jwt_secret;
+}
+
+void Profile ::updateUsername(const HttpRequestPtr &req, Callback callback, const long userID, const std::string &username)
+{
+    auto json = req->getJsonObject();
+
+    Json::Value ret;
+
+    auto jwt_secret = request_check(ret, req, callback, json, userID);
 
     if (username.empty())
     {
@@ -196,39 +204,9 @@ auto Profile::updateTitle(const HttpRequestPtr req, std::function<void(const Htt
     auto json = req->getJsonObject();
 
     Json::Value ret;
-    if (json == nullptr)
-    {
-        ret["error"] = "Malformed request";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
 
-    auto customConfig = app().getCustomConfig();
-    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
-
-    if (jwt_secret == "")
-    {
-        ret["error"] = "JWT not configured";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
-
-    if (!optionalToken.has_value())
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
-    auto token = optionalToken.value();
-    if (token.userID != user_id)
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
+    
     if (title.empty())
     {
         ret["error"] = "Some or all of the parameters are empty";
@@ -262,38 +240,8 @@ auto Profile::updateName(const HttpRequestPtr req, std::function<void(const Http
     auto json = req->getJsonObject();
 
     Json::Value ret;
-    if (json == nullptr)
-    {
-        ret["error"] = "Malformed request";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
 
-    auto customConfig = app().getCustomConfig();
-    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
-
-    if (jwt_secret == "")
-    {
-        ret["error"] = "JWT not configured";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
-
-    if (!optionalToken.has_value())
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
-    auto token = optionalToken.value();
-    if (token.userID != user_id)
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
 
     if (name.empty())
     {
@@ -328,38 +276,8 @@ auto Profile::updateDesignation(const HttpRequestPtr req, std::function<void(con
     auto json = req->getJsonObject();
 
     Json::Value ret;
-    if (json == nullptr)
-    {
-        ret["error"] = "Malformed request";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
 
-    auto customConfig = app().getCustomConfig();
-    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
-
-    if (jwt_secret == "")
-    {
-        ret["error"] = "JWT not configured";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
-
-    if (!optionalToken.has_value())
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
-    auto token = optionalToken.value();
-    if (token.userID != user_id)
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
 
     if (designation.empty())
     {
