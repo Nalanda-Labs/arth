@@ -11,10 +11,13 @@
     import { goto, stores } from "@sapper/app";
     import Button, { Label } from "@smui/button";
     import { onMount } from "svelte";
+    import { LightPaginationNav } from "svelte-paginate";
     import * as api from "api.js";
 
     let topics = [];
     export let page;
+    let currentPage = page;
+	let count = 0;
 
     onMount(async () => {
         if (!page) {
@@ -27,6 +30,7 @@
 
         if(response.topics) {
             topics = response.topics;
+            count = response.count;
         }
         for(let i=0; i<topics.length; i++) {
             topics[i]["tags"] = topics[i]["tags"].slice(1, -1);
@@ -118,4 +122,13 @@
         {/each}
         <hr style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px" />
     </div>
+    <svelte:component
+		this={LightPaginationNav}
+		totalItems={count}
+		pageSize="50"
+		{currentPage}
+		limit={50}
+		showStepOptions={true}
+		on:setPage={(e) => (currentPage = e.detail.page)}
+	/>
 </div>

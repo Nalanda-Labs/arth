@@ -67,6 +67,11 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
                         ret["topics"].append(topic);
                     }
                 }
+                auto rows = co_await clientPtr->execSqlCoro("select count(1) from topics");
+                    for (auto &r1 : rows)
+                    {
+                        ret["count"] = r1["count"].as<std::string>();
+                    }
             }
 
             callback(jsonResponse(std::move(ret)));

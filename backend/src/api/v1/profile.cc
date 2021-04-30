@@ -84,7 +84,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     }
 }
 
-std::string request_check(Json::Value &ret, const HttpRequestPtr &req, Callback& callback, auto& json, const long userID)
+std::string Profile::request_check(Json::Value &ret, const HttpRequestPtr &req, Callback& callback, auto& json, const long userID)
 {
     if (json == nullptr)
     {

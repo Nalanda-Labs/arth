@@ -45,7 +45,7 @@
 		},
 		{
 			name: "Tags",
-			route: "/tags",
+			route: "/tags/1",
 			protected: false,
 			logout_only: false,
 		},

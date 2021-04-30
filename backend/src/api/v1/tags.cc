@@ -74,8 +74,54 @@ void Tags::getTags(const HttpRequestPtr &req, Callback callback)
                     return;
                 },
                 /// match any tag that starts with tag
-                tag + "%"
-            );
+                tag + "%");
         });
+    }
+}
+
+auto Tags::getAllTags(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string &page) -> Task<>
+{
+    Json::Value ret;
+
+    ret["tags"] = Json::arrayValue;
+    const long limit = 40;
+    auto page_no = atol(page.c_str());
+
+    {
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            auto result = co_await clientPtr->execSqlCoro("select count(1) over (), * from tags limit $1 offset $2", limit, limit * (page_no - 1));
+
+            if (result.size() == 0)
+            {
+                callback(jsonResponse(std::move(ret)));
+            }
+            else
+            {
+                for (auto &r : result)
+                {
+                    Json::Value tag;
+
+                    tag["id"] = r["id"].as<std::string>();
+                    tag["name"] = r["name"].as<std::string>();
+                    tag["topic_count"] = r["topic_count"].as<std::string>();
+                    tag["info"] = r["info"].as<std::string>();
+                    tag["count"] = r["count"].as<std::string>();
+
+                    ret["tags"].append(tag);
+                }
+                callback(jsonResponse(std::move(ret)));    
+            }
+        }
+        catch (const DrogonDbException &e)
+        {
+            // Exception works as sync interfaces.
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(jsonResponse(std::move(ret)));
+        }
+
+        co_return;
     }
 }
