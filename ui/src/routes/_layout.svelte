@@ -73,7 +73,7 @@
 		setMiniWindow;
 		const unsubscribe = session.subscribe(async ($session) => {
 			if($session.user){
-				sections[4].route = `/users/${$session.user_id}/${$session.user}`;
+				sections[4].route = `/user/${$session.user_id}/${$session.user}`;
 			}
 		});
 		return unsubscribe;

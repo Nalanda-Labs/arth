@@ -41,7 +41,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     {
         auto clientPtr = app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select username, name, title, designation, location, email, image_url from users "
+            "select username, name, title, designation, location, email, image_url, git, website from users "
             "where id = $1",
 
             [=](const Result &r) mutable {
@@ -60,6 +60,8 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
                 ret["designation"] = row["designation"].as<std::string>();
                 ret["location"] = row["location"].as<std::string>();
                 ret["image_url"] = row["image_url"].as<std::string>();
+                ret["git"] = row["git"].as<std::string>();
+                ret["website"] = row["website"].as<std::string>();
 
                 auto customConfig = app().getCustomConfig();
                 const auto jwt_secret = customConfig.get("jwt_secret", "").asString();
@@ -293,6 +295,81 @@ auto Profile::updateDesignation(const HttpRequestPtr req, std::function<void(con
         {
             co_await clientPtr->execSqlCoro("update users set designation=$1 where id = $2", trim(designation), (long)user_id);
             ret["message"] = "Designation updated";
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+        catch (const DrogonDbException &e)
+        {
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+        }
+    }
+
+    co_return;
+}
+
+auto Profile::updateGit(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const long user_id) -> Task<>
+{
+    auto json = req->getJsonObject();
+
+    Json::Value ret;
+
+    auto git = json->get("git", "").asString();
+
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
+
+    if (git.empty())
+    {
+        ret["error"] = "Some or all of the parameters are empty";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    {
+        Json::Value ret;
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            co_await clientPtr->execSqlCoro("update users set git=$1 where id = $2", trim(git), (long)user_id);
+            ret["message"] = "git updated";
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+        catch (const DrogonDbException &e)
+        {
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+        }
+    }
+
+    co_return;
+}
+
+auto Profile::updateWebsite(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const long user_id) -> Task<>
+{
+    auto json = req->getJsonObject();
+
+    Json::Value ret;
+
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
+    auto website = json->get("website", "").asString();
+
+    if (website.empty())
+    {
+        ret["error"] = "Some or all of the parameters are empty";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    {
+        Json::Value ret;
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            co_await clientPtr->execSqlCoro("update users set website=$1 where id = $2", trim(website), (long)user_id);
+            ret["message"] = "Website updated";
             callback(jsonResponse(std::move(ret)));
             co_return;
         }

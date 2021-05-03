@@ -16,6 +16,8 @@ class Profile:public drogon::HttpController<Profile>
     ADD_METHOD_TO(Profile ::updateName, "/api/v1/profile/{user_id}/name/{name}/", Post);
     ADD_METHOD_TO(Profile ::updateDesignation, "/api/v1/profile/{user_id}/designation/{designation}/", Post);
     ADD_METHOD_TO(Profile ::updateDesignation, "/api/v1/profile/{user_id}/designation/{designation}/", Post);
+    ADD_METHOD_TO(Profile ::updateGit, "/api/v1/profile/{user_id}/git/", Post);
+    ADD_METHOD_TO(Profile ::updateWebsite, "/api/v1/profile/{user_id}/website/", Post);
     METHOD_LIST_END
 
     std::string request_check(Json::Value &ret, const HttpRequestPtr &req, Callback& callback, auto& json, const long userID);
@@ -24,5 +26,7 @@ class Profile:public drogon::HttpController<Profile>
     auto updateTitle(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const long user_id, const std::string &title) -> Task<>;
     auto updateName(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const long user_id, const std::string &name) -> Task<>;
     auto updateDesignation(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const long user_id, const std::string &designation) -> Task<>;
+    auto updateGit(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const long user_id) -> Task<>;
+    auto updateWebsite(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const long user_id) -> Task<>;
 };
 }//namespace api::v1

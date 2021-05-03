@@ -17,7 +17,7 @@
     let location = "";
     let image_url = "";
     let image_alt = "";
-    let github = "";
+    let git = "";
     let website = "";
     let twitter = "";
     let response = {};
@@ -36,6 +36,8 @@
             designation = response.designation;
             location = response.location;
             username = response.username;
+            git = response.git;
+            website = response.website;
 
             if (response.image_url !== "") {
                 image_url = response.image_url;
@@ -55,8 +57,8 @@
             if (location === "" && $session.user === response.username) {
                 location = "Click to edit your location";
             }
-            if (github === "" && $session.user === response.username) {
-                github = "Add your github url";
+            if (git === "" && $session.user === response.username) {
+                git = "Add your git url";
             }
             if (website === "" && $session.user === response.username) {
                 website = "Add your website link";
@@ -183,6 +185,52 @@
             },
             false
         );
+
+        let git_elem = document.getElementById("git");
+
+        git_elem.addEventListener(
+            "blur",
+            async function () {
+                if (git != git_elem.innerHTML) {
+                    let git1 = git_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/git/`,
+                        {"git": git1.trim()},
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        git = git_elem.innerHTML;
+                    }
+                }
+            },
+            false
+        );
+
+        let website_elem = document.getElementById("website");
+
+        website_elem.addEventListener(
+            "blur",
+            async function () {
+                if (website != website_elem.innerHTML) {
+                    let website1 = website_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/website/`,
+                        {"website": website1.trim()},
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        website = website_elem.innerHTML;
+                    }
+                }
+            },
+            false
+        );
     });
 </script>
 
@@ -199,7 +247,7 @@
             > to change it.
         </p>
     </div>
-    <div class="col-12 col-sm-12 col-md-6" style="float:left">
+    <div class="col-12 col-sm-12 col-md-5" style="float:left">
         <table>
             <tr>
                 {#if $session.user == username}
@@ -249,7 +297,7 @@
             </tr>
         </table>
     </div>
-    <div class="col-12 col-sm-12 col-md-3" style="display:inline">
+    <div class="col-12 col-sm-12 col-md-4" style="display:inline">
         <table>
             <tr>
                 {#if $session.user == username}
@@ -261,7 +309,7 @@
                     </td>
                 {:else}
                     <td>
-                        <i class="fas map-marker-alt" style="color:#666" />
+                        <i class="fas fa-map-marker-alt" style="color:#666" />
                         <span id="location">
                             {location}
                         </span>
@@ -272,16 +320,16 @@
                 {#if $session.user == username}
                     <td>
                         <i class="fab fa-github" style="color:#666" />
-                        <span contenteditable="true" id="github">
-                            {github}
-                        </span>
+                        <a class="anchor" contenteditable="true" id="git" href="{git}">
+                            {git}
+                        </a>
                     </td>
                 {:else}
                     <td>
                         <i class="fab fa-github" style="color:#666" />
-                        <span id="location">
-                            {github}
-                        </span>
+                        <a class="anchor" id="git" href="{git}">
+                            {git}
+                        </a>
                     </td>
                 {/if}
             </tr>
@@ -289,16 +337,16 @@
                 {#if $session.user == username}
                     <td>
                         <i class="fas fa-link" style="color:#666" />
-                        <span contenteditable="true" id="website">
+                        <a class="anchor" contenteditable="true" id="website" href="{website}">
                             {website}
-                        </span>
+                        </a>
                     </td>
                 {:else}
                     <td>
                         <i class="fas fa-link" style="color:#666" />
-                        <span id="website">
+                        <a class="anchor" id="website" href="{website}">
                             {website}
-                        </span>
+                        </a>
                     </td>
                 {/if}
             </tr>
