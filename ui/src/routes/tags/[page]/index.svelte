@@ -25,7 +25,9 @@
 		let response = await api.get(`tags/${page}`);
 		if (response.tags) {
 			tags = response.tags;
-			count = tags.length;
+			if(tags.length > 0) {
+				count = tags[0].length;
+			}
 		}
 	});
 </script>
@@ -42,7 +44,7 @@
 		particular tag for topics/questions.
 	</p>
 	<div class="row">
-		{#each tags as { tid, info, name, topic_count }}
+		{#each tags as { id, info, name, topic_count }}
 			<Card
 				style="width:150px;height:200px;margin-right:20px;margin-top:10px;margin-left:10px"
 			>
@@ -54,12 +56,11 @@
 				<span style="margin-left:10px;float:right"
 					>{topic_count} questions</span
 				>
-				<!-- <hr/> -->
 				<Content>{info.slice(0, 100)}</Content>
 				<a
 					class="anchor"
 					style="margin-left:10px;"
-					href="/tags/edit/{tid}/{name}">Edit</a
+					href="/tags/edit/{id}/{name}">Edit</a
 				>
 			</Card>
 		{/each}

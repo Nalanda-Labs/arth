@@ -84,7 +84,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     }
 }
 
-std::string Profile::request_check(Json::Value &ret, const HttpRequestPtr &req, Callback& callback, auto& json, const long userID)
+std::string Profile::request_check(Json::Value &ret, const HttpRequestPtr &req, Callback &callback, auto &json, const long userID)
 {
     if (json == nullptr)
     {
@@ -206,7 +206,7 @@ auto Profile::updateTitle(const HttpRequestPtr req, std::function<void(const Htt
     Json::Value ret;
 
     auto jwt_secret = request_check(ret, req, callback, json, user_id);
-    
+
     if (title.empty())
     {
         ret["error"] = "Some or all of the parameters are empty";
@@ -224,11 +224,11 @@ auto Profile::updateTitle(const HttpRequestPtr req, std::function<void(const Htt
             callback(jsonResponse(std::move(ret)));
             co_return;
         }
-        catch (const DrogonDbException &err)
+        catch (const DrogonDbException &e)
         {
-            auto resp = HttpResponse::newHttpResponse();
-            resp->setBody(err.base().what());
-            callback(resp);
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
         }
     }
 
@@ -260,11 +260,11 @@ auto Profile::updateName(const HttpRequestPtr req, std::function<void(const Http
             callback(jsonResponse(std::move(ret)));
             co_return;
         }
-        catch (const DrogonDbException &err)
+        catch (const DrogonDbException &e)
         {
-            auto resp = HttpResponse::newHttpResponse();
-            resp->setBody(err.base().what());
-            callback(resp);
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
         }
     }
 
@@ -296,11 +296,11 @@ auto Profile::updateDesignation(const HttpRequestPtr req, std::function<void(con
             callback(jsonResponse(std::move(ret)));
             co_return;
         }
-        catch (const DrogonDbException &err)
+        catch (const DrogonDbException &e)
         {
-            auto resp = HttpResponse::newHttpResponse();
-            resp->setBody(err.base().what());
-            callback(resp);
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
         }
     }
 

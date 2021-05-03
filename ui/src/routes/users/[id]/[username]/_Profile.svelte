@@ -26,7 +26,7 @@
 
     onMount(async () => {
         response = await api.get(
-            `users/${id}/${username}`,
+            `user/${id}/${username}`,
             localStorage.getItem("jwt")
         );
 

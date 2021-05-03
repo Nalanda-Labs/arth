@@ -48,9 +48,9 @@
 	<div>
 		<h3>Sign In</h3>
 		<p>
-			<a style="text-decoration:none" href="/register">Need an account?</a>
+			<a class="anchor" style="text-decoration:none" href="/register">Need an account?</a>
 			or
-			<a style="text-decoration:none" href="/forgot-password">Forgot
+			<a class="anchor" style="text-decoration:none" href="/forgot-password">Forgot
 				password?</a>
 		</p>
 

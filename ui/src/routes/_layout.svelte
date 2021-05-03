@@ -51,13 +51,13 @@
 		},
 		{
 			name: "Users",
-			route: "/users",
+			route: "/users/1",
 			protected: false,
 			logout_only: false,
 		},
 		{
 			name: "Profile",
-			route: `/users/${$session.user_id}/${$session.user}`,
+			route: `/user/${$session.user_id}/${$session.user}`,
 			protected: true,
 			logout_only: false,
 		},
@@ -144,7 +144,7 @@
 				</IconButton>
 			{/if}
 			<IconButton
-				href="htts://github.com/Nalanda-Labs/arth"
+				href="https://github.com/Nalanda-Labs/arth"
 				title="Source Code"
 			>
 				<Icon>

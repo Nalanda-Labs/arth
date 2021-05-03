@@ -10,7 +10,7 @@ class Profile:public drogon::HttpController<Profile>
 {
   public:    
     METHOD_LIST_BEGIN        
-    ADD_METHOD_TO(Profile ::getProfile, "/api/v1/users/{user_id}/{username}", Get, Options);
+    ADD_METHOD_TO(Profile ::getProfile, "/api/v1/user/{user_id}/{username}", Get, Options);
     ADD_METHOD_TO(Profile ::updateUsername, "/api/v1/profile/{user_id}/username/{username}/", Post);
     ADD_METHOD_TO(Profile ::updateTitle, "/api/v1/profile/{user_id}/title/{title}/", Post);
     ADD_METHOD_TO(Profile ::updateName, "/api/v1/profile/{user_id}/name/{name}/", Post);

@@ -72,7 +72,7 @@ import { mdiScrewLag } from "@mdi/js";
 	<ListErrors {response} />
 	<div>
 		<h3>Sign Up</h3>
-		<p class="text-xs-center"><a href="/login">Have an account?</a></p>
+		<p class="text-xs-center"><a class="anchor" href="/login">Have an account?</a></p>
 		<form on:submit|preventDefault={onSubmit}>
 			<div>
 				<Textfield
