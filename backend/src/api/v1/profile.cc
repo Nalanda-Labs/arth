@@ -41,7 +41,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     {
         auto clientPtr = app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select username, name, title, designation, location, email, image_url, git, website from users "
+            "select username, name, title, designation, location, email, image_url, git, website, twitter from users "
             "where id = $1",
 
             [=](const Result &r) mutable {
@@ -62,6 +62,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
                 ret["image_url"] = row["image_url"].as<std::string>();
                 ret["git"] = row["git"].as<std::string>();
                 ret["website"] = row["website"].as<std::string>();
+                ret["twitter"] = row["twitter"].as<std::string>();
 
                 auto customConfig = app().getCustomConfig();
                 const auto jwt_secret = customConfig.get("jwt_secret", "").asString();
@@ -370,6 +371,43 @@ auto Profile::updateWebsite(const HttpRequestPtr req, std::function<void(const H
         {
             co_await clientPtr->execSqlCoro("update users set website=$1 where id = $2", trim(website), (long)user_id);
             ret["message"] = "Website updated";
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+        catch (const DrogonDbException &e)
+        {
+            LOG_DEBUG << e.base().what();
+            ret["error"] = (std::string)e.base().what();
+            callback(HttpResponse::newHttpJsonResponse(std::move(ret)));
+        }
+    }
+
+    co_return;
+}
+
+auto Profile::updateTwitter(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const long user_id) -> Task<>
+{
+    auto json = req->getJsonObject();
+
+    Json::Value ret;
+
+    auto jwt_secret = request_check(ret, req, callback, json, user_id);
+    auto twitter = json->get("twitter", "").asString();
+
+    if (twitter.empty())
+    {
+        ret["error"] = "Some or all of the parameters are empty";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    {
+        Json::Value ret;
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            co_await clientPtr->execSqlCoro("update users set twitter=$1 where id = $2", trim(twitter), (long)user_id);
+            ret["message"] = "Twitter updated";
             callback(jsonResponse(std::move(ret)));
             co_return;
         }

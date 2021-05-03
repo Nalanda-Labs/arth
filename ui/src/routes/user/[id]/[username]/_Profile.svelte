@@ -38,6 +38,7 @@
             username = response.username;
             git = response.git;
             website = response.website;
+            twitter = response.twitter;
 
             if (response.image_url !== "") {
                 image_url = response.image_url;
@@ -231,6 +232,28 @@
             },
             false
         );
+        let twitter_elem = document.getElementById("twitter");
+
+        twitter_elem.addEventListener(
+            "blur",
+            async function () {
+                if (twitter != twitter_elem.innerHTML) {
+                    let twitter1 = twitter_elem.innerHTML;
+
+                    response = await api.post(
+                        `profile/${id}/twitter/`,
+                        {"twitter": twitter1.trim()},
+                        localStorage.getItem("jwt")
+                    );
+                    if (response.error) {
+                        Swal.fire(response.error);
+                    } else {
+                        twitter = twitter_elem.innerHTML;
+                    }
+                }
+            },
+            false
+        );
     });
 </script>
 
@@ -354,16 +377,16 @@
                 {#if $session.user == username}
                     <td>
                         <i class="fab fa-twitter" style="color:#666" />
-                        <span contenteditable="true" id="twitter">
+                        <a class="anchor" contenteditable="true" id="twitter" href="{twitter}">
                             {twitter}
-                        </span>
+                        </a>
                     </td>
                 {:else}
                     <td>
                         <i class="fab fa-twitter" style="color:#666" />
-                        <span id="twitter">
+                        <a id="twitter" class="anchor" href={twitter}>
                             {twitter}
-                        </span>
+                        </a>
                     </td>
                 {/if}
             </tr>
