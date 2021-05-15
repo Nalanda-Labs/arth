@@ -13,6 +13,9 @@
 	import "../../_utils.scss";
 
 	export let page;
+	if (!page) {
+		page = 1;
+	}
 	let currentPage = page;
 	let tags = [];
 	let count = 0;
@@ -26,7 +29,7 @@
 		if (response.tags) {
 			tags = response.tags;
 			if(tags.length > 0) {
-				count = tags[0].length;
+				count = tags[0].count;
 			}
 		}
 	});
@@ -68,9 +71,8 @@
 	<svelte:component
 		this={LightPaginationNav}
 		totalItems={count}
-		pageSize="50"
-		{currentPage}
-		limit={50}
+		pageSize={50}
+		currentPage={currentPage}
 		showStepOptions={true}
 		on:setPage={(e) => (currentPage = e.detail.page)}
 	/>

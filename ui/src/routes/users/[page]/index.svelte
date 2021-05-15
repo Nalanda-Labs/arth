@@ -60,8 +60,7 @@
 		this={LightPaginationNav}
 		totalItems={count}
 		pageSize="50"
-		{currentPage}
-		limit={50}
+		currentPage={currentPage}
 		showStepOptions={true}
 		on:setPage={(e) => (currentPage = e.detail.page)}
 	/>

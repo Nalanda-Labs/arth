@@ -148,11 +148,11 @@
     <div>
         <div style="float:left;margin-right:10px;z-index:2;">
             {#if image_url === ""}
-                <a href="/users/{posted_by}/{username}">
+                <a href="/user/{posted_by}/{username}">
                     <p data-letters={initials.toUpperCase()} />
                 </a>
             {:else}
-                <a href="/users/{posted_by}/{username}">
+                <a href="/user/{posted_by}/{username}">
                     <img src={image_url}  style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                 </a>
             {/if}
@@ -228,11 +228,11 @@
         <div>
             <div style="float:left;margin-right:10px">
                 {#if image_url === "" || image_url === undefined}
-                    <a href="/users/{posted_by}/{username}">
+                    <a href="/user/{posted_by}/{username}">
                         <p data-letters={initials.toUpperCase()} />
                     </a>
                 {:else}
-                    <a href="/users/{posted_by}/{username}">
+                    <a href="/user/{posted_by}/{username}">
                         <img src="{image_url}" style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                     </a>
                 {/if}
