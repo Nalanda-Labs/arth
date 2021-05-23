@@ -50,11 +50,14 @@
             }
 
 			const response = await api.post(
-				"t/edit-topic/{id}/",
+				`t/edit-topic/${id}/`,
 				{ topic },
 				localStorage.getItem("jwt")
 			);
 
+			if(response.error) {
+				Swal.fire(response.error);
+			}
 			if (response.id && response.slug) {
 				id = response.id;
 				await goto(`/t/${response.id}/${response.slug}`);
@@ -176,7 +179,7 @@
         {/if}
 		<div class="b-wrapper">
 			<Button variant="raised">
-				<Label>Ask</Label>
+				<Label>Edit</Label>
 			</Button>
 		</div>
 	</form>

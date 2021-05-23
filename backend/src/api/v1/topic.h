@@ -30,12 +30,14 @@ namespace api
             ADD_METHOD_TO(Topic ::getDiscussion, "/api/v1/t/get-discussion/{size_t id}/?"
                                                  "time={string created_at}&limit={uint limit}",
                           Get, Options);
+            ADD_METHOD_TO(Topic ::editTopic, "/api/v1/t/edit-topic/{string id}/", Post, Options);
             METHOD_LIST_END
 
             void createTopic(const HttpRequestPtr &req, Callback callback);
             void getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "");
             void getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
                                const std::string &created_at, const size_t &limit = 10);
+            auto editTopic(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid) -> Task<>;
         };
     } // namespace v1
 } // namespace api

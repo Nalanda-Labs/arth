@@ -55,7 +55,7 @@ std::optional<Token> verifiedToken(const std::string &authHeader, const std::str
  * @param bindingStartCount the number to start parameter count from
  * @return std::string ($1, $2, $3, ...$n)
  */
-std::string toPostgresParmeterizedSql(size_t placeholderCount,
+std::string toPostgresParameterizedSql(size_t placeholderCount,
                                       size_t bindingStartCount) {
     assert(placeholderCount > 0);
 

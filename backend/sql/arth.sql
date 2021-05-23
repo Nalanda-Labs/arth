@@ -37,6 +37,19 @@ CREATE TABLE public.email_tokens (
 ALTER TABLE public.email_tokens OWNER TO shiv;
 
 --
+-- Name: items; Type: TABLE; Schema: public; Owner: shiv
+--
+
+CREATE TABLE public.items (
+    n integer,
+    s text,
+    "time" timestamp with time zone
+);
+
+
+ALTER TABLE public.items OWNER TO shiv;
+
+--
 -- Name: tags; Type: TABLE; Schema: public; Owner: shiv
 --
 
@@ -203,7 +216,7 @@ CREATE TABLE public.users (
     designation character varying,
     location character varying,
     image_url text DEFAULT ''::text,
-    github character varying(128) DEFAULT ''::character varying,
+    git character varying(128) DEFAULT ''::character varying,
     website character varying(256) DEFAULT ''::character varying,
     twitter character varying(128) DEFAULT ''::character varying,
     about_me character varying DEFAULT ''::character varying
@@ -320,6 +333,13 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.votes
     ADD CONSTRAINT votes_pkey PRIMARY KEY (topic_id, user_id);
+
+
+--
+-- Name: items_n_idx; Type: INDEX; Schema: public; Owner: shiv
+--
+
+CREATE INDEX items_n_idx ON public.items USING btree ("time");
 
 
 --
