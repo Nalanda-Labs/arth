@@ -23,6 +23,7 @@
 	let Tags = null;
     let title = "";
     let taglist = [];
+	let count = 0;
 
 	async function onSubmit() {
 		if ($session.user) {
@@ -83,6 +84,7 @@
             title = response.title;
             value = response.topic.description;
             taglist = response.tags.map((tag) => tag.name);
+			count = taglist.length;
         }
 	});
 
@@ -157,7 +159,7 @@
 			mode="tab"
 			{value}/>
 		<div style="margin:30px"/>
-        {#if taglist.length}
+        {#if count}
 		<svelte:component
 			this={Tags}
 			name={'tags'}
