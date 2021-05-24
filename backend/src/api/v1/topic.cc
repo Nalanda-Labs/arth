@@ -441,6 +441,7 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             }
             std::stringstream binder;
             std::string s;
+            
             join(tagList, ',', s);
             binder << "select * from tags where name in (" << s << ")";
             try

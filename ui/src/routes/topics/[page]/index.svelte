@@ -94,8 +94,24 @@
         }
     });
 </script>
-
-<div class="container">
+<style>
+    @media (max-width: 720px) {
+		.topic {
+			width: 100%;
+		}
+	}
+	@media (max-width: 4096px) {
+		.topic {
+			width: 800px;
+		}
+    :global(.bytemd-editor .CodeMirror) {
+        height: 90% !important;
+    }
+    .container {
+        margin-left: 10px;
+    }}
+</style>
+<div class="topic container">
     <h3>All topics
         <Button on:click={()=>goto('/ask')} variant="raised" style="float:right;margin-right:50px;margin-top:20px">
         <Label>Post topic</Label>
