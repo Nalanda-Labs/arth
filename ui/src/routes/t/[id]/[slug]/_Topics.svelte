@@ -153,7 +153,7 @@
                 </a>
             {:else}
                 <a href="/user/{posted_by}/{username}">
-                    <img src={image_url}  style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
+                    <img src={image_url}  alt="profile pic" style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                 </a>
             {/if}
         </div>
@@ -194,7 +194,7 @@
                             style="vertical-align:bottom">share</span
                         >Share</a
                     >
-                    <!-- <a
+                    <a
                         href="/bookmark/{id}"
                         class="anchor"
                         title="Bookmark this post"
@@ -203,7 +203,7 @@
                             class="material-icons"
                             style="vertical-align:bottom">bookmark</span
                         >Bookmark</a
-                    > -->
+                    >
                     <a
                         href="/reply"
                         on:click|preventDefault={show_editor(
@@ -233,7 +233,7 @@
                     </a>
                 {:else}
                     <a href="/user/{posted_by}/{username}">
-                        <img src="{image_url}" style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
+                        <img src="{image_url}" alt="profile pic" style="width: 2.5em;height: 2.5em;line-height: 2.5em;text-align: center;border-radius: 50%;"/>
                     </a>
                 {/if}
             </div>

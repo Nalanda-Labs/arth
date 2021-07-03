@@ -9,7 +9,7 @@ find_package(Threads REQUIRED)
 
 message(STATUS "compiler: " ${CMAKE_CXX_COMPILER_ID})
 include(CheckCXXSourceRuns)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines")
 # this is to find packages installed using cmake
 # if there are other custom paths, add here
 # it is assumed that drogon is installed with all dependencies                                                            
@@ -28,7 +28,7 @@ set(arth_sources
     src/api/v1/tags.cc
     src/api/v1/util/arth.cc
     src/api/v1/stats.cc
-	src/api/v1/posts.cc
+    src/api/v1/posts.cc
     src/api/v1/index.cc
     src/api/v1/users.cc
     )

@@ -151,7 +151,7 @@
                         >share</span
                     >Share</a
                 >
-                <!-- <a
+                <a
                     href="/bookmark/{id}"
                     class="anchor"
                     title="Bookmark this post"
@@ -159,7 +159,7 @@
                     ><span class="material-icons" style="vertical-align:bottom"
                         >bookmark</span
                     >Bookmark</a
-                > -->
+                >
                 <a
                     href="/reply"
                     on:click|preventDefault={show_editor(

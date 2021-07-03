@@ -35,3 +35,6 @@ TODO
 ====
 1. Implement Redis LRU cache.
 2. Imlpement Elasticsearch for searching questions.
+3. Implement reputation system.
+4. Implement badges.
+5. Implement more ittems on profile.
