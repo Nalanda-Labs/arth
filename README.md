@@ -38,3 +38,5 @@ TODO
 3. Implement reputation system.
 4. Implement badges.
 5. Implement more ittems on profile.
+6. Implement voting on question.
+7. Implement accepting answer on topics.
