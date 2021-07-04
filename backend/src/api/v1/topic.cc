@@ -303,43 +303,48 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         LOG_DEBUG << created_at;
 
         // never use offset in cockroachdb it does not work well in terms of execution speed
-        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
-                                       {
-                                           transPtr->execSqlAsync(
-                                               "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
-                                               [=](const Result &rows) mutable
-                                               {
-                                                   ret["topics"] = Json::arrayValue;
+        clientPtr->newTransactionAsync(
+            [=](const std::shared_ptr<Transaction> &transPtr) mutable
+            {
+                transPtr->execSqlAsync(
+                    "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at," 
+                    "t.votes, t.answer_accepted, users.username, users.image_url from topics t left join users on "
+                    "t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
+                    [=](const Result &rows) mutable
+                    {
+                        ret["topics"] = Json::arrayValue;
 
-                                                   LOG_DEBUG << rows.size();
-                                                   for (auto &r : rows)
-                                                   {
-                                                       Json::Value topic;
-                                                       topic["description"] = r["description"].as<std::string>();
-                                                       topic["visible"] = r["visible1"].as<bool>();
-                                                       topic["posted_by"] = r["posted_by"].as<std::string>();
-                                                       topic["created_at"] = r["created_at"].as<std::string>();
-                                                       topic["updated_at"] = r["updated_at"].as<std::string>();
-                                                       topic["topic_id"] = r["id"].as<std::string>();
-                                                       topic["username"] = r["username"].as<std::string>();
-                                                       topic["votes"] = r["votes"].as<std::string>();
-                                                       topic["image_url"] = r["image_url"].as<std::string>();
+                        LOG_DEBUG << rows.size();
+                        for (auto &r : rows)
+                        {
+                            Json::Value topic;
+                            topic["description"] = r["description"].as<std::string>();
+                            topic["visible"] = r["visible1"].as<bool>();
+                            topic["posted_by"] = r["posted_by"].as<std::string>();
+                            topic["created_at"] = r["created_at"].as<std::string>();
+                            topic["updated_at"] = r["updated_at"].as<std::string>();
+                            topic["topic_id"] = r["id"].as<std::string>();
+                            topic["username"] = r["username"].as<std::string>();
+                            topic["votes"] = r["votes"].as<std::string>();
+                            topic["image_url"] = r["image_url"].as<std::string>();
+                            topic["answer_accepted"] = r["answer_accepted"].as<bool>();
 
-                                                       ret["topics"].append(topic);
-                                                   }
+                                ret["topics"]
+                                    .append(topic);
+                        }
 
-                                                   callback(jsonResponse(std::move(ret)));
-                                                   return;
-                                               },
-                                               [=](const DrogonDbException &e) mutable
-                                               {
-                                                   LOG_DEBUG << e.base().what();
-                                                   ret["error"] = (std::string)e.base().what();
-                                                   callback(jsonResponse(std::move(ret)));
-                                                   return;
-                                               },
-                                               tid, created_at, limit);
-                                       });
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    },
+                    [=](const DrogonDbException &e) mutable
+                    {
+                        LOG_DEBUG << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    },
+                    tid, created_at, limit);
+            });
     }
 }
 
@@ -441,7 +446,7 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             // TODO: fix this with internal::orm::sql_binder so that sql injection does not happen
             std::stringstream binder;
             std::string s;
-            
+
             join(tagList, ',', s);
             binder << "select * from tags where name in (" << s << ")";
             try
@@ -527,15 +532,21 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             // in this case row will be empty
             auto row = co_await transPtr->execSqlCoro("select id, slug from topics where op_id=0 and id=$1", tid);
             LOG_DEBUG << row.size();
-            if(row.size()) { // topic is original topic
-                for(auto &r: row) {
+            if (row.size())
+            { // topic is original topic
+                for (auto &r : row)
+                {
                     id = r["id"].as<std::string>();
                     slug = r["slug"].as<std::string>();
                 }
-            } else {
+            }
+            else
+            {
                 auto row = co_await transPtr->execSqlCoro("select id, slug from topics where id in (select op_id from topics where op_id!=0 and id=$1)", tid);
-                if(row.size()) { // topic is original topic
-                    for(auto &r: row) {
+                if (row.size())
+                { // topic is original topic
+                    for (auto &r : row)
+                    {
                         id = r["id"].as<std::string>();
                         slug = r["slug"].as<std::string>();
                     }
