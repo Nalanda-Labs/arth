@@ -27,7 +27,7 @@ namespace api
             ADD_METHOD_TO(Votes ::votes, "/api/v1/votes/", Post, Options);
             METHOD_LIST_END
 
-            auto votes(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback) -> Task<>;
+            auto votes(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) -> Task<>;
         };
     } // namespace v1
 } // namespace api

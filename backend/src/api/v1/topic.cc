@@ -230,66 +230,69 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
         auto clientPtr = drogon::app().getFastDbClient("default");
         Json::Value ret;
 
-        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
-                                       {
-                                           transPtr->execSqlAsync(
-                                               "select t.title, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id where t.id=$1",
-                                               [=](const Result &r) mutable
-                                               {
-                                                   if (r.size() == 0)
-                                                   {
-                                                       ret["error"] = "No topics found.";
-                                                       callback(jsonResponse(std::move(ret)));
-                                                   }
-                                                   else
-                                                   {
-                                                       ret["title"] = r[0]["title"].as<std::string>();
-                                                       Json::Value topic;
-                                                       topic["description"] = r[0]["description"].as<std::string>();
-                                                       topic["visible"] = r[0]["visible1"].as<bool>();
-                                                       topic["posted_by"] = r[0]["posted_by"].as<std::string>();
-                                                       topic["created_at"] = r[0]["created_at"].as<std::string>();
-                                                       topic["updated_at"] = r[0]["updated_at"].as<std::string>();
-                                                       topic["username"] = r[0]["username"].as<std::string>();
-                                                       topic["votes"] = r[0]["votes"].as<std::string>();
-                                                       topic["image_url"] = r[0]["image_url"].as<std::string>();
-                                                       ret["topic"] = topic;
+        clientPtr->newTransactionAsync(
+            [=](const std::shared_ptr<Transaction> &transPtr) mutable
+            {
+                transPtr->execSqlAsync(
+                    "select t.title, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at,"
+                    "t.votes, users.username, users.image_url from topics t left join users on "
+                    "t.posted_by=users.id where t.id=$1",
+                    [=](const Result &r) mutable
+                    {
+                        if (r.size() == 0)
+                        {
+                            ret["error"] = "No topics found.";
+                            callback(jsonResponse(std::move(ret)));
+                        }
+                        else
+                        {
+                            ret["title"] = r[0]["title"].as<std::string>();
+                            Json::Value topic;
+                            topic["description"] = r[0]["description"].as<std::string>();
+                            topic["visible"] = r[0]["visible1"].as<bool>();
+                            topic["posted_by"] = r[0]["posted_by"].as<std::string>();
+                            topic["created_at"] = r[0]["created_at"].as<std::string>();
+                            topic["updated_at"] = r[0]["updated_at"].as<std::string>();
+                            topic["username"] = r[0]["username"].as<std::string>();
+                            topic["votes"] = r[0]["votes"].as<std::string>();
+                            topic["image_url"] = r[0]["image_url"].as<std::string>();
+                            ret["topic"] = topic;
 
-                                                       transPtr->execSqlAsync(
-                                                           "select name from tags left join topic_tags on topic_tags.tag_id=tags.id where topic_tags.topic_id=$1",
-                                                           [=](const Result &r1) mutable
-                                                           {
-                                                               ret["tags"] = Json::arrayValue;
+                            transPtr->execSqlAsync(
+                                "select name from tags left join topic_tags on topic_tags.tag_id=tags.id where topic_tags.topic_id=$1",
+                                [=](const Result &r1) mutable
+                                {
+                                    ret["tags"] = Json::arrayValue;
 
-                                                               for (auto &row : r1)
-                                                               {
-                                                                   Json::Value tag;
+                                    for (auto &row : r1)
+                                    {
+                                        Json::Value tag;
 
-                                                                   LOG_DEBUG << row["name"].as<std::string>();
-                                                                   tag["name"] = row["name"].as<std::string>();
-                                                                   ret["tags"].append(tag);
-                                                               }
-                                                               callback(jsonResponse(std::move(ret)));
-                                                               return;
-                                                           },
-                                                           [=](const DrogonDbException &e) mutable
-                                                           {
-                                                               LOG_DEBUG << e.base().what();
-                                                               ret["error"] = (std::string)e.base().what();
-                                                               callback(jsonResponse(std::move(ret)));
-                                                               return;
-                                                           },
-                                                           tid);
-                                                   }
-                                               },
-                                               [=](const DrogonDbException &e) mutable
-                                               {
-                                                   LOG_DEBUG << e.base().what();
-                                                   ret["error"] = (std::string)e.base().what();
-                                                   callback(jsonResponse(std::move(ret)));
-                                               },
-                                               tid);
-                                       });
+                                        LOG_DEBUG << row["name"].as<std::string>();
+                                        tag["name"] = row["name"].as<std::string>();
+                                        ret["tags"].append(tag);
+                                    }
+                                    callback(jsonResponse(std::move(ret)));
+                                    return;
+                                },
+                                [=](const DrogonDbException &e) mutable
+                                {
+                                    LOG_DEBUG << e.base().what();
+                                    ret["error"] = (std::string)e.base().what();
+                                    callback(jsonResponse(std::move(ret)));
+                                    return;
+                                },
+                                tid);
+                        }
+                    },
+                    [=](const DrogonDbException &e) mutable
+                    {
+                        LOG_DEBUG << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(jsonResponse(std::move(ret)));
+                    },
+                    tid);
+            });
     }
 }
 
@@ -303,6 +306,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         LOG_DEBUG << created_at;
 
         // never use offset in cockroachdb it does not work well in terms of execution speed
+<<<<<<< Updated upstream
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
                                        {
                                            transPtr->execSqlAsync(
@@ -327,6 +331,37 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
 
                                                        ret["topics"].append(topic);
                                                    }
+=======
+        clientPtr->newTransactionAsync(
+            [=](const std::shared_ptr<Transaction> &transPtr) mutable
+            {
+                transPtr->execSqlAsync(
+                    "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at,"
+                    "t.votes, t.answer_accepted, users.username, users.image_url from topics t left join users on "
+                    "t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
+                    [=](const Result &rows) mutable
+                    {
+                        ret["topics"] = Json::arrayValue;
+
+                        LOG_DEBUG << rows.size();
+                        for (auto &r : rows)
+                        {
+                            Json::Value topic;
+                            topic["description"] = r["description"].as<std::string>();
+                            topic["visible"] = r["visible1"].as<bool>();
+                            topic["posted_by"] = r["posted_by"].as<std::string>();
+                            topic["created_at"] = r["created_at"].as<std::string>();
+                            topic["updated_at"] = r["updated_at"].as<std::string>();
+                            topic["topic_id"] = r["id"].as<std::string>();
+                            topic["username"] = r["username"].as<std::string>();
+                            topic["votes"] = r["votes"].as<std::string>();
+                            topic["image_url"] = r["image_url"].as<std::string>();
+                            topic["answer_accepted"] = r["answer_accepted"].as<bool>();
+
+                            ret["topics"]
+                                .append(topic);
+                        }
+>>>>>>> Stashed changes
 
                                                    callback(jsonResponse(std::move(ret)));
                                                    return;
@@ -547,6 +582,58 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             co_return;
         }
         catch (const DrogonDbException &e)
+        {
+            ret["error"] = (std::string)e.base().what();
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+    }
+    co_return;
+}
+
+auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid, const std::string& aid) -> Task<>
+{
+    Json::Value ret;
+
+    auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    Token jwt = optionalToken.value();
+
+    auto user_id = jwt.userID;
+    LOG_DEBUG << user_id;
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        auto transPtr = co_await clientPtr->newTransactionCoro();
+        try {
+            // find it an answer is already accepted then make it unaccepted
+            auto r = co_await transPtr->execSqlCoro("select id from topics where op_id=$1 and answer_accepted=true", tid);
+            if(r.size() != 0) {
+                auto id = r[0]["id"].as<size_t>();
+                co_await transPtr->execSqlCoro("update topics set answer_accepted=false where id=$1", id);
+            }
+            // now we can accept new answer
+            co_await transPtr->execSqlCoro("update topics set answer_accepted=true where id=$1", aid);
+            ret["success"] = true;
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        } catch (const DrogonDbException &e)
         {
             ret["error"] = (std::string)e.base().what();
             callback(jsonResponse(std::move(ret)));

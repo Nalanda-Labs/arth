@@ -157,7 +157,29 @@ import Swal from "sweetalert2";
         }
       }
     }
+  }
+  async function acceptAnswer(elementID) {
+    if (!$session.user) {
+      Swal.fire("You need to be logged in before accepting answer.");
+      return;
+    }
+    const response = await api.post(
+      `accept-answer/${id}/${elementID}/`,
+      localStorage.getItem("jwt")
+    );
 
+    if (response.error) {
+      Swal.fire(response.error);
+    } else {
+      for (var i = 0; i < topics.length; i++) {
+        if (topics[i].topic_id == elementID) {
+          topics[i].answer_accepted = true;
+        } else {
+          topics[i].answer_accepted = false;
+        }
+      }
+      topics = topics;
+    }
   }
 </script>
 
@@ -285,11 +307,6 @@ import Swal from "sweetalert2";
           <span style="text-align:center">{votes}</span>
           <br />
           {#if $session.user}
-<<<<<<< HEAD
-          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, topic_id)}>
-            <i class="fas fa-angle-down" />
-          </a>
-=======
             <a
               href="/vote-down"
               class="anchor"
@@ -297,7 +314,6 @@ import Swal from "sweetalert2";
             >
               <i class="fas fa-angle-down" />
             </a>
->>>>>>> parent of fdfa040... updated npm packages and working on accepting answers
           {/if}
         </div>
       </div>
