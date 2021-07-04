@@ -3,7 +3,7 @@ Arth
 it is software, made up of bugs.
 
 
-It is a C++/Drogon/Svelte/Postgres/Redis QnA web application.
+It is a C++/Drogon/Svelte/CockroachDB/Redis QnA web application.
 The main reason of writing it in C++ is speed and electricity
 saving. Just imagine the amount of electircity saved if all
 web apps were in C++. Humanity will have far better time
@@ -13,8 +13,16 @@ A piece of code is written once, modified few times, read
 many times and ran even more number of times. Thus performance
 matters.
 
+CockroachDB has been chosen to scale horizontally and Redis for
+providing speed.
+
+Svelte has been because of its simplicity and ease of use.
+Another UI can be implemented in parallel with this as backend is
+totally decoupled from Svelte.
+
 Please read LICENSE carefully. At the bottom there are additional
-clauses.
+clauses. The license applies for all files in this repository unless
+file has a specific license mentioned.
 
 Goals
 =====
@@ -37,6 +45,6 @@ TODO
 2. Imlpement Elasticsearch for searching questions.
 3. Implement reputation system.
 4. Implement badges.
-5. Implement more ittems on profile.
+5. Implement more items on profile.
 6. Implement voting on question.
 7. Implement accepting answer on topics.

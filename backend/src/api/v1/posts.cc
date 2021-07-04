@@ -78,7 +78,7 @@ void Posts::createPost(const HttpRequestPtr &req, Callback callback, const size_
 
                     size_t op_id;
 
-                    bool isTopic = row["op_id"].isNull();
+                    bool isTopic = (row["op_id"].as<size_t>() == 0);
                     if (isTopic) {
                         op_id = row["id"].as<size_t>();
                     } else {

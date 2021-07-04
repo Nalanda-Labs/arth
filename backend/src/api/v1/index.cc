@@ -31,7 +31,7 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
         auto clientPtr = drogon::app().getFastDbClient();
         try
         {
-            auto result = co_await clientPtr->execSqlCoro("select t.id, t.visible, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.views, t.slug, \
+            auto result = co_await clientPtr->execSqlCoro("select t.id, t.visible1, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.views, t.slug, \
                                                           users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left \
                                                           join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join \
                                                           tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by \
@@ -47,7 +47,7 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
                     Json::Value topic;
 
                     topic["id"] = r["id"].as<std::string>();
-                    topic["visible"] = r["visible"].as<bool>();
+                    topic["visible"] = r["visible1"].as<bool>();
                     topic["title"] = r["title"].as<std::string>();
                     topic["created_at"] = r["created_at"].as<std::string>();
                     topic["updated_at"] = r["updated_at"].as<std::string>();

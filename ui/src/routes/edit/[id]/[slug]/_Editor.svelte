@@ -44,10 +44,8 @@
 			}
 
 			topic.body = value;
-            if(taglist.length != 0) {
-			    if (topic.tagList.length < 1) {
-				    Swal.fire("At least one tag should be supplied.");
-			    }
+            if(taglist.length == 0) {
+				Swal.fire("At least one tag should be supplied.");
             }
 
 			const response = await api.post(

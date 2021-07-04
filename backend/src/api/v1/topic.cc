@@ -233,7 +233,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
                                        {
                                            transPtr->execSqlAsync(
-                                               "select t.title, t.description, t.visible, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id where t.id=$1",
+                                               "select t.title, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id where t.id=$1",
                                                [=](const Result &r) mutable
                                                {
                                                    if (r.size() == 0)
@@ -246,7 +246,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
                                                        ret["title"] = r[0]["title"].as<std::string>();
                                                        Json::Value topic;
                                                        topic["description"] = r[0]["description"].as<std::string>();
-                                                       topic["visible"] = r[0]["visible"].as<bool>();
+                                                       topic["visible"] = r[0]["visible1"].as<bool>();
                                                        topic["posted_by"] = r[0]["posted_by"].as<std::string>();
                                                        topic["created_at"] = r[0]["created_at"].as<std::string>();
                                                        topic["updated_at"] = r[0]["updated_at"].as<std::string>();
@@ -306,7 +306,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
                                        {
                                            transPtr->execSqlAsync(
-                                               "select count(1) over(), t.id, t.description, t.visible, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
+                                               "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
                                                [=](const Result &rows) mutable
                                                {
                                                    ret["topics"] = Json::arrayValue;
@@ -316,7 +316,7 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
                                                    {
                                                        Json::Value topic;
                                                        topic["description"] = r["description"].as<std::string>();
-                                                       topic["visible"] = r["visible"].as<bool>();
+                                                       topic["visible"] = r["visible1"].as<bool>();
                                                        topic["posted_by"] = r["posted_by"].as<std::string>();
                                                        topic["created_at"] = r["created_at"].as<std::string>();
                                                        topic["updated_at"] = r["updated_at"].as<std::string>();

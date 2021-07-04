@@ -35,7 +35,11 @@ app {
   display: flex;
   flex-direction: column;
   height: 100%;
-  font-family: Roboto;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .drawer-container {
@@ -74,9 +78,8 @@ app {
   padding: 10px;
   border: 1px solid #eee;
   box-shadow: -1px 1px #eee;
-  font-weight: 300;
   flex-direction: column;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 .main-content > section {
