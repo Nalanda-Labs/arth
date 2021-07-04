@@ -385,7 +385,6 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
     }
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        auto customConfig = app().getCustomConfig();
         auto transPtr = co_await clientPtr->newTransactionCoro();
         // get data from json to variables so that we do not need to operate on json
         auto title = topic.get("title", "").asString();
@@ -439,6 +438,7 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
                 }
                 LOG_DEBUG << tag;
             }
+            // TODO: fix this with internal::orm::sql_binder so that sql injection does not happen
             std::stringstream binder;
             std::string s;
             

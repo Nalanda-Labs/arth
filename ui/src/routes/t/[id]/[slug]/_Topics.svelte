@@ -5,7 +5,7 @@
   import "../../../_utils.scss";
   import TagList from "../../../../components/_TagList.svelte";
   import { stores } from "@sapper/app";
-import Swal from "sweetalert2";
+  import Swal from "sweetalert2";
 
   export let id;
   export let slug;
@@ -129,33 +129,35 @@ import Swal from "sweetalert2";
     // console.log(editorDiv.scrollHeight, editorDiv.scrollTop, editorDiv.clientHeight);
   }
   async function vote(vote, elementID) {
-      console.log(vote, elementID);
-      if(!$session.user) {
-          Swal.fire("You need to be logged in before voting.");
-          return;
-      }
-      let data = {};
-      data.vote = vote;
-      data.id = id;
-      const response = await api.post(
-				"votes/",
-				{ data },
-				localStorage.getItem("jwt")
-			);
+    console.log(vote, elementID);
+    if (!$session.user) {
+      Swal.fire("You need to be logged in before voting.");
+      return;
+    }
+    let data = {};
+    data.vote = vote;
+    data.id = elementID;
+    const response = await api.post(
+      "votes/",
+      { data },
+      localStorage.getItem("jwt")
+    );
 
-			if (response.error) {
-                Swal.fire(response.error);
-			} else {
-                if(elementID == id) {
-                    votes += 1;
-                } else {
-                    for(var i=0; i<topics.length; i++) {
-                        if(topics[i].votes == elementID) {
-                            topics[i].votes += vote;
-                        }
-                    }
-                }
-            }
+    if (response.error) {
+      Swal.fire(response.error);
+    } else {
+      if (elementID == id) {
+        votes = vote + parseInt(votes);
+      } else {
+        for (var i = 0; i < topics.length; i++) {
+          if (topics[i].topic_id == elementID) {
+            topics[i].votes = vote + parseInt(topics[i].votes);
+            topics = topics;
+            break
+          }
+        }
+      }
+    }
   }
 </script>
 
@@ -183,7 +185,11 @@ import Swal from "sweetalert2";
       <br />
       <div style="text-align: center;font-size: 24px">
         {#if $session.user}
-          <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, id)}>
+          <a
+            href="/vote-up"
+            class="anchor"
+            on:click|preventDefault={vote(1, id)}
+          >
             <i class="fas fa-angle-up" />
           </a>
         {/if}
@@ -191,7 +197,11 @@ import Swal from "sweetalert2";
         <span style="text-align:center">{votes}</span>
         <br />
         {#if $session.user}
-          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, id)}>
+          <a
+            href="/vote-down"
+            class="anchor"
+            on:click|preventDefault={vote(-1, id)}
+          >
             <i class="fas fa-angle-down" />
           </a>
         {/if}
@@ -275,7 +285,11 @@ import Swal from "sweetalert2";
         <br />
         <div style="text-align: center;font-size: 24px">
           {#if $session.user}
-            <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, topic_id)}>
+            <a
+              href="/vote-up"
+              class="anchor"
+              on:click|preventDefault={vote(1, topic_id)}
+            >
               <i class="fas fa-angle-up" />
             </a>
           {/if}
@@ -283,9 +297,13 @@ import Swal from "sweetalert2";
           <span style="text-align:center">{votes}</span>
           <br />
           {#if $session.user}
-          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, topic_id)}>
-            <i class="fas fa-angle-down" />
-          </a>
+            <a
+              href="/vote-down"
+              class="anchor"
+              on:click|preventDefault={vote(-1, topic_id)}
+            >
+              <i class="fas fa-angle-down" />
+            </a>
           {/if}
         </div>
       </div>
@@ -365,6 +383,6 @@ import Swal from "sweetalert2";
     margin-top: -10px;
   }
   p {
-      font-weight: 300;
+    font-weight: 300;
   }
 </style>
