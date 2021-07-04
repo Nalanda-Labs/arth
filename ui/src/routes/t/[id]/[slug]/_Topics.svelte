@@ -5,7 +5,7 @@
   import "../../../_utils.scss";
   import TagList from "../../../../components/_TagList.svelte";
   import { stores } from "@sapper/app";
-  import Swal from "sweetalert2";
+import Swal from "sweetalert2";
 
   export let id;
   export let slug;
@@ -152,33 +152,12 @@
           if (topics[i].topic_id == elementID) {
             topics[i].votes = vote + parseInt(topics[i].votes);
             topics = topics;
-            break;
+            break
           }
         }
       }
     }
-  }
-  async function acceptAnswer(elementID) {
-    if (!$session.user) {
-      Swal.fire("You need to be logged in before accepting answer.");
-      return;
-    }
-    const response = await api.post(
-      `votes/${id}/${elementID}`,
-      localStorage.getItem("jwt")
-    );
 
-    if (response.error) {
-      Swal.fire(response.error);
-    } else {
-      for (var i = 0; i < topics.length; i++) {
-        if (topics[i].topic_id == elementID) {
-          topics[i].acceptAnswer = true;
-          topics = topics;
-          break;
-        }
-      }
-    }
   }
 </script>
 
@@ -206,11 +185,7 @@
       <br />
       <div style="text-align: center;font-size: 24px">
         {#if $session.user}
-          <a
-            href="/vote-up"
-            class="anchor"
-            on:click|preventDefault={vote(1, id)}
-          >
+          <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, id)}>
             <i class="fas fa-angle-up" />
           </a>
         {/if}
@@ -218,11 +193,7 @@
         <span style="text-align:center">{votes}</span>
         <br />
         {#if $session.user}
-          <a
-            href="/vote-down"
-            class="anchor"
-            on:click|preventDefault={vote(-1, id)}
-          >
+          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, id)}>
             <i class="fas fa-angle-down" />
           </a>
         {/if}
@@ -286,7 +257,7 @@
     </div>
   </div>
   <div style="clear:both" />
-  {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts, answer_accepted }}
+  {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts }}
     <hr style="border-bottom:1px solid;color:#eee" />
     <div>
       <div style="float:left;margin-right:10px">
@@ -306,11 +277,7 @@
         <br />
         <div style="text-align: center;font-size: 24px">
           {#if $session.user}
-            <a
-              href="/vote-up"
-              class="anchor"
-              on:click|preventDefault={vote(1, topic_id)}
-            >
+            <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, topic_id)}>
               <i class="fas fa-angle-up" />
             </a>
           {/if}
@@ -318,6 +285,11 @@
           <span style="text-align:center">{votes}</span>
           <br />
           {#if $session.user}
+<<<<<<< HEAD
+          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, topic_id)}>
+            <i class="fas fa-angle-down" />
+          </a>
+=======
             <a
               href="/vote-down"
               class="anchor"
@@ -325,26 +297,7 @@
             >
               <i class="fas fa-angle-down" />
             </a>
-          {/if}
-          <br />
-          {#if answer_accepted}
-            <a
-              href="/accpet-answer"
-              on:click|preventDefault={acceptAnswer(topic_id)}
-            >
-              <i
-                class="fa fa-check"
-                style="color: #3DDC84"
-                aria-hidden="true"
-              />
-            </a>
-          {:else}
-            <a
-              href="/accept-answer"
-              on:click|preventDefault={acceptAnswer(topic_id)}
-            >
-              <i class="fa fa-check" style="color: #ddd" aria-hidden="true" />
-            </a>
+>>>>>>> parent of fdfa040... updated npm packages and working on accepting answers
           {/if}
         </div>
       </div>
@@ -424,6 +377,6 @@
     margin-top: -10px;
   }
   p {
-    font-weight: 300;
+      font-weight: 300;
   }
 </style>
