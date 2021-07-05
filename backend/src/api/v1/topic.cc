@@ -234,7 +234,7 @@ void Topic::getTopic(const HttpRequestPtr &req, Callback callback, const size_t 
             [=](const std::shared_ptr<Transaction> &transPtr) mutable
             {
                 transPtr->execSqlAsync(
-                    "select t.title, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at,"
+                    "select t.title, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, "
                     "t.votes, users.username, users.image_url from topics t left join users on "
                     "t.posted_by=users.id where t.id=$1",
                     [=](const Result &r) mutable
@@ -306,39 +306,13 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
         LOG_DEBUG << created_at;
 
         // never use offset in cockroachdb it does not work well in terms of execution speed
-<<<<<<< Updated upstream
-        clientPtr->newTransactionAsync([=](const std::shared_ptr<Transaction> &transPtr) mutable
-                                       {
-                                           transPtr->execSqlAsync(
-                                               "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at, t.votes, users.username, users.image_url from topics t left join users on t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
-                                               [=](const Result &rows) mutable
-                                               {
-                                                   ret["topics"] = Json::arrayValue;
-
-                                                   LOG_DEBUG << rows.size();
-                                                   for (auto &r : rows)
-                                                   {
-                                                       Json::Value topic;
-                                                       topic["description"] = r["description"].as<std::string>();
-                                                       topic["visible"] = r["visible1"].as<bool>();
-                                                       topic["posted_by"] = r["posted_by"].as<std::string>();
-                                                       topic["created_at"] = r["created_at"].as<std::string>();
-                                                       topic["updated_at"] = r["updated_at"].as<std::string>();
-                                                       topic["topic_id"] = r["id"].as<std::string>();
-                                                       topic["username"] = r["username"].as<std::string>();
-                                                       topic["votes"] = r["votes"].as<std::string>();
-                                                       topic["image_url"] = r["image_url"].as<std::string>();
-
-                                                       ret["topics"].append(topic);
-                                                   }
-=======
         clientPtr->newTransactionAsync(
             [=](const std::shared_ptr<Transaction> &transPtr) mutable
             {
                 transPtr->execSqlAsync(
                     "select count(1) over(), t.id, t.description, t.visible1, t.created_at, t.posted_by, t.updated_at,"
-                    "t.votes, t.answer_accepted, users.username, users.image_url from topics t left join users on "
-                    "t.posted_by=users.id  where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
+                    "t.votes, t.answer_accepted, users.username, users.image_url from topics t left join users on t.posted_by=users.id  "
+                    "where t.op_id=$1  and t.created_at > $2 order by t.created_at asc limit $3",
                     [=](const Result &rows) mutable
                     {
                         ret["topics"] = Json::arrayValue;
@@ -358,23 +332,21 @@ void Topic::getDiscussion(const HttpRequestPtr &req, Callback callback, const si
                             topic["image_url"] = r["image_url"].as<std::string>();
                             topic["answer_accepted"] = r["answer_accepted"].as<bool>();
 
-                            ret["topics"]
-                                .append(topic);
+                            ret["topics"].append(topic);
                         }
->>>>>>> Stashed changes
 
-                                                   callback(jsonResponse(std::move(ret)));
-                                                   return;
-                                               },
-                                               [=](const DrogonDbException &e) mutable
-                                               {
-                                                   LOG_DEBUG << e.base().what();
-                                                   ret["error"] = (std::string)e.base().what();
-                                                   callback(jsonResponse(std::move(ret)));
-                                                   return;
-                                               },
-                                               tid, created_at, limit);
-                                       });
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    },
+                    [=](const DrogonDbException &e) mutable
+                    {
+                        LOG_DEBUG << e.base().what();
+                        ret["error"] = (std::string)e.base().what();
+                        callback(jsonResponse(std::move(ret)));
+                        return;
+                    },
+                    tid, created_at, limit);
+            });
     }
 }
 
@@ -420,7 +392,6 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
     }
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
-        auto customConfig = app().getCustomConfig();
         auto transPtr = co_await clientPtr->newTransactionCoro();
         // get data from json to variables so that we do not need to operate on json
         auto title = topic.get("title", "").asString();
@@ -474,9 +445,10 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
                 }
                 LOG_DEBUG << tag;
             }
+            // TODO: fix this with internal::orm::sql_binder so that sql injection does not happen
             std::stringstream binder;
             std::string s;
-            
+
             join(tagList, ',', s);
             binder << "select * from tags where name in (" << s << ")";
             try
@@ -562,15 +534,21 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             // in this case row will be empty
             auto row = co_await transPtr->execSqlCoro("select id, slug from topics where op_id=0 and id=$1", tid);
             LOG_DEBUG << row.size();
-            if(row.size()) { // topic is original topic
-                for(auto &r: row) {
+            if (row.size())
+            { // topic is original topic
+                for (auto &r : row)
+                {
                     id = r["id"].as<std::string>();
                     slug = r["slug"].as<std::string>();
                 }
-            } else {
+            }
+            else
+            {
                 auto row = co_await transPtr->execSqlCoro("select id, slug from topics where id in (select op_id from topics where op_id!=0 and id=$1)", tid);
-                if(row.size()) { // topic is original topic
-                    for(auto &r: row) {
+                if (row.size())
+                { // topic is original topic
+                    for (auto &r : row)
+                    {
                         id = r["id"].as<std::string>();
                         slug = r["slug"].as<std::string>();
                     }
@@ -582,58 +560,6 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
             co_return;
         }
         catch (const DrogonDbException &e)
-        {
-            ret["error"] = (std::string)e.base().what();
-            callback(jsonResponse(std::move(ret)));
-            co_return;
-        }
-    }
-    co_return;
-}
-
-auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid, const std::string& aid) -> Task<>
-{
-    Json::Value ret;
-
-    auto customConfig = app().getCustomConfig();
-    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
-
-    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
-
-    if (jwt_secret == "")
-    {
-        ret["error"] = "JWT not configured";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
-    if (!optionalToken.has_value())
-    {
-        ret["error"] = "Authentication Error";
-        callback(jsonResponse(std::move(ret)));
-        co_return;
-    }
-
-    Token jwt = optionalToken.value();
-
-    auto user_id = jwt.userID;
-    LOG_DEBUG << user_id;
-    {
-        auto clientPtr = drogon::app().getFastDbClient("default");
-        auto transPtr = co_await clientPtr->newTransactionCoro();
-        try {
-            // find it an answer is already accepted then make it unaccepted
-            auto r = co_await transPtr->execSqlCoro("select id from topics where op_id=$1 and answer_accepted=true", tid);
-            if(r.size() != 0) {
-                auto id = r[0]["id"].as<size_t>();
-                co_await transPtr->execSqlCoro("update topics set answer_accepted=false where id=$1", id);
-            }
-            // now we can accept new answer
-            co_await transPtr->execSqlCoro("update topics set answer_accepted=true where id=$1", aid);
-            ret["success"] = true;
-            callback(jsonResponse(std::move(ret)));
-            co_return;
-        } catch (const DrogonDbException &e)
         {
             ret["error"] = (std::string)e.base().what();
             callback(jsonResponse(std::move(ret)));
