@@ -39,6 +39,16 @@ Features
 2. UI code is small, simple and snappy. Thanks to Svelte.
 3. Password is encrypted using award winner argon algorithm.
 
+What Works
+==========
+1. Registration
+2. Login
+3. New topic creation
+4. Answering a topic
+5. Voting
+6. Accepting an answer
+7. Editing a topic
+
 TODO
 ====
 1. Implement Redis LRU cache.
@@ -46,5 +56,3 @@ TODO
 3. Implement reputation system.
 4. Implement badges.
 5. Implement more items on profile.
-6. Implement voting on question.
-7. Implement accepting answer on topics.
