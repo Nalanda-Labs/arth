@@ -568,3 +568,67 @@ auto Topic::editTopic(const HttpRequestPtr req, std::function<void(const HttpRes
     }
     co_return;
 }
+
+auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string &tid, const std::string &aid) -> Task<>
+{
+    Json::Value ret;
+
+    auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    Token jwt = optionalToken.value();
+
+    auto user_id = jwt.userID;
+    LOG_DEBUG << user_id;
+
+    {
+        auto clientPtr = drogon::app().getFastDbClient("default");
+        auto transPtr = co_await clientPtr->newTransactionCoro();
+
+        try
+        {
+            auto r = co_await transPtr->execSqlCoro("select * from topics where answer_accepted=true and op_id=$1", tid);
+            if (r.size() != 0)
+            {
+                auto id = r[0]["id"].as<size_t>();
+                co_await transPtr->execSqlCoro("update topics set answer_accepted=false where id=$1", id);
+                std::stringstream sstream(aid);
+                size_t result;
+                sstream >> result;
+                if (id == result)
+                {
+                    ret["success"] = true;
+                    callback(jsonResponse(std::move(ret)));
+                    co_return;
+                }
+            }
+            co_await transPtr->execSqlCoro("update topics set answer_accepted=true where id=$1", aid);
+            ret["success"] = true;
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+        catch (const DrogonDbException &e)
+        {
+            ret["error"] = (std::string)e.base().what();
+            callback(jsonResponse(std::move(ret)));
+            co_return;
+        }
+    }
+    co_return;
+}

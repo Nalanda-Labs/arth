@@ -5,7 +5,7 @@
   import "../../../_utils.scss";
   import TagList from "../../../../components/_TagList.svelte";
   import { stores } from "@sapper/app";
-import Swal from "sweetalert2";
+  import Swal from "sweetalert2";
 
   export let id;
   export let slug;
@@ -152,7 +152,7 @@ import Swal from "sweetalert2";
           if (topics[i].topic_id == elementID) {
             topics[i].votes = vote + parseInt(topics[i].votes);
             topics = topics;
-            break
+            break;
           }
         }
       }
@@ -165,6 +165,7 @@ import Swal from "sweetalert2";
     }
     const response = await api.post(
       `accept-answer/${id}/${elementID}/`,
+      {},
       localStorage.getItem("jwt")
     );
 
@@ -173,7 +174,11 @@ import Swal from "sweetalert2";
     } else {
       for (var i = 0; i < topics.length; i++) {
         if (topics[i].topic_id == elementID) {
-          topics[i].answer_accepted = true;
+          if(topics[i].answer_accepted == false) {
+            topics[i].answer_accepted = true;
+          } else {
+            topics[i].answer_accepted = false;
+          }
         } else {
           topics[i].answer_accepted = false;
         }
@@ -207,7 +212,11 @@ import Swal from "sweetalert2";
       <br />
       <div style="text-align: center;font-size: 24px">
         {#if $session.user}
-          <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, id)}>
+          <a
+            href="/vote-up"
+            class="upvote"
+            on:click|preventDefault={vote(1, id)}
+          >
             <i class="fas fa-angle-up" />
           </a>
         {/if}
@@ -215,7 +224,11 @@ import Swal from "sweetalert2";
         <span style="text-align:center">{votes}</span>
         <br />
         {#if $session.user}
-          <a href="/vote-down" class="downvote" on:click|preventDefault={vote(-1, id)}>
+          <a
+            href="/vote-down"
+            class="downvote"
+            on:click|preventDefault={vote(-1, id)}
+          >
             <i class="fas fa-angle-down" />
           </a>
         {/if}
@@ -279,7 +292,7 @@ import Swal from "sweetalert2";
     </div>
   </div>
   <div style="clear:both" />
-  {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts }}
+  {#each topics as { topic_id, description, votes, posted_by, username, initials, image_url, shown_ts, answer_accepted }}
     <hr style="border-bottom:1px solid;color:#eee" />
     <div>
       <div style="float:left;margin-right:10px">
@@ -299,7 +312,11 @@ import Swal from "sweetalert2";
         <br />
         <div style="text-align: center;font-size: 24px">
           {#if $session.user}
-            <a href="/vote-up" class="upvote" on:click|preventDefault={vote(1, topic_id)}>
+            <a
+              href="/vote-up"
+              class="upvote"
+              on:click|preventDefault={vote(1, topic_id)}
+            >
               <i class="fas fa-angle-up" />
             </a>
           {/if}
@@ -314,6 +331,18 @@ import Swal from "sweetalert2";
             >
               <i class="fas fa-angle-down" />
             </a>
+          {/if}
+          <br/>
+          {#if posted_by == $session.user_id}
+            {#if answer_accepted}
+              <a href="/vote-down" on:click|preventDefault={acceptAnswer(topic_id)}>
+                <i class="fas fa-check" style="color: #3DDC84" />
+              </a>
+            {:else}
+              <a href="/vote-down" on:click|preventDefault={acceptAnswer(topic_id)}>
+                <i class="fas fa-check" style="color: #ddd" />
+              </a>
+            {/if}
           {/if}
         </div>
       </div>
@@ -393,6 +422,6 @@ import Swal from "sweetalert2";
     margin-top: -10px;
   }
   p {
-      font-weight: 300;
+    font-weight: 300;
   }
 </style>

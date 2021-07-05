@@ -31,6 +31,7 @@ namespace api
                                                  "time={string created_at}&limit={uint limit}",
                           Get, Options);
             ADD_METHOD_TO(Topic ::editTopic, "/api/v1/t/edit-topic/{string id}/", Post, Options);
+            ADD_METHOD_TO(Topic ::acceptAnswer, "/api/v1/accept-answer/{string tid}/{string aid}/", Post, Options);
             METHOD_LIST_END
 
             void createTopic(const HttpRequestPtr &req, Callback callback);
@@ -38,6 +39,7 @@ namespace api
             void getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
                                const std::string &created_at, const size_t &limit = 10);
             auto editTopic(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid) -> Task<>;
+            auto acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid, const std::string& ria) -> Task<>;
         };
     } // namespace v1
 } // namespace api

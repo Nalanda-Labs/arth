@@ -31,6 +31,7 @@ set(arth_sources
     src/api/v1/posts.cc
     src/api/v1/index.cc
     src/api/v1/users.cc
+    src/api/v1/votes.cc
     )
 
 add_executable(${PROJECT_NAME} ${arth_sources})
