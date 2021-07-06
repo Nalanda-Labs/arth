@@ -63,16 +63,16 @@
         let year = asked_ts.getYear() + 1900;
         shown_ts = asked_ts.getDay() + "/" + asked_ts.getMonth() + "/" + year;
       } else if (172800 <= shown_ts && shown_ts < 259200) {
-        shown_ts = "2 days ago";
+        shown_ts = "asked 2 days ago";
       } else if (86400 <= shown_ts && shown_ts < 172800) {
-        shown_ts = "yesterday";
+        shown_ts = "asked yesterday";
       } else if (3600 <= shown_ts && shown_ts < 8640000) {
-        shown_ts = Math.floor(shown_ts / 3600) + " h";
+        shown_ts = 'asked ' + Math.floor(shown_ts / 3600) + " h ago";
       } else if (60 <= shown_ts && shown_ts < 3600) {
         console.log(shown_ts);
-        shown_ts = Math.floor(shown_ts / 60) + " m";
+        shown_ts = 'asked ' + Math.floor(shown_ts / 60) + " m ago";
       } else {
-        shown_ts = shown_ts + " s";
+        shown_ts = 'asked ' + shown_ts + " s ago";
       }
     }
     response = await api.get(
@@ -214,7 +214,7 @@
         {#if $session.user}
           <a
             href="/vote-up"
-            class="upvote"
+            class="anchor"
             on:click|preventDefault={vote(1, id)}
           >
             <i class="fas fa-angle-up" />
@@ -226,7 +226,7 @@
         {#if $session.user}
           <a
             href="/vote-down"
-            class="downvote"
+            class="anchor"
             on:click|preventDefault={vote(-1, id)}
           >
             <i class="fas fa-angle-down" />
@@ -314,7 +314,7 @@
           {#if $session.user}
             <a
               href="/vote-up"
-              class="upvote"
+              class="anchor"
               on:click|preventDefault={vote(1, topic_id)}
             >
               <i class="fas fa-angle-up" />

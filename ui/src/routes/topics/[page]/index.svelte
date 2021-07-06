@@ -138,6 +138,7 @@
         {/each}
         <hr style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px" />
     </div>
+    {#if count}
     <svelte:component
 		this={LightPaginationNav}
 		totalItems={count}
@@ -146,4 +147,5 @@
 		showStepOptions={true}
 		on:setPage={(e) => (currentPage = e.detail.page)}
 	/>
+    {/if}
 </div>

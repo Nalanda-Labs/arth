@@ -48,9 +48,10 @@ find_library( DL_LIBRARY libpq.so  REQUIRED)
 find_library( DL_LIBRARY libdl.so  REQUIRED)
 find_library( DL_LIBRARY libargon2.a  REQUIERED)
 find_library( DL_LIBRARY libbsd.so  REQUIERED)
+find_library( DL_LIBRARY libhiredis.so REQUIRED)
 find_package(Drogon REQUIRED)
 find_library(argon2 REQUEIRD)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon trantor ${DL_LIBRARY} 
 	Threads::Threads uuid jsoncpp cares brotlicommon z brotlienc brotlidec
-	pq ssl crypto argon2 bsd dl sqlite3)
+	pq ssl crypto argon2 bsd dl hiredis)
