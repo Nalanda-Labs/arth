@@ -60,9 +60,10 @@ CREATE TABLE public.topics (
 	slug VARCHAR(256) NULL DEFAULT NULL::VARCHAR,
 	views INT8 NULL DEFAULT 0:::INT8,
 	rowid INT8 NOT VISIBLE NOT NULL DEFAULT unique_rowid(),
+	answer_accepted BOOL NULL DEFAULT false,
 	CONSTRAINT topics_pkey PRIMARY KEY (id ASC),
 	INDEX uatime_idx (updated_at ASC),
-	FAMILY "primary" (id, title, description, tag_ids, posted_by, created_at, updated_at, upadted_by, visible1, op_id, updated_by, votes, reply_to, slug, views, rowid)
+	FAMILY "primary" (id, title, description, tag_ids, posted_by, created_at, updated_at, upadted_by, visible1, op_id, updated_by, votes, reply_to, slug, views, rowid, answer_accepted)
 );
 CREATE SEQUENCE public.users_id_seq MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT 1 START 1;
 CREATE TABLE public.users (
@@ -120,10 +121,11 @@ CREATE TABLE public.users (
 CREATE TABLE public.votes (
 	topic_id INT8 NOT NULL,
 	user_id INT8 NOT NULL,
-	upvote BOOL NOT NULL,
 	rowid INT8 NOT VISIBLE NOT NULL DEFAULT unique_rowid(),
+	vote INT8 NULL DEFAULT 0:::INT8,
 	CONSTRAINT votes_pkey PRIMARY KEY (topic_id ASC, user_id ASC),
-	FAMILY "primary" (topic_id, user_id, upvote, rowid)
+	UNIQUE INDEX votes_topic_id_user_id_key (topic_id ASC, user_id ASC),
+	FAMILY "primary" (topic_id, user_id, rowid, vote)
 );
 ALTER TABLE public.votes ADD CONSTRAINT votes_topic_id_fkey FOREIGN KEY (topic_id) REFERENCES public.topics(id);
 ALTER TABLE public.votes ADD CONSTRAINT votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);

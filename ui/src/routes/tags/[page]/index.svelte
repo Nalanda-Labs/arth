@@ -49,7 +49,7 @@
 	<div class="row">
 		{#each tags as { id, info, name, topic_count }}
 			<Card
-				style="width:150px;height:200px;margin-right:20px;margin-top:10px;margin-left:10px"
+				style="width:150px;height:150px;margin-right:20px;margin-top:10px;margin-left:10px"
 			>
 				<a
 					class="anchor"

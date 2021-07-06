@@ -174,7 +174,7 @@
     } else {
       for (var i = 0; i < topics.length; i++) {
         if (topics[i].topic_id == elementID) {
-          if(topics[i].answer_accepted == false) {
+          if (topics[i].answer_accepted == false) {
             topics[i].answer_accepted = true;
           } else {
             topics[i].answer_accepted = false;
@@ -211,32 +211,24 @@
       {/if}
       <br />
       <div style="text-align: center;font-size: 24px">
-        {#if $session.user}
-          <a
-            href="/vote-up"
-            class="anchor"
-            on:click|preventDefault={vote(1, id)}
-          >
-            <i class="fas fa-angle-up" />
-          </a>
-        {/if}
+        <a href="/vote-up" class="anchor" on:click|preventDefault={vote(1, id)}>
+          <i class="fas fa-angle-up" />
+        </a>
         <br />
         <span style="text-align:center">{votes}</span>
         <br />
-        {#if $session.user}
-          <a
-            href="/vote-down"
-            class="anchor"
-            on:click|preventDefault={vote(-1, id)}
-          >
-            <i class="fas fa-angle-down" />
-          </a>
-        {/if}
+        <a
+          href="/vote-down"
+          class="anchor"
+          on:click|preventDefault={vote(-1, id)}
+        >
+          <i class="fas fa-angle-down" />
+        </a>
       </div>
     </div>
     <div style="float:left; position:relative;width:calc(100% - 70px)">
       <span style="font-weight:bold;color:#888">{username}</span>
-      <span style="float:right">{shown_ts}</span>
+      <span style="float:right">posted {shown_ts}</span>
       <svelte:component this={Viewer} {value} />
       <TagList {taglist} />
       {#if $session.user}
@@ -311,35 +303,37 @@
         {/if}
         <br />
         <div style="text-align: center;font-size: 24px">
-          {#if $session.user}
-            <a
-              href="/vote-up"
-              class="anchor"
-              on:click|preventDefault={vote(1, topic_id)}
-            >
-              <i class="fas fa-angle-up" />
-            </a>
-          {/if}
+          <a
+            href="/vote-up"
+            class="anchor"
+            on:click|preventDefault={vote(1, topic_id)}
+          >
+            <i class="fas fa-angle-up" />
+          </a>
           <br />
           <span style="text-align:center">{votes}</span>
           <br />
-          {#if $session.user}
-            <a
-              href="/vote-down"
-              class="anchor"
-              on:click|preventDefault={vote(-1, topic_id)}
-            >
-              <i class="fas fa-angle-down" />
-            </a>
-          {/if}
-          <br/>
+          <a
+            href="/vote-down"
+            class="anchor"
+            on:click|preventDefault={vote(-1, topic_id)}
+          >
+            <i class="fas fa-angle-down" />
+          </a>
+          <br />
           {#if posted_by == $session.user_id}
             {#if answer_accepted}
-              <a href="/vote-down" on:click|preventDefault={acceptAnswer(topic_id)}>
+              <a
+                href="/vote-down"
+                on:click|preventDefault={acceptAnswer(topic_id)}
+              >
                 <i class="fas fa-check" style="color: #3DDC84" />
               </a>
             {:else}
-              <a href="/vote-down" on:click|preventDefault={acceptAnswer(topic_id)}>
+              <a
+                href="/vote-down"
+                on:click|preventDefault={acceptAnswer(topic_id)}
+              >
                 <i class="fas fa-check" style="color: #ddd" />
               </a>
             {/if}
@@ -348,7 +342,7 @@
       </div>
       <div style="float:left; position:relative;width:calc(100% - 70px)">
         <span style="font-weight:bold;color:#888">{username}</span>
-        <span style="float:right">{shown_ts}</span>
+        <span style="float:right">posted {shown_ts}</span>
         <svelte:component this={Viewer} value={description} />
         {#if $session.user}
           <div style="float:right">
