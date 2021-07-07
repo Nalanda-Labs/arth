@@ -603,9 +603,14 @@ auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const Http
 
         try
         {
-            auto r = co_await transPtr->execSqlCoro("select * from topics where answer_accepted=true and op_id=$1", tid);
+            auto r = co_await transPtr->execSqlCoro("select * from topics where op_id=$1 and answer_accepted=true", tid);
             if (r.size() != 0)
             {
+                if(r[0]["posted_by"].as<size_t> != user_id) {
+                    ret["error"] = "Only author of topic can accept the answer.";
+                    callback(jsonResponse(std::move(ret)));
+                    co_return;
+                }
                 auto id = r[0]["id"].as<size_t>();
                 co_await transPtr->execSqlCoro("update topics set answer_accepted=false where id=$1", id);
                 std::stringstream sstream(aid);

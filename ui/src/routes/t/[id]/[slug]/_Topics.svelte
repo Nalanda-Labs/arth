@@ -133,6 +133,9 @@
       Swal.fire("You need to be logged in before voting.");
       return;
     }
+    if(parseInt(posted_by)!= $session.user_id) {
+      Swal.fire("Only author of topic can accept the answer.");
+    }
     let data = {};
     data.vote = vote;
     data.id = elementID;
