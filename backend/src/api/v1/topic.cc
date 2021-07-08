@@ -603,17 +603,43 @@ auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const Http
 
         try
         {
-            auto r = co_await transPtr->execSqlCoro("select * from topics where op_id=$1 and answer_accepted=true", tid);
+            auto r = co_await transPtr->execSqlCoro("select posted_by from topics where id=$1", tid);
+            if(r.size() != 0) {
+                auto topic_user_id = r[0]["posted_by"].as<int64_t>();
+                if(user_id == topic_user_id) {
+                    ret["error"] = "You cannot accept your own answer.";
+                    callback(jsonResponse(std::move(ret)));
+                    co_return;        
+                }
+            }
+            r = co_await transPtr->execSqlCoro("select * from topics where op_id=$1 and answer_accepted=true", tid);
+            auto answer_accepted_reputation = customConfig.get("answer_accepted_reputation", 15).asInt64();
+            auto answer_accepting_reputation = customConfig.get("answer_accepting_reputation", 2).asInt64();
             if (r.size() != 0)
             {
-                auto user_id1 = r[0]["posted_by"].as<int64_t>();
-                if(user_id1 != (int64_t)user_id) {
-                    ret["error"] = "Only author of topic can accept the answer.";
-                    callback(jsonResponse(std::move(ret)));
-                    co_return;
-                }
                 auto id = r[0]["id"].as<size_t>();
+                auto receiving_user = r[0]["posted_by"].as<size_t>();
                 co_await transPtr->execSqlCoro("update topics set answer_accepted=false where id=$1", id);
+                // fetch the user's whose reputation is to be decreased
+                auto r1 = co_await transPtr->execSqlCoro("select reputation from users where id=$1 limit 1", receiving_user);
+                LOG_DEBUG << r1.size();
+                if(r1.size() != 0) {
+                    auto reputation = r1[0]["reputation"].as<int64_t>();
+                    LOG_DEBUG << "Hello";
+                    if(reputation - answer_accepted_reputation < 1) {
+                        co_await transPtr->execSqlCoro("update users set reputation = 1 where id=$1", receiving_user);
+                    } else {
+                        co_await transPtr->execSqlCoro("update users set reputation = reputation - $2 where id=$1", receiving_user, answer_accepted_reputation);
+                    }
+                    r1 = co_await transPtr->execSqlCoro("select reputation from users where id=$1 limit 1", user_id);
+                    LOG_DEBUG << "Hello1";
+                    reputation = r1[0]["reputation"].as<int64_t>();
+                    if(reputation - answer_accepting_reputation < 1) {
+                        co_await transPtr->execSqlCoro("update users set reputation = 1 where id=$1", user_id);
+                    } else {
+                        co_await transPtr->execSqlCoro("update users set reputation = reputation - $2 where id=$1", user_id, answer_accepted_reputation);
+                    }
+                }
                 std::stringstream sstream(aid);
                 size_t result;
                 sstream >> result;
@@ -624,6 +650,10 @@ auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const Http
                     co_return;
                 }
             }
+            r = co_await transPtr->execSqlCoro("select * from topics where id=$1", aid);
+            auto receiving_user = r[0]["posted_by"].as<size_t>();
+            co_await transPtr->execSqlCoro("update users set reputation = reputation + $2 where id=$1", receiving_user, answer_accepted_reputation);
+            co_await transPtr->execSqlCoro("update users set reputation = reputation + $2 where id=$1", user_id, answer_accepting_reputation);
             co_await transPtr->execSqlCoro("update topics set answer_accepted=true where id=$1", aid);
             ret["success"] = true;
             callback(jsonResponse(std::move(ret)));
