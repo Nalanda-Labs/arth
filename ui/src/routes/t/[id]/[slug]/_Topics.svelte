@@ -61,7 +61,8 @@
       if (shown_ts >= 259200) {
         asked_ts = new Date(time);
         let year = asked_ts.getYear() + 1900;
-        shown_ts = asked_ts.getDay() + "/" + asked_ts.getMonth() + "/" + year;
+        let month = asked_ts.getMonth() + 1;
+        shown_ts = asked_ts.getDate() + "/" + month + "/" + year;
       } else if (172800 <= shown_ts && shown_ts < 259200) {
         shown_ts = "asked 2 days ago";
       } else if (86400 <= shown_ts && shown_ts < 172800) {
@@ -93,7 +94,8 @@
         if (shown_ts >= 259200) {
           asked_ts = new Date(topics[i].created_at);
           let year = asked_ts.getYear() + 1900;
-          shown_ts = asked_ts.getDay() + "/" + asked_ts.getMonth() + "/" + year;
+          let month = asked_ts.getMonth() + 1;
+          shown_ts = asked_ts.getDate() + "/" + month + "/" + year;
         } else if (172800 <= shown_ts && shown_ts < 259200) {
           shown_ts = "2 days ago";
         } else if (86400 <= shown_ts && shown_ts < 172800) {
@@ -123,18 +125,11 @@
     } else {
       document.getElementById("editor").style.display = "none";
     }
-    // var editorDiv = document.getElementById("container");
-    // console.log(editorDiv.scrollHeight, editorDiv.scrollTop, editorDiv.clientHeight);
-    // editorDiv.scrollTop = editorDiv.scrollHeight;
-    // console.log(editorDiv.scrollHeight, editorDiv.scrollTop, editorDiv.clientHeight);
   }
   async function vote(vote, elementID) {
     if (!$session.user) {
       Swal.fire("You need to be logged in before voting.");
       return;
-    }
-    if(parseInt(posted_by)!= $session.user_id) {
-      Swal.fire("Only author of topic can accept the answer.");
     }
     let data = {};
     data.vote = vote;
@@ -165,6 +160,9 @@
     if (!$session.user) {
       Swal.fire("You need to be logged in before accepting answer.");
       return;
+    }
+    if(parseInt(posted_by)!= $session.user_id) {
+      Swal.fire("Only author of topic can accept the answer.");
     }
     const response = await api.post(
       `accept-answer/${id}/${elementID}/`,

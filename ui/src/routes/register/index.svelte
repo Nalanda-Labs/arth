@@ -18,7 +18,8 @@
 	import Button, { Label } from "@smui/button";
 	import Swal from 'sweetalert2';
 	import "../_utils.scss";
-import { mdiScrewLag } from "@mdi/js";
+	import Snackbar, { Actions } from '@smui/snackbar';
+	import IconButton from '@smui/icon-button';
 
 	const { session } = stores();
 
@@ -29,6 +30,8 @@ import { mdiScrewLag } from "@mdi/js";
 	let name = "";
 	let token = {};
 	let response = {};
+	let errorWithClose;
+	let messageWithClose;
 
 	async function onSubmit(token) {
 		response = await post(`auth/register`, {
@@ -39,16 +42,15 @@ import { mdiScrewLag } from "@mdi/js";
 			token,
 		});
 
-		// TODO handle network errors
-		errors = response.error;
-
-		if (errors) {
+		if (response.error) {
 			if(errors === 'User exists') {
-				Swal.fire("Email already registered. If this is an error try restting your password or contact support.");
+				response.error = "Email already registered. If this is an error try restting your password or contact support.";
+				errorWithClose.open();
+			} else {
+				errorWithClose.open();
 			}
-			return;
 		} else {
-			Swal.fire(response.message);
+			messageWithClose.open();
 		}
 	}
 
@@ -69,7 +71,18 @@ import { mdiScrewLag } from "@mdi/js";
 </svelte:head>
 
 <div class="wrapper">
-	<ListErrors {response} />
+	<Snackbar bind:this={errorWithClose}>
+		<Label>{response.error}</Label>
+		<Actions>
+		  <IconButton class="material-icons" title="Dismiss">close</IconButton>
+		</Actions>
+	</Snackbar>
+	<Snackbar bind:this={messageWithClose}>
+		<Label>{response.message}</Label>
+		<Actions>
+		  <IconButton class="material-icons" title="Dismiss">close</IconButton>
+		</Actions>
+	</Snackbar>
 	<div>
 		<h3>Sign Up</h3>
 		<p class="text-xs-center"><a class="anchor" href="/login">Have an account?</a></p>

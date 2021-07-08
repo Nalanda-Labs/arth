@@ -186,8 +186,5 @@
     :global(.bytemd-editor .CodeMirror) {
       height: 90% !important;
     }
-    .container {
-      margin-left: 0px;
-    }
   }
 </style>

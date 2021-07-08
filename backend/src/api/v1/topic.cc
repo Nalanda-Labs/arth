@@ -606,7 +606,8 @@ auto Topic::acceptAnswer(const HttpRequestPtr req, std::function<void(const Http
             auto r = co_await transPtr->execSqlCoro("select * from topics where op_id=$1 and answer_accepted=true", tid);
             if (r.size() != 0)
             {
-                if(r[0]["posted_by"].as<size_t> != user_id) {
+                auto user_id1 = r[0]["posted_by"].as<int64_t>();
+                if(user_id1 != (int64_t)user_id) {
                     ret["error"] = "Only author of topic can accept the answer.";
                     callback(jsonResponse(std::move(ret)));
                     co_return;

@@ -168,8 +168,8 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
                     std::string ec = convert.str();
                     std::string token = Base64::encode(ec);
 
-                    *transPtr << "insert into users(username, username_lower, email, trust_level,"
-                                 "password_hash, salt, email_verification_code, image_url) values($1, $2, $3, 0, $4, $5, $6, $7);"
+                    *transPtr << "insert into users(username, username_lower, email, "
+                                 "password_hash, salt, email_verification_code, image_url) values($1, $2, $3, $4, $5, $6, $7);"
                               << username << username_lower << email << password_hash << salt << token  << "https://www.gravatar.com/avatar/" + email_hash >>
                         [=, this](const Result &r) mutable {
                             auto smtp = SMTPMail();
