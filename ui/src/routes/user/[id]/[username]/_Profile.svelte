@@ -21,6 +21,7 @@
     let website = "";
     let twitter = "";
     let response = {};
+    let reputation ="";
 
     let { session } = stores();
 
@@ -39,6 +40,7 @@
             git = response.git;
             website = response.website;
             twitter = response.twitter;
+            reputation = response.reputation;
 
             if (response.image_url !== "") {
                 image_url = response.image_url;
@@ -269,6 +271,7 @@
                 >update gravatar</a
             > to change it.
         </p>
+        <span style="text-align: center"><span style="font-size:24px">{reputation}</span><span style="position:relative;top:-5px">&nbsp;REPUTATION</span></span>
     </div>
     <div class="col-12 col-sm-12 col-md-5" style="float:left">
         <table>

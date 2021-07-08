@@ -41,7 +41,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
     {
         auto clientPtr = app().getFastDbClient("default");
         clientPtr->execSqlAsync(
-            "select username, name, title, designation, location, email, image_url, git, website, twitter from users "
+            "select username, name, title, designation, location, email, image_url, git, website, twitter, reputation from users "
             "where id = $1",
 
             [=](const Result &r) mutable {
@@ -63,6 +63,7 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
                 ret["git"] = row["git"].as<std::string>();
                 ret["website"] = row["website"].as<std::string>();
                 ret["twitter"] = row["twitter"].as<std::string>();
+                ret["reputation"] = row["reputation"].as<std::string>();
 
                 auto customConfig = app().getCustomConfig();
                 const auto jwt_secret = customConfig.get("jwt_secret", "").asString();

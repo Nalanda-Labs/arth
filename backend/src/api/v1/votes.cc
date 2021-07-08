@@ -75,6 +75,7 @@ auto Votes::votes(const HttpRequestPtr req, std::function<void(const HttpRespons
             int64_t reputation = 0;
             int64_t reputation_gain = customConfig.get("vote_reputation_gain", 10).asInt64();
             int64_t reputation_loss = customConfig.get("vote_reputation_loss", -10).asInt64();
+            int64_t downvote_reputation_loss = customConfig.get("downvote_reputation_loss", 2).asInt64();
             if (r.size() == 0)
             {
                 ret["error"] = "Cannot find user who has to receive vote.";
@@ -84,7 +85,8 @@ auto Votes::votes(const HttpRequestPtr req, std::function<void(const HttpRespons
             else
             {
                 receiving_user = r[0]["posted_by"].as<int64_t>();
-                LOG_DEBUG << receiving_user;
+                auto r1 = co_await transPtr->execSqlCoro("select reputation from users where id=$1", receiving_user);
+                reputation = r[0]["reputation"].as<int64_t>();
                 if (receiving_user == user_id)
                 {
                     ret["error"] = "You cannot vote on your own post.";
@@ -106,13 +108,13 @@ auto Votes::votes(const HttpRequestPtr req, std::function<void(const HttpRespons
                     if (reputation + reputation_loss < 1)
                     {
                         // reputation cannot fall below 1
-                        co_await transPtr->execSqlCoro("update users set reputation = 1 where id=$2", reputation, receiving_user);
+                        co_await transPtr->execSqlCoro("update users set reputation = 1 where id=$2", receiving_user);
                     }
                     else
                     {
-                        LOG_DEBUG << "Downvote received";
                         co_await transPtr->execSqlCoro("update users set reputation = reputation + $2 where id=$1", receiving_user, reputation_loss);
                     }
+                    co_await transPtr->execSqlCoro("u")
                 }
                 // we return success = true to avoid a null response
                 ret["success"] = true;
