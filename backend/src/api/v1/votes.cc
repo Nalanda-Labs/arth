@@ -114,7 +114,6 @@ auto Votes::votes(const HttpRequestPtr req, std::function<void(const HttpRespons
                     {
                         co_await transPtr->execSqlCoro("update users set reputation = reputation + $2 where id=$1", receiving_user, reputation_loss);
                     }
-                    co_await transPtr->execSqlCoro("u")
                 }
                 // we return success = true to avoid a null response
                 ret["success"] = true;

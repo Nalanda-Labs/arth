@@ -20,7 +20,7 @@ class Posts:public drogon::HttpController<Posts>
 	
     METHOD_LIST_END
    
-    void createPost(const HttpRequestPtr &req, Callback callback, size_t topic_id);
+    auto createPost(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, size_t topic_id) -> Task<>;
 	void getPost(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void updatePost(const HttpRequestPtr &req, Callback callback, size_t post_id);
 	void acceptAsAnswer(const HttpRequestPtr &req, Callback callback, size_t post_id);

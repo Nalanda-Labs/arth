@@ -37,9 +37,9 @@ namespace api
             void createTopic(const HttpRequestPtr &req, Callback callback);
             void getTopic(const HttpRequestPtr &req, Callback callback, const size_t &tid, const std::string &slug = "");
             void getDiscussion(const HttpRequestPtr &req, Callback callback, const size_t &tid,
-                               const std::string &created_at, const size_t &limit = 10);
+                               const std::string &created_at, const size_t &limit = 50);
             auto editTopic(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid) -> Task<>;
-            auto acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid, const std::string& ria) -> Task<>;
+            auto acceptAnswer(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &tid, const std::string& aid) -> Task<>;
         };
     } // namespace v1
 } // namespace api

@@ -13,6 +13,7 @@
     import { onMount } from "svelte";
     import { LightPaginationNav } from "svelte-paginate";
     import * as api from "api.js";
+import { update_slot_spread } from "svelte/internal";
 
     let topics = [];
     export let page;
@@ -46,10 +47,11 @@
                 if (shown_ts >= 259200) {
                     asked_ts = new Date(topics[i].created_at);
                     let year = asked_ts.getYear() + 1900;
+                    let month = asked_ts.getMonth() + 1;
                     shown_ts = "asked on " +
-                        asked_ts.getDay() +
+                        asked_ts.getDate() +
                         "/" +
-                        asked_ts.getMonth() +
+                        month +
                         "/" +
                         year;
                 } else if (172800 <= shown_ts && shown_ts < 259200) {
@@ -70,10 +72,11 @@
                 if (shown_ts >= 259200) {
                     asked_ts = new Date(topics[i].created_at);
                     let year = updated_ts.getYear() + 1900;
+                    let month = updated_ts.getMonth() + 1;
                     shown_ts =
                         "modified on " + updated_ts.getDay() +
                         "/" +
-                        updated_ts.getMonth() +
+                        month +
                         "/" +
                         year;
                 } else if (172800 <= shown_ts && shown_ts < 259200) {

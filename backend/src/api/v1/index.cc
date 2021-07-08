@@ -17,7 +17,7 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-auto Index::index(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string &page = "1") -> Task<>
+auto Index::index(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string &page = "1") -> Task<>
 {
     Json::Value ret;
 
@@ -32,10 +32,11 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
         try
         {
             auto result = co_await clientPtr->execSqlCoro("select t.id, t.visible1, t.title, t.created_at , t.posted_by, t.updated_at, t.votes, t.views, t.slug, \
-                                                          users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags from topics t left \
+                                                          users.username, users.id as uid, array_agg(topic_tags.tag_id) as tag_id, array_agg(tags.name) as tags, t.answer_count from topics t left \
                                                           join users on t.posted_by=users.id left join topic_tags on topic_tags.topic_id=t.id left join \
                                                           tags on topic_tags.tag_id = tags.id where t.op_id=0 group by t.id, users.id order by \
-                                                          t.updated_at limit $1 offset $2", (long)limit, (long)limit*(page_no -1));
+                                                          t.updated_at limit $1 offset $2",
+                                                          (long)limit, (long)limit * (page_no - 1));
             if (result.size() == 0)
             {
                 callback(jsonResponse(std::move(ret)));
@@ -58,20 +59,15 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
                     topic["uid"] = r["uid"].as<std::string>();
                     topic["tid"] = r["tag_id"].as<std::string>();
                     topic["tags"] = r["tags"].as<std::string>();
+                    topic["answers"] = r["answer_count"].as<std::string>();
 
-                    auto rows = co_await clientPtr->execSqlCoro("select count(1) from topics where op_id!=0 and op_id=$1", r["id"].as<std::string>());
-                    for (auto &r1 : rows)
-                    {
-                        // LOG_DEBUG << r1[(Row::SizeType)0].as<size_t>();
-                        topic["answers"] = r1[(Row::SizeType)0].as<std::string>();
-                        ret["topics"].append(topic);
-                    }
+                    ret["topics"].append(topic);
                 }
                 auto rows = co_await clientPtr->execSqlCoro("select count(1) from topics");
-                    for (auto &r1 : rows)
-                    {
-                        ret["count"] = r1["count"].as<std::string>();
-                    }
+                for (auto &r1 : rows)
+                {
+                    ret["count"] = r1["count"].as<std::string>();
+                }
             }
 
             callback(jsonResponse(std::move(ret)));
@@ -85,5 +81,5 @@ auto Index::index(const HttpRequestPtr req, std::function<void(const HttpRespons
         }
     }
 
-    co_return;    
+    co_return;
 }
