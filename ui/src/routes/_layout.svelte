@@ -39,19 +39,19 @@
 		},
 		{
 			name: "Browse Topics",
-			route: "/topics/1",
+			route: "/topics/",
 			protected: false,
 			logout_only: false,
 		},
 		{
 			name: "Tags",
-			route: "/tags/1",
+			route: "/tags/",
 			protected: false,
 			logout_only: false,
 		},
 		{
 			name: "Users",
-			route: "/users/1",
+			route: "/users/",
 			protected: false,
 			logout_only: false,
 		},

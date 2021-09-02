@@ -74,3 +74,15 @@ std::string toPostgresParameterizedSql(size_t placeholderCount,
     sql << '$' << i << ')';
     return sql.str();
 }
+
+auto esHttpObject() {
+    auto customConfig = drogon::app().getCustomConfig();
+	auto index_name = customConfig.get("es_index_name", "arth").asString();
+	auto es_host = customConfig.get("es_host", "http://'localhost:9200").asString();
+	// create the index by sending put request. we do not care for response as it
+	// will work only first time and rest of time it will fail
+	// we will use elasticsearch's rest API for connecting and querying it
+	auto client = drogon::HttpClient::newHttpClient(es_host);
+	auto req = drogon::HttpRequest::newHttpRequest();
+    return req;
+}

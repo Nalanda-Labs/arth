@@ -6,6 +6,8 @@
 #include <drogon/orm/DbClient.h>
 #include <drogon/drogon_callbacks.h>
 #include <drogon/HttpController.h>
+#include <drogon/HttpClient.h>
+#include <drogon/HttpRequest.h>
 #include <stdexcept>
 #include <trantor/utils/Logger.h>
 

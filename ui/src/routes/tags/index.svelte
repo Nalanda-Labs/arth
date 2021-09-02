@@ -9,8 +9,7 @@
 	import { onMount } from "svelte";
 	import * as api from "api.js";
 	import Card, { Content } from "@smui/card";
-	import { LightPaginationNav } from "svelte-paginate";
-	import "../../_utils.scss";
+	import "../_utils.scss";
 
 	export let page;
 	if (!page) {
@@ -25,7 +24,7 @@
 			page = 1;
 		}
 
-		let response = await api.get(`tags/${page}`);
+		let response = await api.get(`tags/`);
 		if (response.tags) {
 			tags = response.tags;
 			if(tags.length > 0) {
@@ -68,14 +67,6 @@
 			</Card>
 		{/each}
 	</div>
-	<svelte:component
-		this={LightPaginationNav}
-		totalItems={count}
-		pageSize={50}
-		currentPage={currentPage}
-		showStepOptions={true}
-		on:setPage={(e) => (currentPage = e.detail.page)}
-	/>
 </div>
 
 <style>
