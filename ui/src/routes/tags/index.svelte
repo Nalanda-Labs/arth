@@ -1,8 +1,5 @@
 <script context="module">
-	export function preload({ params }, { user }) {
-		let page = params.page;
-		return { page };
-	}
+	export function preload({ params }, { user }) {}
 </script>
 
 <script>
@@ -10,28 +7,41 @@
 	import * as api from "api.js";
 	import Card, { Content } from "@smui/card";
 	import "../_utils.scss";
+	import InfiniteLoading from "svelte-infinite-loading";
 
-	export let page;
-	if (!page) {
-		page = 1;
-	}
-	let currentPage = page;
 	let tags = [];
-	let count = 0;
+	let data = [];
 
-	onMount(async () => {
-		if (!page) {
-			page = 1;
+	async function fetchdata() {
+		let last_tag = "";
+		if (tags.length) {
+			last_tag = topics[topics.length - 1].name;
 		}
-
-		let response = await api.get(`tags/`);
+		let response = await api.post(`tags/`, { last_tag: last_tag });
 		if (response.tags) {
 			tags = response.tags;
-			if(tags.length > 0) {
-				count = tags[0].count;
-			}
 		}
+	}
+	onMount(async () => {
+		await fetchData();
 	});
+	$: data = [...data, ...tags];
+	async function infiniteHandler({ detail: { loaded, complete } }) {
+		let last_tag = "";
+		if (tags.length) {
+			last_tag = topics[topics.length - 1].name;
+		}
+		let response = await api.post(`tags/`, { last_tag: last_tag });
+		if (response.tags) {
+			tags = response.tags;
+		}
+		if (tags.length) {
+			data = [...data, ...tags];
+			loaded();
+		} else {
+			complete();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -46,7 +56,7 @@
 		particular tag for topics/questions.
 	</p>
 	<div class="row">
-		{#each tags as { id, info, name, topic_count }}
+		{#each data as { id, info, name, topic_count }}
 			<Card
 				style="width:150px;height:150px;margin-right:20px;margin-top:10px;margin-left:10px"
 			>
@@ -66,6 +76,7 @@
 				>
 			</Card>
 		{/each}
+		<InfiniteLoading on:infinite={infiniteHandler} />
 	</div>
 </div>
 

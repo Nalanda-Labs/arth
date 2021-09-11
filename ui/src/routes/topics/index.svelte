@@ -7,7 +7,6 @@
   import Button, { Label } from "@smui/button";
   import { onMount } from "svelte";
   import * as api from "api.js";
-  import InfiniteScroll from "../_components/InfiniteScroll.svelte";
   import InfiniteLoading from "svelte-infinite-loading";
 
   let topics = [];
@@ -211,12 +210,6 @@
       </div>
     {/each}
     <InfiniteLoading on:infinite={infiniteHandler} />
-    <InfiniteScroll
-      hasMore={topics.length}
-      on:loadMore={() => {
-        fetchData();
-      }}
-    />
     <hr
       style="border-bottom:1px solid;color:#eee;display:block;min-width:100%;margin-top:20px"
     />
