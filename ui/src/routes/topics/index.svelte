@@ -33,7 +33,8 @@
       let now = new Date();
 
       if (asked_ts == updated_ts) {
-        let shown_ts = Math.floor((now - asked_ts) / 1000);
+        var offset = new Date().getTimezoneOffset();
+        let shown_ts = Math.floor((now - asked_ts) / 1000 + offset*60);
         if (shown_ts >= 259200) {
           asked_ts = new Date(topics[i].created_at);
           let year = asked_ts.getYear() + 1900;
@@ -54,7 +55,8 @@
         }
         topics[i].shown_ts = shown_ts;
       } else {
-        let shown_ts = Math.floor((now - updated_ts) / 1000);
+        var offset = new Date().getTimezoneOffset();
+        let shown_ts = Math.floor((now - updated_ts) / 1000 + offset*60);
         if (shown_ts >= 259200) {
           asked_ts = new Date(topics[i].created_at);
           let year = updated_ts.getYear() + 1900;
@@ -105,7 +107,8 @@
         let now = new Date();
 
         if (asked_ts == updated_ts) {
-          let shown_ts = Math.floor((now - asked_ts) / 1000);
+          var offset = new Date().getTimezoneOffset();
+          let shown_ts = Math.floor((now - asked_ts) / 1000 + offset*60);
           if (shown_ts >= 259200) {
             asked_ts = new Date(topics[i].created_at);
             let year = asked_ts.getYear() + 1900;
@@ -126,7 +129,8 @@
           }
           topics[i].shown_ts = shown_ts;
         } else {
-          let shown_ts = Math.floor((now - updated_ts) / 1000);
+          var offset = new Date().getTimezoneOffset();
+          let shown_ts = Math.floor((now - updated_ts) / 1000 + offset*60);
           if (shown_ts >= 259200) {
             asked_ts = new Date(topics[i].created_at);
             let year = updated_ts.getYear() + 1900;
@@ -198,7 +202,7 @@
         <div style="margin-top:10px;clear:both" />
         {#each tags as tag, i}
           <a
-            href="/tags/topics/tagged/{tag}"
+            href="/topics/tagged/{tag}"
             style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 4px"
             >{tag}</a
           >

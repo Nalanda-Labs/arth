@@ -27,10 +27,12 @@ namespace api
             // use METHOD_ADD to add your custom processing function here;
             ADD_METHOD_TO(Tags ::getTags, "/api/v1/get-tags/", Post, Options);
             ADD_METHOD_TO(Tags ::getAllTags, "/api/v1/tags/", Post);
+            ADD_METHOD_TO(Tags::getTopicsByTag, "/api/v1/topics/tagged/{std::string tag}", Post);
             METHOD_LIST_END
 
             void getTags(const HttpRequestPtr &req, Callback callback);
             auto getAllTags(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) -> Task<>;
+            auto getTopicsByTag(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string& tag) -> Task<>;
 
         };
     } // namespace v1

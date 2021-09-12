@@ -6,7 +6,6 @@
 </script>
 
 <script>
-  // import Editor from "../../../_components/Editor.svelte";
   import Topics from "./_Topics.svelte";
   import { stores } from "@sapper/app";
   import Button, { Label } from "@smui/button";

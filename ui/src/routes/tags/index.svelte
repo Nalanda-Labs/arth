@@ -1,5 +1,6 @@
 <script context="module">
-	export function preload({ params }, { user }) {}
+	export function preload({ params }, { user }) {
+	}
 </script>
 
 <script>

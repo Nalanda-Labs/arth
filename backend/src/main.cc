@@ -18,7 +18,7 @@ int main() {
 			req, [](ReqResult, const HttpResponsePtr &response)
 			{
 					LOG_INFO << "receive response!";
-					LOG_INFO << response->getBody();
+					// LOG_INFO << response->getBody();
 			});
 	app().run();
 }
