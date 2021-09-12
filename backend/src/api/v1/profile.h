@@ -15,7 +15,7 @@ class Profile:public drogon::HttpController<Profile>
     ADD_METHOD_TO(Profile ::updateTitle, "/api/v1/profile/{user_id}/title/{title}/", Post);
     ADD_METHOD_TO(Profile ::updateName, "/api/v1/profile/{user_id}/name/{name}/", Post);
     ADD_METHOD_TO(Profile ::updateDesignation, "/api/v1/profile/{user_id}/designation/{designation}/", Post);
-    ADD_METHOD_TO(Profile ::updateDesignation, "/api/v1/profile/{user_id}/designation/{designation}/", Post);
+    ADD_METHOD_TO(Profile ::updateDesignation, "/api/v1/profile/{user_id}/location/{location}/", Post);
     ADD_METHOD_TO(Profile ::updateGit, "/api/v1/profile/{user_id}/git/", Post);
     ADD_METHOD_TO(Profile ::updateWebsite, "/api/v1/profile/{user_id}/website/", Post);
     ADD_METHOD_TO(Profile ::updateTwitter, "/api/v1/profile/{user_id}/twitter/", Post);

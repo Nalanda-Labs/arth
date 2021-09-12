@@ -35,8 +35,11 @@ void Profile::getProfile(const HttpRequestPtr &req, Callback callback, const lon
         logged_in = true;
     }
 
-    auto token = optionalToken.value();
-    auto viewer_id = token.userID;
+    const long viewer_id = -1;
+    if(optionalToken.has_value()) {
+        auto token = optionalToken.value();
+        auto viewer_id = token.userID;
+    }
 
     {
         auto clientPtr = app().getFastDbClient("default");

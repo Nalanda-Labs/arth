@@ -15,23 +15,28 @@ using namespace drogon;
 using namespace drogon::orm;
 using namespace api::v1;
 
-auto Users::getUsers(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string &page = "1") -> Task<>
+auto Users::getUsers(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback) -> Task<>
 {
     Json::Value ret;
 
 
     ret["users"] = Json::arrayValue;
     auto customConfig = app().getCustomConfig();
-    auto page_no = atol(page.c_str());
     int limit = customConfig.get("limit_per_page", 18).asInt64();
-    LOG_DEBUG << limit;
-    LOG_DEBUG << (page_no - 1) * limit;
+    auto json = req->getJsonObject();
+    // get data from json to variables so that we do not need to operate on json
+    Json::Value topic;
+    std::string last_user = "";
+    if (json->isMember("last_user"))
+    {
+        last_user = json->get("last_user", "").asString();
+    }
     {
         auto clientPtr = drogon::app().getFastDbClient();
         try
         {
 
-            auto result = co_await clientPtr->execSqlCoro("select count(1) over (), id, username, name, location, image_url from users limit $1 offset $2", (long)limit, (long)limit * (page_no - 1));
+            auto result = co_await clientPtr->execSqlCoro("select id, username, name, location, image_url from users where username > $1 order by reputation desc, username limit $2", last_user, (long)limit);
             if (result.size() == 0)
             {
                 callback(jsonResponse(std::move(ret)));
@@ -48,7 +53,6 @@ auto Users::getUsers(const HttpRequestPtr req, std::function<void(const HttpResp
                     user["name"] = r["name"].as<std::string>();
                     user["location"] = r["location"].as<std::string>();
                     user["image_url"] = r["image_url"].as<std::string>();
-                    user["count"] = r["count"].as<std::string>();
 
                     ret["users"].append(user);
                 }

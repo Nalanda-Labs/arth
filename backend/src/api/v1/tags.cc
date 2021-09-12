@@ -79,20 +79,36 @@ void Tags::getTags(const HttpRequestPtr &req, Callback callback)
     }
 }
 
-auto Tags::getAllTags(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string &page) -> Task<>
+auto Tags::getAllTags(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback) -> Task<>
 {
     Json::Value ret;
 
     ret["tags"] = Json::arrayValue;
     const long limit = 40;
-    auto page_no = atol(page.c_str());
-
+    auto json = req->getJsonObject();
+    // get data from json to variables so that we do not need to operate on json
+    Json::Value topic;
+    std::string last_tag = "";
+    if (json->isMember("last_tag"))
+    {
+        last_tag = json->get("last_tags", "").asString();
+    }
+    auto topic_count = 0L;
+    if (json->isMember("topic_count"))
+    {
+        topic_count = json->get("topic_count", 0).asInt64();
+    }
+    if(topic_count == 0) {
+        topic_count = INT64_MAX;
+    }
+    LOG_DEBUG << last_tag;
+    LOG_DEBUG << topic_count;
     {
         auto clientPtr = drogon::app().getFastDbClient();
         try
         {
-            auto result = co_await clientPtr->execSqlCoro("select count(1) over (), * from tags limit $1 offset $2", limit, limit * (page_no - 1));
-
+            auto result = co_await clientPtr->execSqlCoro("select * from tags where name > $1 and topic_count< $2 order by topic_count desc, name limit $3", last_tag, topic_count, limit);
+            LOG_DEBUG << result.size();
             if (result.size() == 0)
             {
                 callback(jsonResponse(std::move(ret)));
@@ -107,7 +123,6 @@ auto Tags::getAllTags(const HttpRequestPtr req, std::function<void(const HttpRes
                     tag["name"] = r["name"].as<std::string>();
                     tag["topic_count"] = r["topic_count"].as<std::string>();
                     tag["info"] = r["info"].as<std::string>();
-                    tag["count"] = r["count"].as<std::string>();
 
                     ret["tags"].append(tag);
                 }

@@ -12,26 +12,30 @@
 	let tags = [];
 	let data = [];
 
-	async function fetchdata() {
+	async function fetchData() {
 		let last_tag = "";
+		let topic_count = 0;
 		if (tags.length) {
-			last_tag = topics[topics.length - 1].name;
+			last_tag = tags[tags.length - 1].name;
+			topic_count = tags[tags.length - 1].topic_count;
 		}
-		let response = await api.post(`tags/`, { last_tag: last_tag });
+		let response = await api.post(`tags/`, { last_tag: last_tag, topic_count: topic_count });
 		if (response.tags) {
 			tags = response.tags;
 		}
+		data = tags;
 	}
 	onMount(async () => {
 		await fetchData();
 	});
-	$: data = [...data, ...tags];
 	async function infiniteHandler({ detail: { loaded, complete } }) {
 		let last_tag = "";
+		let topic_count = 0;
 		if (tags.length) {
-			last_tag = topics[topics.length - 1].name;
+			last_tag = tags[tags.length - 1].name;
+			topic_count = tags[tags.length - 1].topic_count;
 		}
-		let response = await api.post(`tags/`, { last_tag: last_tag });
+		let response = await api.post(`tags/`, { last_tag: last_tag, topic_count: topic_count });
 		if (response.tags) {
 			tags = response.tags;
 		}

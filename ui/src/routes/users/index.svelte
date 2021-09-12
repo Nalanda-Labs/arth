@@ -1,34 +1,43 @@
 <script context="module">
-	export function preload({ params }) {
-		let page = params.page;
-		return { page };
-	}
+	export function preload({ params }) {}
 </script>
 
 <script>
 	import { onMount } from "svelte";
 	import * as api from "api.js";
-	import Card, { Content } from "@smui/card";
+	import InfiniteLoading from "svelte-infinite-loading";
 	import "../_utils.scss";
 
-	export let page;
-	let currentPage = page;
 	let users = [];
-	let count = 0;
+	let data = [];
 
 	onMount(async () => {
-		if (!page) {
-			page = 1;
+		let last_user = "";
+		if (users.length) {
+			last_user = users[users.length - 1].username;
 		}
-
-		let response = await api.get(`users`);
+		let response = await api.post(`users/`, {last_user: last_user});
 		if (response.users) {
 			users = response.users;
-			if (users.length > 0) {
-				count = users[0].count;
-			}
 		}
+		data = tags;
 	});
+	async function infiniteHandler({ detail: { loaded, complete } }) {
+		let last_user = "";
+		if (users.length) {
+			last_user = users[users.length - 1].username;
+		}
+		let response = await api.post(`users/`, {last_user: last_user});
+		if (response.users) {
+			users = response.users;
+		}
+		if (users.length) {
+			data = [...data, ...users];
+			loaded();
+		} else {
+			complete();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -54,6 +63,7 @@
 				<p style="font-size: 12px;margin-left:5px;margin-top:0px">{location}</p>
 			</div>
 		{/each}
+		<InfiniteLoading on:infinite={infiniteHandler} />
 	</div>
 </div>
 

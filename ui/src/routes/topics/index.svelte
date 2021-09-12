@@ -76,11 +76,14 @@
         topics[i].shown_ts = shown_ts;
       }
     }
+    if(topics.length){
+      data = topics;
+    }
   }
   onMount(async () => {
     await fetchData();
   });
-  $: data = [...data, ...topics];
+  // $: data = [...data, ...topics];
 
   async function infiniteHandler({ detail: { loaded, complete } }) {
     let updated_at = "";
