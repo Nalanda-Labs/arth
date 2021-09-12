@@ -18,11 +18,19 @@
     let data = [];
     let count = 0;
 
-    async function fetchData() {
+    async function fetchData(passed_tag="") {
         console.log(tag);
+        data = [];
+        topics = [];
+        if(passed_tag !== "") {
+            tag = passed_tag;
+        }
         let updated_at = "";
         if (topics.length) {
             updated_at = topics[topics.length - 1].updated_at;
+        }
+        if(passed_tag === "") {
+            updated_at = "";
         }
         let response = await api.post(`topics/tagged/${tag}`, {
             updated_at: updated_at,
@@ -209,7 +217,7 @@
 </svelte:head>
 <div class="topic container">
     <h3>
-        All topics
+        Questions tagged [{tag}]
         <Button
             on:click={() => goto("/ask")}
             variant="raised"
@@ -256,7 +264,7 @@
                     <a
                         href="/topics/tagged/{tag}"
                         style="text-decoration:none; color: #fff;background-color: #4285F4; padding:7px; margin-right:10px; border-radius: 4px"
-                        >{tag}</a
+                        on:click={fetchData(tag)}>{tag}</a
                     >
                 {/each}
                 <span style="float:right"
