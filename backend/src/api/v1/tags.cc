@@ -226,3 +226,101 @@ auto Tags::getTopicsByTag(const HttpRequestPtr req, std::function<void(const Htt
 
     co_return;
 }
+
+auto Tags::getTag(const HttpRequestPtr req, std::function<void(const HttpResponsePtr &)> callback, const std::string& tag) -> Task<>
+{
+    Json::Value ret;
+
+    {
+        ret["info"] = "";
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            // we do keyset pagination for infinite scrolling
+            
+            auto result = co_await clientPtr->execSqlCoro("select info from tags where name=$1", tag);
+            if (result.size() == 0)
+            {
+                callback(jsonResponse(std::move(ret)));
+            }
+            else
+            {
+                for (auto &r : result)
+                {
+                    ret["info"] = r["info"].as<std::string>();
+                }
+            }
+
+            callback(jsonResponse(std::move(ret)));
+        }
+        catch (const DrogonDbException &err)
+        {
+            // Exception works as sync interfaces.
+            auto resp = HttpResponse::newHttpResponse();
+            resp->setBody(err.base().what());
+            callback(resp);
+        }
+    }
+
+    co_return;
+}
+auto Tags::updateTagInfo(const HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, const std::string& tag) -> Task<>
+{
+    Json::Value ret;
+
+    auto customConfig = app().getCustomConfig();
+    auto jwt_secret = customConfig.get("jwt_secret", "").asString();
+
+    auto optionalToken = verifiedToken(req->getHeader("Authorization"), jwt_secret);
+
+    if (jwt_secret == "")
+    {
+        ret["error"] = "JWT not configured";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    if (!optionalToken.has_value())
+    {
+        ret["error"] = "Authentication Error";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+
+    Token jwt = optionalToken.value();
+
+    auto user_id = jwt.userID;
+    LOG_DEBUG << user_id;
+
+    auto json = req->getJsonObject();
+    // get data from json to variables so that we do not need to operate on json
+    std::string info;
+    if (json->isMember("info"))
+    {
+        info = json->get("info", "").asString();
+    }
+    if(info.length() < 20 || info.length() > 100000) {
+        ret["error"] = "Info should be between 20 to 100000 characters";
+        callback(jsonResponse(std::move(ret)));
+        co_return;
+    }
+    {
+        auto clientPtr = drogon::app().getFastDbClient();
+        try
+        {
+            // we do keyset pagination for infinite scrolling
+            
+            auto result = co_await clientPtr->execSqlCoro("update tags set info=$1 where name=$2", info, tag);
+            ret["message"] = "Successfully updated tag info";
+
+            callback(jsonResponse(std::move(ret)));
+        }
+        catch (const DrogonDbException &err)
+        {
+            // Exception works as sync interfaces.
+            auto resp = HttpResponse::newHttpResponse();
+            resp->setBody(err.base().what());
+            callback(resp);
+        }
+    }
+}

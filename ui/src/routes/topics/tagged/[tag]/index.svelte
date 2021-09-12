@@ -226,6 +226,8 @@
             <Label>Post topic</Label>
         </Button>
     </h3>
+    <a href="/tags/edit/{tag}" style="float:right;text-decoration:none; color: #4285F4;">Improve Tag Info</a>
+    <a href="/tags/{tag}" style="float:right;text-decoration:none; color: #4285F4;margin-right:10px">Tag Info</a>
     <div class="row" style="width:100%">
         {#each data as { id, slug, title, tags, shown_ts, uid, username, answers, views }}
             <hr

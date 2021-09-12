@@ -63,7 +63,7 @@
 	<div class="row">
 		{#each data as { id, info, name, topic_count }}
 			<Card
-				style="width:150px;height:150px;margin-right:20px;margin-top:10px;margin-left:10px"
+				style="width:150px;height:250px;margin-right:20px;margin-top:10px;margin-left:10px"
 			>
 				<a
 					class="anchor"
@@ -73,11 +73,11 @@
 				<span style="margin-left:10px;float:right"
 					>{topic_count} questions</span
 				>
-				<Content>{info.slice(0, 100)}</Content>
+				<Content>{info.slice(0, 50)}</Content>
 				<a
 					class="anchor"
 					style="margin-left:10px;"
-					href="/tags/edit/{id}/{name}">Edit</a
+					href="/tags/edit/{name}">Edit</a
 				>
 			</Card>
 		{/each}
