@@ -48,6 +48,8 @@ What Works
 5. Voting
 6. Accepting an answer
 7. Editing a topic
+8. Questions by tag
+9. Viewing and editing tag info.
 
 TODO
 ====
@@ -56,3 +58,8 @@ TODO
 3. Implement reputation system.
 4. Implement badges.
 5. Implement more items on profile.
+
+Installation
+============
+Check `CMakeLists.txt` file in backend folder which tells what packages you will need.
+For ui folder you need node js and just run `npm i` and then you can build frontend.
