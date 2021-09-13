@@ -68,7 +68,7 @@ struct EMail
           m_user(user),
           m_passwd(passwd),
           m_socket(socket),
-          m_uuid(utils::getUuid())
+          m_uuid(drogon::utils::getUuid())
     {
         m_status = Init;
     }
@@ -193,7 +193,7 @@ void messagesHandle(const trantor::TcpConnectionPtr &connPtr,
         std::string screte(email->m_user);
 
         //outMsg.append(base64_encode(reinterpret_cast<const unsigned char*>(screte.c_str()), screte.length()));
-        outMsg.append(utils::base64Encode(reinterpret_cast<const unsigned char *>(screte.c_str()), screte.length()));
+        outMsg.append(drogon::utils::base64Encode(reinterpret_cast<const unsigned char *>(screte.c_str()), screte.length()));
 
         outMsg.append("\r\n");
 
@@ -210,7 +210,7 @@ void messagesHandle(const trantor::TcpConnectionPtr &connPtr,
 
         std::string screte(email->m_passwd);
 
-        outMsg.append(utils::base64Encode(reinterpret_cast<const unsigned char *>(screte.c_str()), screte.length()));
+        outMsg.append(drogon::utils::base64Encode(reinterpret_cast<const unsigned char *>(screte.c_str()), screte.length()));
         outMsg.append("\r\n");
 
         out.append(outMsg.data(), outMsg.size());
