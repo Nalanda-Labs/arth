@@ -3,7 +3,7 @@
 using namespace drogon;
 
 int main() {
-	app().loadConfigFile("../config.json");
+	app().loadConfigFile("/home/shiv/arth/backend/config.json");
 	auto customConfig = app().getCustomConfig();
 	auto index_name = customConfig.get("es_index_name", "arth").asString();
 	auto es_host = customConfig.get("es_host", "http://'localhost:9200").asString();

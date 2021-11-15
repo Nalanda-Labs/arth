@@ -41,9 +41,10 @@
 			password,
 			token,
 		});
-
+		console.log(response.error);
+		console.log(response.message);
 		if (response.error) {
-			if(errors === 'User exists') {
+			if(response.error === 'User exists') {
 				response.error = "Email already registered. If this is an error try restting your password or contact support.";
 				errorWithClose.open();
 			} else {

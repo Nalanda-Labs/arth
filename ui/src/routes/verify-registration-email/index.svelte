@@ -8,17 +8,28 @@
 
 <script>
     import { goto, stores } from "@sapper/app";
-    import ListErrors from "../_components/ListErrors.svelte";
     import { onMount } from "svelte";
     import * as api from "api.js";
+    import Snackbar, { Actions } from '@smui/snackbar';
+    import IconButton from '@smui/icon-button';
+    import Button, { Label } from "@smui/button";
+
 
     const { session } = stores();
     let response = {};
+    let errorWithClose;
+    let messageWithClose;
 
     onMount(async () => {
         response = await api.get(
             window.location.pathname + window.location.search
         );
+
+	if (response.error) {
+		errorWithClose.open();
+	} else {
+		messageWithClose.open();
+	}
     });
 </script>
 
@@ -28,10 +39,17 @@
 
 <div class="auth-page">
     <div class="container page">
-        <div class="row">
-            <div class="col-md-6 offset-md-3 col-xs-12">
-                <ListErrors {response} />
-            </div>
-        </div>
+	<Snackbar bind:this={errorWithClose}>
+		<Label>{response.error}</Label>
+		<Actions>
+		  <IconButton class="material-icons" title="Dismiss">close</IconButton>
+		</Actions>
+	</Snackbar>
+	<Snackbar bind:this={messageWithClose}>
+		<Label>{response.message}</Label>
+		<Actions>
+		  <IconButton class="material-icons" title="Dismiss">close</IconButton>
+		</Actions>
+	</Snackbar>
     </div>
 </div>

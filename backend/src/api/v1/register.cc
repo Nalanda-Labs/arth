@@ -74,6 +74,7 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
 
     auto customConfig = app().getCustomConfig();
 
+	/* disable http client as it crashed the code
     if (token.isMember("isTrusted"))
     {
         std::string secret = "";
@@ -96,7 +97,7 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
         req->setParameter("secret", secret);
         req->setParameter("response", token.get("isTrusted", false).asString());
         req->addHeader("Content-Length", std::to_string(req->bodyLength()));
-        LOG_DEBUG << req->bodyLength();
+        LOG_DEBUG << "Recaptcha body length: " + req->bodyLength();
 
         client->sendRequest(
             req,
@@ -122,7 +123,7 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
         callback(jsonResponse(std::move(ret)));
         return;
     }
-
+*/
     {
         auto clientPtr = drogon::app().getFastDbClient("default");
         clientPtr->newTransactionAsync([=, this](const std::shared_ptr<Transaction> &transPtr) mutable {
@@ -176,7 +177,7 @@ void Registraion::doRegister(const HttpRequestPtr &req, Callback callback)
                             // TODO: move subject string to translation file
                             auto msgid = smtp.sendEmail(
                                 customConfig.get("smtp_server", "").asString(),
-                                customConfig.get("smtp_port", 587).asInt(),
+                                customConfig.get("smtp_port", 25).asInt(),
                                 customConfig.get("admin_email", "").asString(),
                                 email,
                                 "Registration at arth",
