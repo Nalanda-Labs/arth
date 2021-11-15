@@ -260,6 +260,17 @@
     "custom_config": {
         "realm": "drogonRealm",
         "opaque": "drogonOpaque",
+        "recaptcha_secret": "",
+        "jwt_secret": "",
+        "admin_email": "",
+        "smtp_server": "",
+        "smtp_port": ,
+        "password": "",
+        "admin_username": "",
+        "base_url": "",
+        "limit_per_page": ,
+        "es_index_name": "",
+        "es_host": "",
         "credentials": [
             {
                 "user": "drogon",
